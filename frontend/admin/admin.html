@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Event Management</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="admin-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-music"></i>
+                <span>Event Manager</span>
+            </div>
+            <div class="nav-links">
+                <a href="#singers" class="nav-link active" data-section="singers">
+                    <i class="fas fa-microphone"></i> Singers
+                </a>
+                <a href="#events" class="nav-link" data-section="events">
+                    <i class="fas fa-calendar-alt"></i> Events
+                </a>
+                <a href="/" class="nav-link" target="_blank">
+                    <i class="fas fa-eye"></i> View Site
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="admin-container">
+        <!-- Singers Section -->
+        <section id="singers-section" class="content-section active">
+            <div class="section-header">
+                <h1><i class="fas fa-microphone"></i> Manage Singers</h1>
+                <button class="btn-primary" onclick="openModal('singerModal')">
+                    <i class="fas fa-plus"></i> Add Singer
+                </button>
+            </div>
+
+            <!-- Singers Grid -->
+            <div class="cards-grid" id="singersGrid">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> Loading singers...
+                </div>
+            </div>
+        </section>
+
+        <!-- Events Section -->
+        <section id="events-section" class="content-section">
+            <div class="section-header">
+                <h1><i class="fas fa-calendar-alt"></i> Manage Events</h1>
+                <button class="btn-primary" onclick="openModal('eventModal')">
+                    <i class="fas fa-plus"></i> Add Event
+                </button>
+            </div>
+
+            <!-- Events Grid -->
+            <div class="cards-grid" id="eventsGrid">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> Loading events...
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add Singer Modal -->
+    <div id="singerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-microphone"></i> Add New Singer</h2>
+                <button class="close-btn" onclick="closeModal('singerModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="singerForm" class="form">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Singer Name</label>
+                    <input type="text" name="name" placeholder="Enter singer name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-music"></i> Genre</label>
+                        <select name="genre" required>
+                            <option value="">Select Genre</option>
+                            <option value="Pop">Pop</option>
+                            <option value="Rock">Rock</option>
+                            <option value="Jazz">Jazz</option>
+                            <option value="Classical">Classical</option>
+                            <option value="Hip Hop">Hip Hop</option>
+                            <option value="R&B">R&B</option>
+                            <option value="Country">Country</option>
+                            <option value="Electronic">Electronic</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> Experience (Years)</label>
+                        <input type="number" name="experience_years" placeholder="Years" min="0" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-dollar-sign"></i> Base Price</label>
+                        <input type="number" name="base_price" placeholder="Price in USD" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-map-marker-alt"></i> Location</label>
+                        <input type="text" name="location" placeholder="City, Country" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-image"></i> Profile Image</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" name="image" id="singerImage" accept="image/*" required>
+                        <label for="singerImage" class="file-input-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Choose Image</span>
+                        </label>
+                        <div class="image-preview" id="singerImagePreview"></div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('singerModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Add Singer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-calendar-alt"></i> Add New Event</h2>
+                <button class="close-btn" onclick="closeModal('eventModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="eventForm" class="form">
+                <div class="form-group">
+                    <label><i class="fas fa-heading"></i> Event Name</label>
+                    <input type="text" name="event_name" placeholder="Enter event name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar"></i> Event Date</label>
+                        <input type="date" name="event_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-map-marker-alt"></i> Location</label>
+                        <input type="text" name="location" placeholder="Venue location" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-microphone"></i> Select Singer</label>
+                    <select name="singer_id" id="eventSingerSelect" required>
+                        <option value="">Loading singers...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-image"></i> Event Image</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" name="image" id="eventImage" accept="image/*" required>
+                        <label for="eventImage" class="file-input-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Choose Image</span>
+                        </label>
+                        <div class="image-preview" id="eventImagePreview"></div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('eventModal')">Cancel</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Add Event
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/admin/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Events - Book Your Experience</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Hero Header -->
+    <header class="hero">
+        <nav class="user-nav">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <i class="fas fa-music"></i>
+                    <span>Live Events</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#events" class="nav-link">
+                        <i class="fas fa-calendar-alt"></i> Events
+                    </a>
+                    <a href="#singers" class="nav-link">
+                        <i class="fas fa-microphone"></i> Artists
+                    </a>
+                    <a href="/admin" class="nav-link admin-link">
+                        <i class="fas fa-cog"></i> Admin
+                    </a>
+                </div>
+            </div>
+        </nav>
+        <div class="hero-content">
+            <h1 class="hero-title">Experience Unforgettable Live Events</h1>
+            <p class="hero-subtitle">Discover and book the best performances from world-class artists</p>
+        </div>
+        <div class="hero-overlay"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="user-container">
+        <!-- Featured Events Section -->
+        <section id="events" class="content-section active">
+            <div class="section-header">
+                <h2><i class="fas fa-calendar-star"></i> Upcoming Events</h2>
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">All Events</button>
+                    <button class="filter-tab" data-filter="upcoming">This Month</button>
+                    <button class="filter-tab" data-filter="featured">Featured</button>
+                </div>
+            </div>
+            <div class="events-grid" id="eventsGrid">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> Loading events...
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Singers Section -->
+        <section id="singers" class="content-section active">
+            <div class="section-header">
+                <h2><i class="fas fa-star"></i> Featured Artists</h2>
+            </div>
+            <div class="singers-grid" id="singersGrid">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> Loading artists...
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Event Detail Modal -->
+    <div id="eventDetailModal" class="modal">
+        <div class="modal-content modal-large">
+            <button class="close-btn" onclick="closeModal('eventDetailModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="eventDetailContent"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3><i class="fas fa-music"></i> Live Events</h3>
+                <p>Your premier destination for unforgettable live entertainment experiences.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="#events">Events</a>
+                <a href="#singers">Artists</a>
+                <a href="/admin">Admin</a>
+            </div>
+            <div class="footer-section">
+                <h4>Connect</h4>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Live Events. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/user/user.js"></script>
+</body>
+</html>
