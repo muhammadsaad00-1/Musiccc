@@ -2,7 +2,6 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from db import conn
 from supabase_client import supabase
 
 app = FastAPI()
@@ -46,12 +45,14 @@ def create_singer(
 
     image_url = supabase.storage.from_("singers").get_public_url(path)
 
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO singers (name, genre, experience_years, base_price, location, image_url)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """, (name, genre, experience_years, base_price, location, image_url))
-    conn.commit()
+    supabase.table("singers").insert({
+        "name": name,
+        "genre": genre,
+        "experience_years": experience_years,
+        "base_price": base_price,
+        "location": location,
+        "image_url": image_url
+    }).execute()
 
     return {"message": "Singer created"}
 
@@ -60,40 +61,21 @@ def create_singer(
 @app.get("/singers")
 def get_singers():
     try:
-        cur = conn.cursor()
-        cur.execute("SELECT id, name, genre, experience_years, base_price, location, created_at, image_url FROM singers")
-        rows = cur.fetchall()
-        singers = []
-        for row in rows:
-            singers.append({
-                "id": row[0],
-                "name": row[1],
-                "genre": row[2],
-                "experience_years": row[3],
-                "base_price": row[4],
-                "location": row[5],
-                "created_at": str(row[6]) if row[6] else None,
-                "image_url": row[7]
-            })
-        return singers
+        response = supabase.table("singers").select("*").execute()
+        return response.data
     except Exception as e:
-        conn.rollback()
         raise
 
 
 @app.put("/admin/singers/{id}")
 def update_singer(id: int, name: str):
-    cur = conn.cursor()
-    cur.execute("UPDATE singers SET name=%s WHERE id=%s", (name, id))
-    conn.commit()
+    supabase.table("singers").update({"name": name}).eq("id", id).execute()
     return {"message": "Singer updated"}
 
 
 @app.delete("/admin/singers/{id}")
 def delete_singer(id: int):
-    cur = conn.cursor()
-    cur.execute("DELETE FROM singers WHERE id=%s", (id,))
-    conn.commit()
+    supabase.table("singers").delete().eq("id", id).execute()
     return {"message": "Singer deleted"}
 
 
@@ -113,35 +95,30 @@ def create_event(
     supabase.storage.from_("events").upload(path, file_bytes)
     image_url = supabase.storage.from_("events").get_public_url(path)
 
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO events (event_name, event_date, location, singer_id, image_url)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (event_name, event_date, location, singer_id, image_url))
-    conn.commit()
+    supabase.table("events").insert({
+        "event_name": event_name,
+        "event_date": event_date,
+        "location": location,
+        "singer_id": singer_id,
+        "image_url": image_url
+    }).execute()
 
     return {"message": "Event created"}
 
 
 @app.get("/events")
 def get_events():
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT e.id, e.event_name, e.event_date, e.location, e.image_url, s.name, e.singer_id
-        FROM events e
-        left join singers s on e.singer_id = s.id
-    """)
-    rows = cur.fetchall()
+    response = supabase.table("events").select("*, singers(name)").execute()
     events = []
-    for row in rows:
+    for event in response.data:
         events.append({
-            "id": row[0],
-            "event_name": row[1],
-            "event_date": row[2],
-            "location": row[3],
-            "image_url": row[4],
-            "singer_name": row[5],
-            "singer_id": row[6]
+            "id": event["id"],
+            "event_name": event["event_name"],
+            "event_date": event["event_date"],
+            "location": event["location"],
+            "image_url": event["image_url"],
+            "singer_name": event["singers"]["name"] if event.get("singers") else None,
+            "singer_id": event["singer_id"]
         })
     return events
 
@@ -155,20 +132,14 @@ def update_event(
     location: str,
     singer_id: int
 ):
-    cur = conn.cursor()
-    cur.execute("""
-        UPDATE events
-        SET event_name=%s,
-            event_date=%s,
-            location=%s,
-            singer_id=%s
-        WHERE id=%s
-    """, (event_name, event_date, location, singer_id, event_id))
-    conn.commit()
+    supabase.table("events").update({
+        "event_name": event_name,
+        "event_date": event_date,
+        "location": location,
+        "singer_id": singer_id
+    }).eq("id", event_id).execute()
     return {"message": "Event updated"}
 @app.delete("/admin/events/{event_id}")
 def delete_event(event_id: int):
-    cur = conn.cursor()
-    cur.execute("DELETE FROM events WHERE id=%s", (event_id,))
-    conn.commit()
+    supabase.table("events").delete().eq("id", event_id).execute()
     return {"message": "Event deleted"}
