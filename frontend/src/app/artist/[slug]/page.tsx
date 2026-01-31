@@ -3,11 +3,11 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, use } from 'react';
+import { useState, useEffect, use } from 'react';
 import {
     MapPin, Clock, CheckCircle, Star, Play, ArrowLeft, Share2,
     Music, Disc3, Award, Instagram, Youtube, ExternalLink,
-    ChevronRight, Pause
+    ChevronRight, Pause, Loader2
 } from 'lucide-react';
 import { mockArtists, mockCategories } from '@/lib/mockData';
 import AlbumCarousel from '@/components/artists/AlbumCarousel';
@@ -16,20 +16,164 @@ interface ArtistPageProps {
     params: Promise<{ slug: string }>;
 }
 
+// Helper to extract YouTube video ID from URL
+function extractYoutubeId(url: string): string | null {
+    if (!url) return null;
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s]{11})/);
+    return match ? match[1] : null;
+}
+
+// Transform backend performer to frontend artist format
+function transformPerformerToArtist(performer: any): any {
+    const slug = performer.name?.toLowerCase().replace(/\s+/g, '-') || '';
+
+    // Transform videos array (YouTube URLs) to the expected format
+    const youtubeVideos = (performer.videos || []).map((url: string, index: number) => {
+        const videoId = extractYoutubeId(url);
+        return {
+            id: index + 1,
+            title: `${performer.name} - Performance ${index + 1}`,
+            videoId: videoId || '',
+            views: 'N/A',
+            thumbnail: videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : performer.profile_image_url
+        };
+    }).filter((v: any) => v.videoId);
+
+    return {
+        id: performer.id,
+        name: performer.name,
+        slug: slug,
+        category_id: getCategoryIdFromName(performer.category),
+        bio: performer.description || '',
+        short_bio: performer.description?.substring(0, 100) || '',
+        location: performer.locations?.[0] || 'Pakistan',
+        price_range: performer.price ? `PKR ${performer.price.toLocaleString()}` : undefined,
+        image_url: performer.profile_image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400',
+        cover_image: performer.profile_image_url,
+        is_featured: false,
+        is_verified: true,
+        languages: performer.genres || [],
+        genres: performer.genres || [],
+        performance_duration: undefined,
+        youtubeVideos: youtubeVideos,
+        socialLinks: {
+            instagram: performer.instagram_url,
+            youtube: performer.youtube_url,
+        },
+        // These could be fetched from external APIs in the future
+        albums: [],
+        popularSongs: [],
+        achievements: [],
+        gallery_urls: [],
+    };
+}
+
+function getCategoryIdFromName(categoryName: string): number {
+    const mapping: Record<string, number> = {
+        'Singer': 1,
+        'Musician': 2,
+        'DJ': 3,
+        'Dancer': 4,
+        'Comedian': 5,
+        'Anchor': 6,
+        'Makeup Artist': 7,
+        'Photographer': 8,
+        'Mehndi Artist': 9,
+        'Decorator': 10,
+    };
+    return mapping[categoryName] || 1;
+}
+
 export default function ArtistPage({ params }: ArtistPageProps) {
     const { slug } = use(params);
-    const artist = mockArtists.find((a) => a.slug === slug);
+    const [artist, setArtist] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
     const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+    const [isBackendArtist, setIsBackendArtist] = useState(false);
+    const [spotifyData, setSpotifyData] = useState<any>(null);
+    const [loadingSpotify, setLoadingSpotify] = useState(false);
+
+    // Fetch Spotify data for the artist
+    async function fetchSpotifyData(artistName: string) {
+        setLoadingSpotify(true);
+        try {
+            const response = await fetch(`http://localhost:8001/api/spotify/artist/${encodeURIComponent(artistName)}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.found) {
+                    setSpotifyData(data);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching Spotify data:', error);
+        } finally {
+            setLoadingSpotify(false);
+        }
+    }
+
+    useEffect(() => {
+        async function fetchArtist() {
+            setLoading(true);
+
+            // First, try to find in mock data
+            const mockArtist = mockArtists.find((a) => a.slug === slug);
+
+            if (mockArtist) {
+                setArtist(mockArtist);
+                setIsBackendArtist(false);
+                setLoading(false);
+                // Fetch Spotify data for mock artists too
+                fetchSpotifyData(mockArtist.name);
+                return;
+            }
+
+            // If not in mock data, try to fetch from backend
+            try {
+                const response = await fetch(`http://localhost:8001/performers/by-name/${encodeURIComponent(slug)}`);
+                if (response.ok) {
+                    const performer = await response.json();
+                    if (!performer.error) {
+                        const transformedArtist = transformPerformerToArtist(performer);
+                        setArtist(transformedArtist);
+                        setIsBackendArtist(true);
+                        setLoading(false);
+                        // Fetch Spotify data
+                        fetchSpotifyData(performer.name);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching performer:', error);
+            }
+
+            // Artist not found
+            setArtist(null);
+            setLoading(false);
+        }
+
+        fetchArtist();
+    }, [slug]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
+                    <p className="text-gray-400">Loading artist profile...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (!artist) {
         notFound();
     }
 
     const category = mockCategories.find((c) => c.id === artist.category_id);
-    const hasMedia = artist.albums || artist.popularSongs || artist.youtubeVideos;
+    const hasMedia = artist.albums?.length > 0 || artist.popularSongs?.length > 0 || artist.youtubeVideos?.length > 0;
 
     // Split bio into paragraphs for better readability
-    const bioParagraphs = artist.bio.split('\n\n').filter(p => p.trim());
+    const bioParagraphs = (artist.bio || '').split('\n\n').filter((p: string) => p.trim());
 
     return (
         <div className="min-h-screen bg-[#0a0a0b]">
@@ -50,7 +194,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                 <div className="absolute top-24 left-0 right-0">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <Link
-                            href={`/artists/${category?.slug || ''}`}
+                            href={`/artists/${category?.slug || 'singers'}`}
                             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors bg-[#0a0a0b]/50 backdrop-blur-sm px-4 py-2 rounded-full"
                         >
                             <ArrowLeft className="w-4 h-4" />
@@ -108,6 +252,11 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                                         {category.name}
                                     </span>
                                 )}
+                                {isBackendArtist && (
+                                    <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/30">
+                                        New Artist
+                                    </span>
+                                )}
                             </div>
 
                             {/* Name */}
@@ -116,7 +265,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                             </h1>
 
                             {/* Genres */}
-                            {artist.genres && (
+                            {artist.genres && artist.genres.length > 0 && (
                                 <div className="flex flex-wrap justify-center lg:justify-start gap-2 mb-6">
                                     {artist.genres.map((genre: string) => (
                                         <span key={genre} className="px-3 py-1 bg-gradient-to-r from-orange-500/10 to-pink-600/10 text-gray-300 rounded-full text-sm border border-gray-800">
@@ -178,7 +327,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
             </section>
 
             {/* Achievements */}
-            {artist.achievements && (
+            {artist.achievements && artist.achievements.length > 0 && (
                 <section className="py-8 border-y border-gray-800">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex flex-wrap justify-center gap-8">
@@ -193,7 +342,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                 </section>
             )}
 
-            {/* About Section - Enhanced with Paragraphs */}
+            {/* About Section */}
             <section className="py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-[#1a1a1a] rounded-3xl border border-gray-800 p-8">
@@ -202,17 +351,23 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                             About {artist.name}
                         </h2>
                         <div className="space-y-4">
-                            {bioParagraphs.map((paragraph, index) => (
-                                <p key={index} className="text-gray-400 leading-relaxed text-lg">
-                                    {paragraph}
+                            {bioParagraphs.length > 0 ? (
+                                bioParagraphs.map((paragraph: string, index: number) => (
+                                    <p key={index} className="text-gray-400 leading-relaxed text-lg">
+                                        {paragraph}
+                                    </p>
+                                ))
+                            ) : (
+                                <p className="text-gray-400 leading-relaxed text-lg">
+                                    {artist.short_bio || `${artist.name} is a talented performer available for bookings through our platform.`}
                                 </p>
-                            ))}
+                            )}
                         </div>
 
-                        {/* Languages */}
+                        {/* Languages/Genres */}
                         {artist.languages && artist.languages.length > 0 && (
                             <div className="mt-8 pt-6 border-t border-gray-800">
-                                <p className="text-gray-500 text-sm mb-3">Languages</p>
+                                <p className="text-gray-500 text-sm mb-3">Genres</p>
                                 <div className="flex flex-wrap gap-2">
                                     {artist.languages.map((lang: string) => (
                                         <span key={lang} className="px-4 py-2 bg-[#0a0a0b] border border-gray-800 rounded-full text-sm text-gray-300">
@@ -226,8 +381,70 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                 </div>
             </section>
 
-            {/* Discography - 3D Rotating Carousel */}
-            {artist.albums && artist.albums.length > 0 && (
+            {/* Spotify Discography Section */}
+            {(spotifyData?.albums?.length > 0 || loadingSpotify) && (
+                <section className="py-12">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                                <Disc3 className="w-6 h-6 text-green-500" />
+                                Discography
+                                <span className="text-sm font-normal text-gray-500 ml-2">from Spotify</span>
+                            </h2>
+                            {spotifyData?.spotify_url && (
+                                <a
+                                    href={spotifyData.spotify_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-green-500 hover:text-green-400 transition-colors text-sm"
+                                >
+                                    <span>View on Spotify</span>
+                                    <ExternalLink className="w-4 h-4" />
+                                </a>
+                            )}
+                        </div>
+
+                        {loadingSpotify ? (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {spotifyData.albums.map((album: any) => (
+                                    <a
+                                        key={album.id}
+                                        href={album.spotify_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="group bg-[#1a1a1a] rounded-xl p-4 border border-gray-800 hover:border-gray-700 transition-all hover:bg-[#2a2a2a]"
+                                    >
+                                        <div className="relative aspect-square rounded-lg overflow-hidden mb-3">
+                                            <Image
+                                                src={album.cover || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400'}
+                                                alt={album.name}
+                                                fill
+                                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                                                <Play className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            </div>
+                                        </div>
+                                        <h3 className="font-medium text-white text-sm truncate group-hover:text-green-400 transition-colors">
+                                            {album.name}
+                                        </h3>
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            {album.year} • {album.type === 'single' ? 'Single' : 'Album'}
+                                        </p>
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </section>
+            )}
+
+            {/* Fallback to mock album carousel if no Spotify data */}
+            {!spotifyData?.albums?.length && !loadingSpotify && artist.albums && artist.albums.length > 0 && (
                 <section className="py-12">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <AlbumCarousel albums={artist.albums} artistName={artist.name} />
@@ -235,8 +452,80 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                 </section>
             )}
 
-            {/* Popular Songs */}
-            {artist.popularSongs && artist.popularSongs.length > 0 && (
+            {/* Spotify Top Songs Section */}
+            {(spotifyData?.topTracks?.length > 0 || loadingSpotify) && (
+                <section className="py-12">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-2">
+                            <Music className="w-6 h-6 text-green-500" />
+                            Top Songs
+                            <span className="text-sm font-normal text-gray-500 ml-2">from Spotify</span>
+                        </h2>
+
+                        {loadingSpotify ? (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
+                            </div>
+                        ) : (
+                            <div className="bg-[#1a1a1a] rounded-2xl border border-gray-800 overflow-hidden">
+                                {spotifyData.topTracks.map((song: any, index: number) => (
+                                    <a
+                                        key={song.id}
+                                        href={song.spotify_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-4 p-4 hover:bg-[#2a2a2a] transition-colors border-b border-gray-800 last:border-b-0 group"
+                                    >
+                                        {/* Track Number */}
+                                        <div className="w-8 text-center">
+                                            <span className="text-gray-500 group-hover:hidden">{index + 1}</span>
+                                            <Play className="w-4 h-4 text-green-500 hidden group-hover:block mx-auto" />
+                                        </div>
+
+                                        {/* Album Art */}
+                                        {song.image && (
+                                            <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                                                <Image
+                                                    src={song.image}
+                                                    alt={song.name}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* Song Info */}
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-medium text-white group-hover:text-green-400 transition-colors truncate">
+                                                {song.name}
+                                            </h4>
+                                            {song.album && (
+                                                <p className="text-gray-500 text-sm truncate">{song.album}</p>
+                                            )}
+                                        </div>
+
+                                        {/* Plays */}
+                                        <div className="text-gray-500 text-sm hidden sm:block">
+                                            {song.plays}
+                                        </div>
+
+                                        {/* Duration */}
+                                        <div className="text-gray-500 text-sm w-12 text-right">
+                                            {song.duration}
+                                        </div>
+
+                                        {/* Spotify Icon */}
+                                        <ExternalLink className="w-4 h-4 text-gray-600 group-hover:text-green-500 transition-colors" />
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </section>
+            )}
+
+            {/* Fallback to mock popular songs if no Spotify data */}
+            {!spotifyData?.topTracks?.length && !loadingSpotify && artist.popularSongs && artist.popularSongs.length > 0 && (
                 <section className="py-12">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-2">
@@ -279,13 +568,14 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                 </section>
             )}
 
-            {/* YouTube Videos */}
+
+            {/* YouTube Videos - from Backend or Mock */}
             {artist.youtubeVideos && artist.youtubeVideos.length > 0 && (
                 <section className="py-12">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-2">
                             <Youtube className="w-6 h-6 text-red-500" />
-                            Videos
+                            Live Performances
                         </h2>
 
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -328,9 +618,11 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                                                     <Play className="w-7 h-7 text-white ml-1" />
                                                 </div>
                                             </div>
-                                            <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/70 text-white text-xs rounded">
-                                                {video.views} views
-                                            </div>
+                                            {video.views !== 'N/A' && (
+                                                <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/70 text-white text-xs rounded">
+                                                    {video.views} views
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
