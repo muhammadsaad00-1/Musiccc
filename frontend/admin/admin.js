@@ -8,6 +8,7 @@ let eventsData = [];
 let requestsData = [];
 let currentFilter = 'all';
 let selectedRequest = null;
+let editingPerformerId = null;
 
 // ============================================
 // Initialization
@@ -75,7 +76,20 @@ function closeModal(modalId) {
             preview.innerHTML = '';
         });
     }
+
+    // Reset performer modal state
+    if (modalId === 'performerModal') {
+        editingPerformerId = null;
+        const modalTitle = modal.querySelector('.modal-header h2');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        modalTitle.innerHTML = '<i class="fas fa-microphone"></i> Add New Performer';
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Add Performer';
+        // Restore image required
+        const imageInput = form.querySelector('[name="image"]');
+        imageInput.setAttribute('required', 'required');
+    }
 }
+
 
 // Close modal on background click
 document.querySelectorAll('.modal').forEach(modal => {
@@ -197,10 +211,14 @@ function displayPerformers(performers) {
                 <div class="card-actions">
                     ${performer.instagram_url ? `<a href="${performer.instagram_url}" target="_blank" class="btn-icon"><i class="fab fa-instagram"></i></a>` : ''}
                     ${performer.youtube_url ? `<a href="${performer.youtube_url}" target="_blank" class="btn-icon"><i class="fab fa-youtube"></i></a>` : ''}
+                    <button class="btn-edit" onclick="editPerformer('${performer.id}')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
                     <button class="btn-delete" onclick="deletePerformer('${performer.id}')">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
+
             </div>
         </div>
     `).join('');
@@ -331,28 +349,82 @@ document.getElementById('performerForm').addEventListener('submit', async (e) =>
             formData.set('videos', JSON.stringify(videosArray));
         }
 
-        const response = await fetch(`${API_BASE}/admin/performers`, {
-            method: 'POST',
+        let url = `${API_BASE}/admin/performers`;
+        let method = 'POST';
+        let successMessage = 'Performer added successfully!';
+
+        if (editingPerformerId) {
+            url = `${API_BASE}/admin/performers/${editingPerformerId}`;
+            method = 'PUT';
+            successMessage = 'Performer updated successfully!';
+        }
+
+        const response = await fetch(url, {
+            method: method,
             body: formData
         });
 
         if (response.ok) {
-            showToast('Performer added successfully!', 'success');
+            showToast(successMessage, 'success');
             closeModal('performerModal');
+            editingPerformerId = null;
             loadPerformers();
             loadPerformersForEventDropdown();
         } else {
             const error = await response.json();
-            showToast(`Failed to add performer: ${error.detail || 'Unknown error'}`, 'error');
+            showToast(`Failed to save performer: ${error.detail || 'Unknown error'}`, 'error');
         }
     } catch (error) {
-        console.error('Error adding performer:', error);
-        showToast('Failed to add performer. Please try again.', 'error');
+        console.error('Error saving performer:', error);
+        showToast('Failed to save performer. Please try again.', 'error');
     } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-save"></i> Add Performer';
+        submitBtn.innerHTML = editingPerformerId ? '<i class="fas fa-save"></i> Update Performer' : '<i class="fas fa-save"></i> Add Performer';
+        editingPerformerId = null;
     }
 });
+
+// ============================================
+// Edit Performer
+// ============================================
+function editPerformer(id) {
+    const performer = performersData.find(p => p.id === id);
+    if (!performer) return;
+
+    editingPerformerId = id;
+    const form = document.getElementById('performerForm');
+    const modal = document.getElementById('performerModal');
+    const modalTitle = modal.querySelector('.modal-header h2');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    // Update modal title and button
+    modalTitle.innerHTML = '<i class="fas fa-edit"></i> Edit Performer';
+    submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Performer';
+
+    // Populate form fields
+    form.querySelector('[name="name"]').value = performer.name || '';
+    form.querySelector('[name="description"]').value = performer.description || '';
+    form.querySelector('[name="category"]').value = performer.category || '';
+    form.querySelector('[name="price"]').value = performer.price || '';
+    form.querySelector('[name="instagram_url"]').value = performer.instagram_url || '';
+    form.querySelector('[name="youtube_url"]').value = performer.youtube_url || '';
+    form.querySelector('[name="locations"]').value = performer.locations ? performer.locations.join(', ') : '';
+    form.querySelector('[name="genres"]').value = performer.genres ? performer.genres.join(', ') : '';
+    form.querySelector('[name="videos"]').value = performer.videos ? performer.videos.join(', ') : '';
+
+    // Make image optional when editing
+    const imageInput = form.querySelector('[name="image"]');
+    imageInput.removeAttribute('required');
+
+    // Show current image preview if exists
+    const preview = document.getElementById('performerImagePreview');
+    if (performer.profile_image_url) {
+        preview.innerHTML = `<img src="${performer.profile_image_url}" alt="Current Image">`;
+        preview.classList.add('active');
+    }
+
+    openModal('performerModal');
+}
 
 // ============================================
 // Add Event Form
