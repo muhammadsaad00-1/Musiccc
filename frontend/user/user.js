@@ -2,7 +2,7 @@
 // User Frontend JavaScript
 // ============================================
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'http://localhost:8001';
 let eventsData = [];
 let singersData = [];
 let currentFilter = 'all';

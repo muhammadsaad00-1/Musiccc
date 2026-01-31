@@ -23,10 +23,39 @@ export default function PostRequirementPage() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Form submitted:', formData);
-        setIsSubmitted(true);
+        
+        try {
+            // Prepare form data for backend
+            const submitData = new FormData();
+            submitData.append('eventType', formData.eventType);
+            submitData.append('eventDate', formData.eventDate);
+            submitData.append('eventLocation', formData.eventLocation);
+            submitData.append('budget', formData.budget);
+            submitData.append('artistType', formData.artistType);
+            submitData.append('name', formData.name);
+            submitData.append('email', formData.email);
+            submitData.append('phone', formData.phone);
+            submitData.append('message', formData.message);
+            
+            // Submit to backend
+            const response = await fetch('http://localhost:8001/api/submit-requirement', {
+                method: 'POST',
+                body: submitData
+            });
+            
+            if (response.ok) {
+                console.log('Form submitted successfully:', formData);
+                setIsSubmitted(true);
+            } else {
+                console.error('Failed to submit form');
+                alert('Failed to submit request. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            alert('An error occurred. Please try again.');
+        }
     };
 
     const nextStep = () => setStep(step + 1);

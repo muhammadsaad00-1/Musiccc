@@ -2,8 +2,8 @@
 // Admin Dashboard JavaScript
 // ============================================
 
-const API_BASE = 'http://localhost:8000';
-let singersData = [];
+const API_BASE = 'http://localhost:8001';
+let performersData = [];
 let eventsData = [];
 
 // ============================================
@@ -12,9 +12,9 @@ let eventsData = [];
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initFilePreview();
-    loadSingers();
+    loadPerformers();
     loadEvents();
-    loadSingersForEventDropdown();
+    loadPerformersForEventDropdown();
 });
 
 // ============================================
@@ -84,11 +84,11 @@ document.querySelectorAll('.modal').forEach(modal => {
 // Image Preview
 // ============================================
 function initFilePreview() {
-    // Singer image preview
-    const singerImageInput = document.getElementById('singerImage');
-    if (singerImageInput) {
-        singerImageInput.addEventListener('change', (e) => {
-            handleImagePreview(e.target, 'singerImagePreview');
+    // Performer image preview
+    const performerImageInput = document.getElementById('performerImage');
+    if (performerImageInput) {
+        performerImageInput.addEventListener('change', (e) => {
+            handleImagePreview(e.target, 'performerImagePreview');
         });
     }
 
@@ -129,60 +129,69 @@ function showToast(message, type = 'success') {
 }
 
 // ============================================
-// Load Singers
+// Load Performers
 // ============================================
-async function loadSingers() {
+async function loadPerformers() {
     try {
-        const response = await fetch(`${API_BASE}/singers`);
-        singersData = await response.json();
-        displaySingers(singersData);
+        const response = await fetch(`${API_BASE}/performers`);
+        performersData = await response.json();
+        displayPerformers(performersData);
     } catch (error) {
-        console.error('Error loading singers:', error);
-        showToast('Failed to load singers', 'error');
+        console.error('Error loading performers:', error);
+        showToast('Failed to load performers', 'error');
     }
 }
 
-function displaySingers(singers) {
-    const grid = document.getElementById('singersGrid');
+function displayPerformers(performers) {
+    const grid = document.getElementById('performersGrid');
     
-    if (singers.length === 0) {
+    if (performers.length === 0) {
         grid.innerHTML = `
             <div class="loading-spinner">
                 <i class="fas fa-music"></i>
-                <p>No singers added yet. Click "Add Singer" to get started!</p>
+                <p>No performers added yet. Click "Add Performer" to get started!</p>
             </div>
         `;
         return;
     }
 
-    grid.innerHTML = singers.map(singer => `
+    grid.innerHTML = performers.map(performer => `
         <div class="card">
             <div class="card-image">
-                <img src="${singer.image_url || 'https://via.placeholder.com/400x300?text=No+Image'}" 
-                     alt="${singer.name}"
+                <img src="${performer.profile_image_url || 'https://via.placeholder.com/400x300?text=No+Image'}" 
+                     alt="${performer.name}"
                      onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                <div class="card-badge">${singer.genre}</div>
+                <div class="card-badge">${performer.category}</div>
             </div>
             <div class="card-content">
-                <h3 class="card-title">${singer.name}</h3>
+                <h3 class="card-title">${performer.name}</h3>
+                ${performer.description ? `<p class="card-description">${performer.description.substring(0, 100)}${performer.description.length > 100 ? '...' : ''}</p>` : ''}
                 <div class="card-meta">
-                    <div class="card-meta-item">
-                        <i class="fas fa-clock"></i>
-                        <span>${singer.experience_years} years exp</span>
-                    </div>
-                    <div class="card-meta-item">
-                        <i class="fas fa-dollar-sign"></i>
-                        <span>$${singer.base_price}</span>
-                    </div>
+                    ${performer.price ? `
+                        <div class="card-meta-item">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>$${performer.price}</span>
+                        </div>
+                    ` : ''}
+                    ${performer.genres && performer.genres.length > 0 ? `
+                        <div class="card-meta-item">
+                            <i class="fas fa-music"></i>
+                            <span>${performer.genres.join(', ')}</span>
+                        </div>
+                    ` : ''}
                 </div>
-                <div class="card-meta">
-                    <div class="card-meta-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${singer.location}</span>
+                ${performer.locations && performer.locations.length > 0 ? `
+                    <div class="card-meta">
+                        <div class="card-meta-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>${performer.locations.join(', ')}</span>
+                        </div>
                     </div>
-                </div>
+                ` : ''}
                 <div class="card-actions">
-                    <button class="btn-delete" onclick="deleteSinger(${singer.id})">
+                    ${performer.instagram_url ? `<a href="${performer.instagram_url}" target="_blank" class="btn-icon"><i class="fab fa-instagram"></i></a>` : ''}
+                    ${performer.youtube_url ? `<a href="${performer.youtube_url}" target="_blank" class="btn-icon"><i class="fab fa-youtube"></i></a>` : ''}
+                    <button class="btn-delete" onclick="deletePerformer('${performer.id}')">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
@@ -218,78 +227,76 @@ function displayEvents(events) {
         return;
     }
 
-    grid.innerHTML = events.map(event => {
-        const date = new Date(event.event_date);
-        const formattedDate = date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
-        });
-
-        return `
-            <div class="card">
-                <div class="card-image">
-                    <img src="${event.image_url || 'https://via.placeholder.com/400x300?text=No+Image'}" 
-                         alt="${event.event_name}"
-                         onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                </div>
-                <div class="card-content">
-                    <h3 class="card-title">${event.event_name}</h3>
-                    <div class="card-meta">
+    grid.innerHTML = events.map(event => `
+        <div class="card">
+            <div class="card-image">
+                <img src="${event.image_url || 'https://via.placeholder.com/400x300?text=No+Image'}" 
+                     alt="${event.name}"
+                     onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+            </div>
+            <div class="card-content">
+                <h3 class="card-title">${event.name}</h3>
+                ${event.description ? `<p class="card-description">${event.description.substring(0, 100)}${event.description.length > 100 ? '...' : ''}</p>` : ''}
+                <div class="card-meta">
+                    ${event.pricing ? `
                         <div class="card-meta-item">
-                            <i class="fas fa-calendar"></i>
-                            <span>${formattedDate}</span>
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>$${event.pricing}</span>
                         </div>
-                        <div class="card-meta-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>${event.location}</span>
-                        </div>
-                    </div>
-                    <div class="card-meta">
+                    ` : ''}
+                    ${event.performers && event.performers.length > 0 ? `
                         <div class="card-meta-item">
                             <i class="fas fa-microphone"></i>
-                            <span>${event.singer_name || 'Unknown Artist'}</span>
+                            <span>${event.performers.map(p => `${p.name} (${p.category})`).join(', ')}</span>
+                        </div>
+                    ` : ''}
+                </div>
+                ${event.event_recommendations ? `
+                    <div class="card-meta">
+                        <div class="card-meta-item">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>${event.event_recommendations.substring(0, 80)}...</span>
                         </div>
                     </div>
-                    <div class="card-actions">
-                        <button class="btn-delete" onclick="deleteEvent(${event.id})">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </div>
+                ` : ''}
+                <div class="card-actions">
+                    <button class="btn-delete" onclick="deleteEvent('${event.id}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
                 </div>
             </div>
-        `;
-    }).join('');
+        </div>
+    `).join('');
 }
 
 // ============================================
-// Load Singers for Event Dropdown
+// Load Performers for Event Dropdown
 // ============================================
-async function loadSingersForEventDropdown() {
+async function loadPerformersForEventDropdown() {
     try {
-        const response = await fetch(`${API_BASE}/singers`);
-        const singers = await response.json();
-        const select = document.getElementById('eventSingerSelect');
+        const response = await fetch(`${API_BASE}/performers`);
+        const performers = await response.json();
+        const select = document.getElementById('eventPerformerSelect');
         
-        if (singers.length === 0) {
-            select.innerHTML = '<option value="">No singers available - add singers first</option>';
+        if (performers.length === 0) {
+            select.innerHTML = '<option value="">No performers available - add performers first</option>';
         } else {
             select.innerHTML = `
-                <option value="">Select a singer</option>
-                ${singers.map(singer => `
-                    <option value="${singer.id}">${singer.name} (${singer.genre})</option>
+                <option value="">Select a performer (optional)</option>
+                ${performers.map(performer => `
+                    <option value="${performer.id}">${performer.name} (${performer.category})</option>
                 `).join('')}
             `;
         }
     } catch (error) {
-        console.error('Error loading singers for dropdown:', error);
+        console.error('Error loading performers for dropdown:', error);
     }
 }
 
 // ============================================
-// Add Singer Form
+// Add Performer Form
 // ============================================
-document.getElementById('singerForm').addEventListener('submit', async (e) => {
+document.getElementById('performerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -299,26 +306,45 @@ document.getElementById('singerForm').addEventListener('submit', async (e) => {
     try {
         const formData = new FormData(e.target);
         
-        const response = await fetch(`${API_BASE}/admin/singers`, {
+        // Convert comma-separated strings to JSON arrays
+        const locationsValue = formData.get('locations');
+        if (locationsValue) {
+            const locationsArray = locationsValue.split(',').map(l => l.trim()).filter(l => l);
+            formData.set('locations', JSON.stringify(locationsArray));
+        }
+        
+        const genresValue = formData.get('genres');
+        if (genresValue) {
+            const genresArray = genresValue.split(',').map(g => g.trim()).filter(g => g);
+            formData.set('genres', JSON.stringify(genresArray));
+        }
+        
+        const videosValue = formData.get('videos');
+        if (videosValue) {
+            const videosArray = videosValue.split(',').map(v => v.trim()).filter(v => v);
+            formData.set('videos', JSON.stringify(videosArray));
+        }
+        
+        const response = await fetch(`${API_BASE}/admin/performers`, {
             method: 'POST',
             body: formData
         });
         
         if (response.ok) {
-            showToast('Singer added successfully!', 'success');
-            closeModal('singerModal');
-            loadSingers();
-            loadSingersForEventDropdown();
+            showToast('Performer added successfully!', 'success');
+            closeModal('performerModal');
+            loadPerformers();
+            loadPerformersForEventDropdown();
         } else {
             const error = await response.json();
-            showToast(`Failed to add singer: ${error.detail || 'Unknown error'}`, 'error');
+            showToast(`Failed to add performer: ${error.detail || 'Unknown error'}`, 'error');
         }
     } catch (error) {
-        console.error('Error adding singer:', error);
-        showToast('Failed to add singer. Please try again.', 'error');
+        console.error('Error adding performer:', error);
+        showToast('Failed to add performer. Please try again.', 'error');
     } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-save"></i> Add Singer';
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Add Performer';
     }
 });
 
@@ -334,6 +360,11 @@ document.getElementById('eventForm').addEventListener('submit', async (e) => {
     
     try {
         const formData = new FormData(e.target);
+        
+        // Get selected performer IDs from multi-select
+        const select = document.getElementById('eventPerformerSelect');
+        const selectedIds = Array.from(select.selectedOptions).map(option => option.value).filter(v => v);
+        formData.set('performer_ids', JSON.stringify(selectedIds));
         
         const response = await fetch(`${API_BASE}/admin/events`, {
             method: 'POST',
@@ -358,28 +389,28 @@ document.getElementById('eventForm').addEventListener('submit', async (e) => {
 });
 
 // ============================================
-// Delete Singer
+// Delete Performer
 // ============================================
-async function deleteSinger(id) {
-    if (!confirm('Are you sure you want to delete this singer?')) {
+async function deletePerformer(id) {
+    if (!confirm('Are you sure you want to delete this performer?')) {
         return;
     }
     
     try {
-        const response = await fetch(`${API_BASE}/admin/singers/${id}`, {
+        const response = await fetch(`${API_BASE}/admin/performers/${id}`, {
             method: 'DELETE'
         });
         
         if (response.ok) {
-            showToast('Singer deleted successfully!', 'success');
-            loadSingers();
-            loadSingersForEventDropdown();
+            showToast('Performer deleted successfully!', 'success');
+            loadPerformers();
+            loadPerformersForEventDropdown();
         } else {
-            showToast('Failed to delete singer', 'error');
+            showToast('Failed to delete performer', 'error');
         }
     } catch (error) {
-        console.error('Error deleting singer:', error);
-        showToast('Failed to delete singer. Please try again.', 'error');
+        console.error('Error deleting performer:', error);
+        showToast('Failed to delete performer. Please try again.', 'error');
     }
 }
 

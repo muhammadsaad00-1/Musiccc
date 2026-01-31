@@ -17,8 +17,8 @@
                 <span>Event Manager</span>
             </div>
             <div class="nav-links">
-                <a href="#singers" class="nav-link active" data-section="singers">
-                    <i class="fas fa-microphone"></i> Singers
+                <a href="#performers" class="nav-link active" data-section="performers">
+                    <i class="fas fa-microphone"></i> Performers
                 </a>
                 <a href="#events" class="nav-link" data-section="events">
                     <i class="fas fa-calendar-alt"></i> Events
@@ -32,19 +32,19 @@
 
     <!-- Main Content -->
     <div class="admin-container">
-        <!-- Singers Section -->
-        <section id="singers-section" class="content-section active">
+        <!-- Performers Section -->
+        <section id="performers-section" class="content-section active">
             <div class="section-header">
-                <h1><i class="fas fa-microphone"></i> Manage Singers</h1>
-                <button class="btn-primary" onclick="openModal('singerModal')">
-                    <i class="fas fa-plus"></i> Add Singer
+                <h1><i class="fas fa-microphone"></i> Manage Performers</h1>
+                <button class="btn-primary" onclick="openModal('performerModal')">
+                    <i class="fas fa-plus"></i> Add Performer
                 </button>
             </div>
 
-            <!-- Singers Grid -->
-            <div class="cards-grid" id="singersGrid">
+            <!-- Performers Grid -->
+            <div class="cards-grid" id="performersGrid">
                 <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin"></i> Loading singers...
+                    <i class="fas fa-spinner fa-spin"></i> Loading performers...
                 </div>
             </div>
         </section>
@@ -67,65 +67,80 @@
         </section>
     </div>
 
-    <!-- Add Singer Modal -->
-    <div id="singerModal" class="modal">
+    <!-- Add Performer Modal -->
+    <div id="performerModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-microphone"></i> Add New Singer</h2>
-                <button class="close-btn" onclick="closeModal('singerModal')">
+                <h2><i class="fas fa-microphone"></i> Add New Performer</h2>
+                <button class="close-btn" onclick="closeModal('performerModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="singerForm" class="form">
+            <form id="performerForm" class="form">
                 <div class="form-group">
-                    <label><i class="fas fa-user"></i> Singer Name</label>
-                    <input type="text" name="name" placeholder="Enter singer name" required>
+                    <label><i class="fas fa-user"></i> Performer Name *</label>
+                    <input type="text" name="name" placeholder="Enter performer name" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-align-left"></i> Description</label>
+                    <textarea name="description" rows="3" placeholder="Enter description about the performer"></textarea>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label><i class="fas fa-music"></i> Genre</label>
-                        <select name="genre" required>
-                            <option value="">Select Genre</option>
-                            <option value="Pop">Pop</option>
-                            <option value="Rock">Rock</option>
-                            <option value="Jazz">Jazz</option>
-                            <option value="Classical">Classical</option>
-                            <option value="Hip Hop">Hip Hop</option>
-                            <option value="R&B">R&B</option>
-                            <option value="Country">Country</option>
-                            <option value="Electronic">Electronic</option>
+                        <label><i class="fas fa-tags"></i> Category *</label>
+                        <select name="category" required>
+                            <option value="">Select Category</option>
+                            <option value="Singer">Singer</option>
+                            <option value="Comedian">Comedian</option>
+                            <option value="DJ">DJ</option>
+                            <option value="Photography">Photography</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label><i class="fas fa-clock"></i> Experience (Years)</label>
-                        <input type="number" name="experience_years" placeholder="Years" min="0" required>
+                        <label><i class="fas fa-dollar-sign"></i> Price</label>
+                        <input type="number" name="price" placeholder="Price" min="0" step="0.01">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label><i class="fas fa-dollar-sign"></i> Base Price</label>
-                        <input type="number" name="base_price" placeholder="Price in USD" min="0" required>
+                        <label><i class="fab fa-instagram"></i> Instagram URL</label>
+                        <input type="url" name="instagram_url" placeholder="https://instagram.com/...">
                     </div>
                     <div class="form-group">
-                        <label><i class="fas fa-map-marker-alt"></i> Location</label>
-                        <input type="text" name="location" placeholder="City, Country" required>
+                        <label><i class="fab fa-youtube"></i> YouTube URL</label>
+                        <input type="url" name="youtube_url" placeholder="https://youtube.com/...">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label><i class="fas fa-image"></i> Profile Image</label>
+                    <label><i class="fas fa-map-marker-alt"></i> Locations (comma separated)</label>
+                    <input type="text" name="locations" placeholder="Mumbai, Delhi, Bangalore">
+                    <small>Enter cities where performer is available, separated by commas</small>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-music"></i> Genres (comma separated)</label>
+                    <input type="text" name="genres" placeholder="Pop, Rock, Jazz">
+                    <small>Enter genres, separated by commas</small>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-video"></i> Video URLs (comma separated)</label>
+                    <input type="text" name="videos" placeholder="https://youtube.com/watch?v=..., https://youtube.com/watch?v=...">
+                    <small>Enter YouTube video URLs, separated by commas</small>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-image"></i> Profile Image *</label>
                     <div class="file-input-wrapper">
-                        <input type="file" name="image" id="singerImage" accept="image/*" required>
-                        <label for="singerImage" class="file-input-label">
+                        <input type="file" name="image" id="performerImage" accept="image/*" required>
+                        <label for="performerImage" class="file-input-label">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <span>Choose Image</span>
                         </label>
-                        <div class="image-preview" id="singerImagePreview"></div>
+                        <div class="image-preview" id="performerImagePreview"></div>
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModal('singerModal')">Cancel</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('performerModal')">Cancel</button>
                     <button type="submit" class="btn-primary">
-                        <i class="fas fa-save"></i> Add Singer
+                        <i class="fas fa-save"></i> Add Performer
                     </button>
                 </div>
             </form>
@@ -143,27 +158,32 @@
             </div>
             <form id="eventForm" class="form">
                 <div class="form-group">
-                    <label><i class="fas fa-heading"></i> Event Name</label>
-                    <input type="text" name="event_name" placeholder="Enter event name" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Event Date</label>
-                        <input type="date" name="event_date" required>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-map-marker-alt"></i> Location</label>
-                        <input type="text" name="location" placeholder="Venue location" required>
-                    </div>
+                    <label><i class="fas fa-heading"></i> Event Name *</label>
+                    <input type="text" name="name" placeholder="Enter event name" required>
                 </div>
                 <div class="form-group">
-                    <label><i class="fas fa-microphone"></i> Select Singer</label>
-                    <select name="singer_id" id="eventSingerSelect" required>
-                        <option value="">Loading singers...</option>
+                    <label><i class="fas fa-align-left"></i> Description</label>
+                    <textarea name="description" rows="3" placeholder="Enter event description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lightbulb"></i> Event Recommendations</label>
+                    <textarea name="event_recommendations" rows="2" placeholder="Recommendations for this event (e.g., suitable performer types, requirements)"></textarea>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-dollar-sign"></i> Pricing</label>
+                    <input type="number" name="pricing" placeholder="Event pricing" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-microphone"></i> Select Performers (hold Ctrl/Cmd to select multiple)</label>
+                    <select name="performer_ids" id="eventPerformerSelect" multiple size="5" style="height: auto;">
+                        <option value="">Loading performers...</option>
                     </select>
+                    <small>Hold Ctrl (Windows) or Cmd (Mac) to select multiple performers</small>
+                </div>
+                    <small>Hold Ctrl (Windows) or Cmd (Mac) to select multiple performers</small>
                 </div>
                 <div class="form-group">
-                    <label><i class="fas fa-image"></i> Event Image</label>
+                    <label><i class="fas fa-image"></i> Event Image *</label>
                     <div class="file-input-wrapper">
                         <input type="file" name="image" id="eventImage" accept="image/*" required>
                         <label for="eventImage" class="file-input-label">
