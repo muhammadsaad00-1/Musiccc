@@ -45,6 +45,127 @@ def read_admin():
     return FileResponse("frontend/admin/admin.html")
 
 
+# ============================================
+# BOOKING REQUIREMENTS ENDPOINTS
+# ============================================
+
+@app.post("/api/submit-requirement")
+async def submit_requirement(
+    eventType: str = Form(...),
+    eventDate: str = Form(...),
+    eventLocation: str = Form(...),
+    budget: str = Form(None),
+    artistType: str = Form(...),
+    name: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(...),
+    message: str = Form(None),
+):
+    """
+    Submit a new booking requirement.
+    Saves to database and sends email notification.
+    """
+    from datetime import datetime
+    from email_service import send_requirement_notification
+    
+    try:
+        # Prepare data for database
+        requirement_data = {
+            "event_type": eventType,
+            "event_date": eventDate,
+            "event_location": eventLocation,
+            "budget": budget,
+            "artist_type": artistType,
+            "customer_name": name,
+            "customer_email": email,
+            "customer_phone": phone,
+            "message": message,
+            "status": "pending",
+            "created_at": datetime.now().isoformat()
+        }
+        
+        # Save to database
+        response = supabase.table("booking_requirements").insert(requirement_data).execute()
+        
+        if response.data:
+            requirement_id = response.data[0]["id"]
+            
+            # Send email notification (async, don't block response)
+            email_data = {
+                "eventType": eventType,
+                "eventDate": eventDate,
+                "eventLocation": eventLocation,
+                "budget": budget,
+                "artistType": artistType,
+                "name": name,
+                "email": email,
+                "phone": phone,
+                "message": message
+            }
+            
+            try:
+                send_requirement_notification(email_data)
+            except Exception as email_error:
+                print(f"Email notification failed: {email_error}")
+                # Don't fail the request if email fails
+            
+            return {
+                "success": True,
+                "message": "Requirement submitted successfully",
+                "id": requirement_id
+            }
+        else:
+            return {"success": False, "message": "Failed to save requirement"}
+            
+    except Exception as e:
+        print(f"Error submitting requirement: {e}")
+        # If table doesn't exist, provide helpful message
+        if "relation" in str(e).lower() and "does not exist" in str(e).lower():
+            return {
+                "success": False, 
+                "message": "Database table 'booking_requirements' needs to be created. See setup instructions."
+            }
+        raise
+
+
+@app.get("/api/requirements")
+def get_requirements(status: str = None, limit: int = 50):
+    """
+    Get all booking requirements (for admin dashboard).
+    Optionally filter by status: pending, contacted, booked, cancelled
+    """
+    try:
+        query = supabase.table("booking_requirements").select("*").order("created_at", desc=True).limit(limit)
+        
+        if status:
+            query = query.eq("status", status)
+        
+        response = query.execute()
+        return response.data
+    except Exception as e:
+        print(f"Error fetching requirements: {e}")
+        return []
+
+
+@app.put("/api/requirements/{requirement_id}/status")
+def update_requirement_status(requirement_id: str, status: str = Form(...)):
+    """
+    Update the status of a booking requirement.
+    Status options: pending, contacted, booked, cancelled
+    """
+    try:
+        response = supabase.table("booking_requirements").update({
+            "status": status
+        }).eq("id", requirement_id).execute()
+        
+        if response.data:
+            return {"success": True, "message": "Status updated"}
+        return {"success": False, "message": "Requirement not found"}
+    except Exception as e:
+        print(f"Error updating requirement status: {e}")
+        raise
+
+
 @app.post("/admin/performers")
 async def create_performer(
     name: str = Form(...),

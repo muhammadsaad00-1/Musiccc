@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,673 @@
     <link rel="stylesheet" href="/static/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Booking Requests Section Styles */
+        .br-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .br-card {
+            background: #1a1f35;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .br-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .br-card.br-pending {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .br-card.br-contacted {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .br-card.br-booked {
+            border-left: 4px solid #10b981;
+        }
+
+        .br-card.br-cancelled {
+            border-left: 4px solid #ef4444;
+        }
+
+        .br-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .br-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .br-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .br-customer-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+        }
+
+        .br-customer-email {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        .br-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .br-badge-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .br-badge-contacted {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .br-badge-booked {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .br-badge-cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .br-event {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.875rem;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(99, 102, 241, 0.2));
+            border-radius: 8px;
+            color: #a78bfa;
+            font-weight: 600;
+            font-size: 0.9rem;
+            width: fit-content;
+        }
+
+        .br-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .br-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .br-detail i {
+            color: #64748b;
+            font-size: 0.75rem;
+            width: 14px;
+        }
+
+        .br-detail-artist {
+            color: #60a5fa;
+        }
+
+        .br-detail-artist i {
+            color: #60a5fa;
+        }
+
+        .br-detail-budget {
+            color: #34d399;
+            font-weight: 600;
+        }
+
+        .br-detail-budget i {
+            color: #34d399;
+        }
+
+        .br-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+
+        .br-time {
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+
+        .br-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .br-btn {
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            text-decoration: none;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            transition: all 0.2s;
+        }
+
+        .br-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .br-btn-email:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            color: #60a5fa;
+        }
+
+        .br-btn-call:hover {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+            color: #34d399;
+        }
+
+        .br-empty {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: #1a1f35;
+            border-radius: 16px;
+            border: 2px dashed #334155;
+        }
+
+        .br-empty i {
+            font-size: 4rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .br-empty h3 {
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .br-empty p {
+            color: #94a3b8;
+        }
+
+        /* Stats Grid */
+        .br-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .br-stat-card {
+            background: #1a1f35;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .br-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .br-stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .br-stat-card.pending::before {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .br-stat-card.contacted::before {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        .br-stat-card.booked::before {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .br-stat-card.cancelled::before {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+
+        .br-stat-card.pending:hover {
+            border-color: #f59e0b;
+        }
+
+        .br-stat-card.contacted:hover {
+            border-color: #3b82f6;
+        }
+
+        .br-stat-card.booked:hover {
+            border-color: #10b981;
+        }
+
+        .br-stat-card.cancelled:hover {
+            border-color: #ef4444;
+        }
+
+        .br-stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        .br-stat-card.pending .br-stat-value {
+            color: #fbbf24;
+        }
+
+        .br-stat-card.contacted .br-stat-value {
+            color: #60a5fa;
+        }
+
+        .br-stat-card.booked .br-stat-value {
+            color: #34d399;
+        }
+
+        .br-stat-card.cancelled .br-stat-value {
+            color: #f87171;
+        }
+
+        .br-stat-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .br-stat-label i {
+            font-size: 0.75rem;
+        }
+
+        /* Filter Buttons */
+        .br-filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .br-filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #94a3b8;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .br-filter-btn:hover {
+            border-color: #3b82f6;
+            color: #fff;
+        }
+
+        .br-filter-btn.active {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            border-color: transparent;
+            color: #fff;
+        }
+
+        .br-filter-btn.active.pending {
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+        }
+
+        .br-filter-btn.active.contacted {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+        }
+
+        .br-filter-btn.active.booked {
+            background: linear-gradient(135deg, #059669, #10b981);
+        }
+
+        .br-filter-btn.active.cancelled {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+        }
+
+        /* Section Header */
+        .br-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .br-section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 0;
+        }
+
+        .br-section-title i {
+            color: #3b82f6;
+        }
+
+        /* Request Modal Styles */
+        .br-modal-content {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 95%;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+
+        .br-modal-header {
+            background: linear-gradient(135deg, #1e3a5f, #1e40af);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .br-modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .br-modal-header h2 i {
+            color: #60a5fa;
+        }
+
+        .br-modal-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .br-modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .br-modal-body {
+            padding: 1.5rem;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .br-detail-section {
+            background: #1a1f35;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid #334155;
+        }
+
+        .br-detail-section h3 {
+            margin: 0 0 0.875rem 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .br-detail-section h3 i {
+            font-size: 0.8rem;
+        }
+
+        .br-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+
+        .br-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .br-detail-label {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .br-detail-value {
+            color: #fff;
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-align: right;
+        }
+
+        .br-detail-value.highlight {
+            color: #60a5fa;
+        }
+
+        .br-detail-value.budget {
+            color: #34d399;
+            font-weight: 700;
+        }
+
+        .br-status-current {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .br-status-current.pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .br-status-current.contacted {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .br-status-current.booked {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .br-status-current.cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .br-modal-footer {
+            padding: 1.25rem 1.5rem;
+            background: #1a1f35;
+            border-top: 1px solid #334155;
+        }
+
+        .br-status-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .br-status-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .br-status-btn {
+            padding: 0.5rem 0.875rem;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .br-status-btn:hover {
+            border-color: #3b82f6;
+            color: #fff;
+        }
+
+        .br-status-btn.active {
+            border-color: transparent;
+        }
+
+        .br-status-btn.active.pending {
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+            color: #fff;
+        }
+
+        .br-status-btn.active.contacted {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: #fff;
+        }
+
+        .br-status-btn.active.booked {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #fff;
+        }
+
+        .br-status-btn.active.cancelled {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: #fff;
+        }
+
+        .br-action-btns {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .br-action-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .br-action-btn.email {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: #fff;
+        }
+
+        .br-action-btn.email:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .br-action-btn.call {
+            background: #1a1f35;
+            border: 1px solid #334155;
+            color: #fff;
+        }
+
+        .br-action-btn.call:hover {
+            border-color: #10b981;
+            color: #34d399;
+            transform: translateY(-2px);
+        }
+
+        .br-received-time {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+    </style>
 </head>
+
+
+
+
 <body>
     <!-- Navigation -->
     <nav class="admin-nav">
@@ -22,6 +689,10 @@
                 </a>
                 <a href="#events" class="nav-link" data-section="events">
                     <i class="fas fa-calendar-alt"></i> Events
+                </a>
+                <a href="#requests" class="nav-link" data-section="requests">
+                    <i class="fas fa-envelope"></i> Booking Requests
+                    <span id="requestsBadge" class="nav-badge" style="display: none;">0</span>
                 </a>
                 <a href="/" class="nav-link" target="_blank">
                     <i class="fas fa-eye"></i> View Site
@@ -65,7 +736,52 @@
                 </div>
             </div>
         </section>
+
+        <!-- Booking Requests Section -->
+        <section id="requests-section" class="content-section">
+            <div class="br-section-header">
+                <h1 class="br-section-title"><i class="fas fa-envelope"></i> Booking Requests</h1>
+                <div class="br-filters" id="filterButtons">
+                    <button class="br-filter-btn active" data-filter="all">All</button>
+                    <button class="br-filter-btn pending" data-filter="pending">Pending</button>
+                    <button class="br-filter-btn contacted" data-filter="contacted">Contacted</button>
+                    <button class="br-filter-btn booked" data-filter="booked">Booked</button>
+                    <button class="br-filter-btn cancelled" data-filter="cancelled">Cancelled</button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="br-stats-grid" id="requestsStats">
+                <div class="br-stat-card pending" onclick="filterByStatus('pending')">
+                    <span class="br-stat-value" id="pendingCount">0</span>
+                    <span class="br-stat-label"><i class="fas fa-clock"></i> Pending</span>
+                </div>
+                <div class="br-stat-card contacted" onclick="filterByStatus('contacted')">
+                    <span class="br-stat-value" id="contactedCount">0</span>
+                    <span class="br-stat-label"><i class="fas fa-phone"></i> Contacted</span>
+                </div>
+                <div class="br-stat-card booked" onclick="filterByStatus('booked')">
+                    <span class="br-stat-value" id="bookedCount">0</span>
+                    <span class="br-stat-label"><i class="fas fa-check-circle"></i> Booked</span>
+                </div>
+                <div class="br-stat-card cancelled" onclick="filterByStatus('cancelled')">
+                    <span class="br-stat-value" id="cancelledCount">0</span>
+                    <span class="br-stat-label"><i class="fas fa-times-circle"></i> Cancelled</span>
+                </div>
+            </div>
+
+            <!-- Requests List -->
+            <div class="br-list" id="requestsList">
+                <div class="br-empty">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <h3>Loading...</h3>
+                    <p>Fetching booking requests...</p>
+                </div>
+            </div>
+        </section>
+
     </div>
+
 
     <!-- Add Performer Modal -->
     <div id="performerModal" class="modal">
@@ -83,7 +799,8 @@
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-align-left"></i> Description</label>
-                    <textarea name="description" rows="3" placeholder="Enter description about the performer"></textarea>
+                    <textarea name="description" rows="3"
+                        placeholder="Enter description about the performer"></textarea>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -123,7 +840,8 @@
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-video"></i> Video URLs (comma separated)</label>
-                    <input type="text" name="videos" placeholder="https://youtube.com/watch?v=..., https://youtube.com/watch?v=...">
+                    <input type="text" name="videos"
+                        placeholder="https://youtube.com/watch?v=..., https://youtube.com/watch?v=...">
                     <small>Enter YouTube video URLs, separated by commas</small>
                 </div>
                 <div class="form-group">
@@ -167,45 +885,90 @@
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-lightbulb"></i> Event Recommendations</label>
-                    <textarea name="event_recommendations" rows="2" placeholder="Recommendations for this event (e.g., suitable performer types, requirements)"></textarea>
+                    <textarea name="event_recommendations" rows="2"
+                        placeholder="Recommendations for this event (e.g., suitable performer types, requirements)"></textarea>
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-dollar-sign"></i> Pricing</label>
                     <input type="number" name="pricing" placeholder="Event pricing" min="0" step="0.01">
                 </div>
                 <div class="form-group">
-                    <label><i class="fas fa-microphone"></i> Select Performers (hold Ctrl/Cmd to select multiple)</label>
+                    <label><i class="fas fa-microphone"></i> Select Performers (hold Ctrl/Cmd to select
+                        multiple)</label>
                     <select name="performer_ids" id="eventPerformerSelect" multiple size="5" style="height: auto;">
                         <option value="">Loading performers...</option>
                     </select>
                     <small>Hold Ctrl (Windows) or Cmd (Mac) to select multiple performers</small>
                 </div>
-                    <small>Hold Ctrl (Windows) or Cmd (Mac) to select multiple performers</small>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-image"></i> Event Image *</label>
-                    <div class="file-input-wrapper">
-                        <input type="file" name="image" id="eventImage" accept="image/*" required>
-                        <label for="eventImage" class="file-input-label">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <span>Choose Image</span>
-                        </label>
-                        <div class="image-preview" id="eventImagePreview"></div>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModal('eventModal')">Cancel</button>
-                    <button type="submit" class="btn-primary">
-                        <i class="fas fa-save"></i> Add Event
+                <small>Hold Ctrl (Windows) or Cmd (Mac) to select multiple performers</small>
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-image"></i> Event Image *</label>
+            <div class="file-input-wrapper">
+                <input type="file" name="image" id="eventImage" accept="image/*" required>
+                <label for="eventImage" class="file-input-label">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Choose Image</span>
+                </label>
+                <div class="image-preview" id="eventImagePreview"></div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal('eventModal')">Cancel</button>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i> Add Event
+            </button>
+        </div>
+        </form>
+    </div>
+    </div>
+
+    <!-- Request Detail Modal -->
+    <div id="requestModal" class="modal">
+        <div class="br-modal-content">
+            <div class="br-modal-header">
+                <h2><i class="fas fa-envelope-open-text"></i> Booking Request Details</h2>
+                <button class="br-modal-close" onclick="closeModal('requestModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="br-modal-body" id="requestDetails">
+                <!-- Populated by JavaScript -->
+            </div>
+            <div class="br-modal-footer">
+                <span class="br-status-label">Update Status:</span>
+                <div class="br-status-btns" id="statusButtons">
+                    <button class="br-status-btn pending" onclick="updateRequestStatus('pending')">
+                        <i class="fas fa-clock"></i> Pending
+                    </button>
+                    <button class="br-status-btn contacted" onclick="updateRequestStatus('contacted')">
+                        <i class="fas fa-phone"></i> Contacted
+                    </button>
+                    <button class="br-status-btn booked" onclick="updateRequestStatus('booked')">
+                        <i class="fas fa-check-circle"></i> Booked
+                    </button>
+                    <button class="br-status-btn cancelled" onclick="updateRequestStatus('cancelled')">
+                        <i class="fas fa-times-circle"></i> Cancelled
                     </button>
                 </div>
-            </form>
+                <div class="br-action-btns">
+                    <a id="emailLink" href="" class="br-action-btn email">
+                        <i class="fas fa-envelope"></i> Send Email
+                    </a>
+                    <a id="phoneLink" href="" class="br-action-btn call">
+                        <i class="fas fa-phone"></i> Call
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
+
 
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
+
     <script src="/static/admin/admin.js"></script>
 </body>
+
 </html>
