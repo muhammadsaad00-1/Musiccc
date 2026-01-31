@@ -1,12 +1,45 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from supabase_client import supabase
 from typing import Optional
 import json
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from cachetools import TTLCache
+import hashlib
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
+
+# Initialize cache (maxsize=1000 items, TTL=300 seconds = 5 minutes)
+cache = TTLCache(maxsize=1000, ttl=300)
+
+# Helper function to generate cache keys
+def get_cache_key(prefix: str, **kwargs) -> str:
+    """Generate a unique cache key from prefix and parameters"""
+    key_parts = [prefix] + [f"{k}:{v}" for k, v in sorted(kwargs.items()) if v is not None]
+    key_string = "|".join(key_parts)
+    return hashlib.md5(key_string.encode()).hexdigest()
+
+# Cache invalidation helpers
+def invalidate_performers_cache():
+    """Invalidate all performer-related cache entries"""
+    keys_to_remove = [k for k in cache.keys() if k.startswith(('performers_', 'cities_'))]
+    for key in keys_to_remove:
+        cache.pop(key, None)
+
+def invalidate_events_cache():
+    """Invalidate all event-related cache entries"""
+    keys_to_remove = [k for k in cache.keys() if k.startswith('events_')]
+    for key in keys_to_remove:
+        cache.pop(key, None)
 
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS
 app.add_middleware(
@@ -22,16 +55,20 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 # Serve frontend pages
 @app.get("/")
-def read_root():
+@limiter.limit("60/minute")
+def read_root(request: Request):
     return FileResponse("frontend/user/index.html")
 
 @app.get("/admin")
-def read_admin():
+@limiter.limit("30/minute")
+def read_admin(request: Request):
     return FileResponse("frontend/admin/admin.html")
 
 
 @app.post("/admin/performers")
+@limiter.limit("10/minute")
 async def create_performer(
+    request: Request,
     name: str = Form(...),
     description: str = Form(None),
     category: str = Form(...),  # Singer, Comedian, DJ, Photography
@@ -79,11 +116,22 @@ async def create_performer(
         "profile_image_url": profile_image_url
     }).eq("id", performer_id).execute()
 
+    # Invalidate cache
+    invalidate_performers_cache()
+
     return {"message": "Performer created", "id": performer_id}
 
 
 @app.get("/performers")
-def get_performers(category: str = None, city: str = None):
+@limiter.limit("100/minute")
+def get_performers(request: Request, category: str = None, city: str = None):
+    # Generate cache key
+    cache_key = get_cache_key("performers", category=category, city=city)
+    
+    # Check cache
+    if cache_key in cache:
+        return cache[cache_key]
+    
     try:
         query = supabase.table("performers").select("*")
         if category:
@@ -94,50 +142,88 @@ def get_performers(category: str = None, city: str = None):
         if city and response.data:
             response.data = [p for p in response.data if city in (p.get("locations") or [])]
         
+        # Store in cache
+        cache[cache_key] = response.data
+        
         return response.data
     except Exception as e:
         raise
 
 
 @app.get("/performers/cities")
-def get_all_cities():
+@limiter.limit("100/minute")
+def get_all_cities(request: Request):
     """Get all unique cities/locations where performers are available"""
+    cache_key = "cities_all"
+    
+    # Check cache
+    if cache_key in cache:
+        return cache[cache_key]
+    
     try:
         response = supabase.table("performers").select("locations").execute()
         cities = set()
         for performer in response.data:
             if performer.get("locations"):
                 cities.update(performer["locations"])
-        return {"cities": sorted(list(cities))}
+        
+        result = {"cities": sorted(list(cities))}
+        cache[cache_key] = result
+        
+        return result
     except Exception as e:
         raise
 
 
 @app.get("/performers/by-location/{location}")
-def get_performers_by_location(location: str):
+@limiter.limit("100/minute")
+def get_performers_by_location(request: Request, location: str):
     """Get all performers available in a specific location/city"""
+    cache_key = get_cache_key("performers_location", location=location)
+    
+    # Check cache
+    if cache_key in cache:
+        return cache[cache_key]
+    
     try:
         response = supabase.table("performers").select("*").execute()
         # Filter performers that have this location in their locations array
         filtered_performers = [p for p in response.data if location in (p.get("locations") or [])]
+        
+        cache[cache_key] = filtered_performers
+        
         return filtered_performers
     except Exception as e:
         raise
 
 
 @app.get("/performers/{id}")
-def get_performer(id: str):
+@limiter.limit("100/minute")
+def get_performer(request: Request, id: str):
+    cache_key = get_cache_key("performers_id", id=id)
+    
+    # Check cache
+    if cache_key in cache:
+        return cache[cache_key]
+    
     try:
         response = supabase.table("performers").select("*").eq("id", id).execute()
         if response.data:
-            return response.data[0]
-        return {"error": "Performer not found"}
+            result = response.data[0]
+        else:
+            result = {"error": "Performer not found"}
+        
+        cache[cache_key] = result
+        
+        return result
     except Exception as e:
         raise
 
 
 @app.put("/admin/performers/{id}")
+@limiter.limit("20/minute")
 async def update_performer(
+    request: Request,
     id: str,
     name: str = Form(None),
     description: str = Form(None),
@@ -187,18 +273,29 @@ async def update_performer(
         update_data["profile_image_url"] = supabase.storage.from_("performers").get_public_url(path)
 
     supabase.table("performers").update(update_data).eq("id", id).execute()
+    
+    # Invalidate cache
+    invalidate_performers_cache()
+    
     return {"message": "Performer updated"}
 
 
 @app.delete("/admin/performers/{id}")
-def delete_performer(id: str):
+@limiter.limit("10/minute")
+def delete_performer(request: Request, id: str):
     supabase.table("performers").delete().eq("id", id).execute()
+    
+    # Invalidate cache
+    invalidate_performers_cache()
+    
     return {"message": "Performer deleted"}
 
 
 
 @app.post("/admin/events")
+@limiter.limit("10/minute")
 async def create_event(
+    request: Request,
     name: str = Form(...),
     description: str = Form(None),
     event_recommendations: str = Form(None),
@@ -216,11 +313,18 @@ async def create_event(
         "name": name,
         "description": description,
         "event_recommendations": event_recommendations,
-        "pricing": pricing,
-        "performer_ids": performer_ids_list
+        "pricing": pricing
     }).execute()
     
     event_id = insert_response.data[0]["id"]
+    
+    # Insert performer associations into event_performers junction table
+    if performer_ids_list:
+        event_performer_rows = [
+            {"event_id": event_id, "performer_id": performer_id}
+            for performer_id in performer_ids_list
+        ]
+        supabase.table("event_performers").insert(event_performer_rows).execute()
     
     # Now upload image with proper naming: {id}_{sanitized_name}.{extension}
     file_bytes = await image.read()
@@ -236,16 +340,34 @@ async def create_event(
         "image_url": image_url
     }).eq("id", event_id).execute()
 
+    # Invalidate cache
+    invalidate_events_cache()
+
     return {"message": "Event created", "id": event_id}
 
 
 @app.get("/events")
-def get_events():
+@limiter.limit("100/minute")
+def get_events(request: Request):
+    cache_key = "events_all"
+    
+    # Check cache
+    if cache_key in cache:
+        return cache[cache_key]
+    
     try:
-        response = supabase.table("events").select("*, performers(*)").execute()
+        # Get all events
+        events_response = supabase.table("events").select("*").execute()
         events = []
         
-        for event in response.data:
+        for event in events_response.data:
+            # Get performers for this event through the junction table
+            event_performers_response = supabase.table("event_performers").select(
+                "performers(*)"
+            ).eq("event_id", event["id"]).execute()
+            
+            performers = [ep["performers"] for ep in event_performers_response.data]
+            
             events.append({
                 "id": event["id"],
                 "name": event["name"],
@@ -253,9 +375,10 @@ def get_events():
                 "event_recommendations": event.get("event_recommendations"),
                 "pricing": event["pricing"],
                 "image_url": event.get("image_url"),
-                "performer": event.get("performers"),
-                "performer_id": event.get("performer_id")
+                "performers": performers
             })
+        
+        cache[cache_key] = events
         
         return events
     except Exception as e:
@@ -263,7 +386,14 @@ def get_events():
 
 
 @app.get("/events/{id}")
-def get_event(id: str):
+@limiter.limit("100/minute")
+def get_event(request: Request, id: str):
+    cache_key = get_cache_key("events_id", id=id)
+    
+    # Check cache
+    if cache_key in cache:
+        return cache[cache_key]
+    
     try:
         response = supabase.table("events").select("*").eq("id", id).execute()
         if not response.data:
@@ -271,15 +401,15 @@ def get_event(id: str):
         
         event = response.data[0]
         
-        # Fetch performer details for each performer ID in the array
-        performers_details = []
-        if event.get("performer_ids"):
-            for performer_id in event["performer_ids"]:
-                performer_response = supabase.table("performers").select("*").eq("id", performer_id).execute()
-                if performer_response.data:
-                    performers_details.append(performer_response.data[0])
+        # Fetch performers through the event_performers junction table
+        event_performers_response = supabase.table("event_performers").select(
+            "performer_id, performers(*)"
+        ).eq("event_id", id).execute()
         
-        return {
+        performers_details = [ep["performers"] for ep in event_performers_response.data]
+        performer_ids = [ep["performer_id"] for ep in event_performers_response.data]
+        
+        result = {
             "id": event["id"],
             "name": event["name"],
             "description": event["description"],
@@ -287,14 +417,20 @@ def get_event(id: str):
             "pricing": event["pricing"],
             "image_url": event.get("image_url"),
             "performers": performers_details,
-            "performer_ids": event.get("performer_ids", [])
+            "performer_ids": performer_ids
         }
+        
+        cache[cache_key] = result
+        
+        return result
     except Exception as e:
         raise
 
 
 @app.put("/admin/events/{event_id}")
+@limiter.limit("20/minute")
 async def update_event(
+    request: Request,
     event_id: str,
     name: str = Form(None),
     description: str = Form(None),
@@ -314,8 +450,19 @@ async def update_event(
         update_data["event_recommendations"] = event_recommendations
     if pricing is not None:
         update_data["pricing"] = pricing
+    
+    # Handle performer associations through junction table
     if performer_ids:
-        update_data["performer_ids"] = json.loads(performer_ids)
+        performer_ids_list = json.loads(performer_ids)
+        # Delete existing associations
+        supabase.table("event_performers").delete().eq("event_id", event_id).execute()
+        # Insert new associations
+        if performer_ids_list:
+            event_performer_rows = [
+                {"event_id": event_id, "performer_id": performer_id}
+                for performer_id in performer_ids_list
+            ]
+            supabase.table("event_performers").insert(event_performer_rows).execute()
     
     if image:
         # Get event name for proper file naming
@@ -331,18 +478,30 @@ async def update_event(
         supabase.storage.from_("events").upload(path, file_bytes, {"upsert": "true"})
         update_data["image_url"] = supabase.storage.from_("events").get_public_url(path)
     
-    supabase.table("events").update(update_data).eq("id", event_id).execute()
+    if update_data:
+        supabase.table("events").update(update_data).eq("id", event_id).execute()
+    
+    # Invalidate cache
+    invalidate_events_cache()
+    
     return {"message": "Event updated"}
 
 
 @app.delete("/admin/events/{event_id}")
-def delete_event(event_id: str):
+@limiter.limit("10/minute")
+def delete_event(request: Request, event_id: str):
     supabase.table("events").delete().eq("id", event_id).execute()
+    
+    # Invalidate cache
+    invalidate_events_cache()
+    
     return {"message": "Event deleted"}
 
 
 @app.post("/api/submit-requirement")
+@limiter.limit("5/minute")
 async def submit_requirement(
+    request: Request,
     eventType: str = Form(...),
     eventDate: str = Form(...),
     eventLocation: str = Form(...),
