@@ -17,6 +17,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Helper function to ensure storage bucket exists
+def ensure_bucket_exists(bucket_name: str):
+    """Create a storage bucket if it doesn't exist"""
+    try:
+        # Try to get bucket info - if it fails, bucket doesn't exist
+        supabase.storage.get_bucket(bucket_name)
+    except Exception:
+        # Create the bucket with public access
+        try:
+            supabase.storage.create_bucket(bucket_name, options={"public": True})
+            print(f"Created storage bucket: {bucket_name}")
+        except Exception as e:
+            # Bucket might already exist or other error
+            print(f"Bucket creation note: {e}")
+
 # Mount static files for frontend
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
@@ -71,6 +86,8 @@ async def create_performer(
     sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name.lower().replace(' ', '_'))
     path = f"{performer_id}_{sanitized_name}.{file_extension}"
     
+    # Ensure bucket exists before uploading
+    ensure_bucket_exists("performers")
     supabase.storage.from_("performers").upload(path, file_bytes)
     profile_image_url = supabase.storage.from_("performers").get_public_url(path)
     
@@ -125,6 +142,28 @@ def get_performers_by_location(location: str):
         raise
 
 
+@app.get("/performers/by-name/{name}")
+def get_performer_by_name(name: str):
+    """Get performer by name (slug format with hyphens)"""
+    try:
+        # Convert slug format (havi-abdur-rehman) to search format
+        search_name = name.replace('-', ' ')
+        
+        # Get all performers and find match
+        response = supabase.table("performers").select("*").execute()
+        
+        for performer in response.data:
+            performer_name = performer.get("name", "").lower()
+            # Check exact match or slug match
+            performer_slug = performer_name.replace(' ', '-')
+            if performer_name == search_name.lower() or performer_slug == name.lower():
+                return performer
+        
+        return {"error": "Performer not found"}
+    except Exception as e:
+        raise
+
+
 @app.get("/performers/{id}")
 def get_performer(id: str):
     try:
@@ -134,6 +173,27 @@ def get_performer(id: str):
         return {"error": "Performer not found"}
     except Exception as e:
         raise
+
+
+@app.get("/api/spotify/artist/{artist_name}")
+async def get_artist_spotify_data(artist_name: str):
+    """
+    Fetch artist's discography and top songs from Spotify.
+    Returns top tracks, albums, and artist metadata.
+    """
+    from spotify_api import get_artist_discography
+    
+    try:
+        discography = await get_artist_discography(artist_name)
+        return discography
+    except Exception as e:
+        print(f"Spotify API error: {e}")
+        return {
+            "found": False,
+            "message": str(e),
+            "topTracks": [],
+            "albums": []
+        }
 
 
 @app.put("/admin/performers/{id}")
@@ -182,6 +242,8 @@ async def update_performer(
         sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', performer_name.lower().replace(' ', '_'))
         path = f"{id}_{sanitized_name}.{file_extension}"
         
+        # Ensure bucket exists before uploading
+        ensure_bucket_exists("performers")
         # Upload with upsert option to overwrite if exists
         supabase.storage.from_("performers").upload(path, file_bytes, {"upsert": "true"})
         update_data["profile_image_url"] = supabase.storage.from_("performers").get_public_url(path)
@@ -227,7 +289,8 @@ async def create_event(
     file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
     sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name.lower().replace(' ', '_'))
     path = f"{event_id}_{sanitized_name}.{file_extension}"
-
+    # Ensure bucket exists before uploading
+    ensure_bucket_exists("events")
     supabase.storage.from_("events").upload(path, file_bytes)
     image_url = supabase.storage.from_("events").get_public_url(path)
     
@@ -327,6 +390,8 @@ async def update_event(
         sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', event_name.lower().replace(' ', '_'))
         path = f"{event_id}_{sanitized_name}.{file_extension}"
         
+        # Ensure bucket exists before uploading
+        ensure_bucket_exists("events")
         # Upload with upsert option to overwrite if exists
         supabase.storage.from_("events").upload(path, file_bytes, {"upsert": "true"})
         update_data["image_url"] = supabase.storage.from_("events").get_public_url(path)
