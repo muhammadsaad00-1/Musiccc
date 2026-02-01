@@ -214,7 +214,10 @@ async def create_performer(
     locations: str = Form(None),  # JSON string of list
     genres: str = Form(None),  # JSON string of list
     videos: str = Form(None),  # JSON string of list of YouTube URLs
-    image: UploadFile = File(...)
+    popular_songs: str = Form(None),  # JSON string of list of popular songs
+    image: UploadFile = File(...),
+    header_image: UploadFile = File(None),
+    gallery_images: list[UploadFile] = File(None)
 ):
     import re
     
@@ -222,8 +225,9 @@ async def create_performer(
     locations_list = json.loads(locations) if locations else []
     genres_list = json.loads(genres) if genres else []
     videos_list = json.loads(videos) if videos else []
+    popular_songs_list = json.loads(popular_songs) if popular_songs else []
 
-    # First, insert performer without image URL to get the generated UUID
+    # First, insert performer without image URLs to get the generated UUID
     insert_response = supabase.table("performers").insert({
         "name": name,
         "description": description,
@@ -233,26 +237,48 @@ async def create_performer(
         "youtube_url": youtube_url,
         "locations": locations_list,
         "genres": genres_list,
-        "videos": videos_list
+        "videos": videos_list,
+        "popular_songs": popular_songs_list
     }).execute()
     
     performer_id = insert_response.data[0]["id"]
-    
-    # Now upload image with proper naming: {id}_{sanitized_name}.{extension}
-    file_bytes = await image.read()
-    file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
     sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name.lower().replace(' ', '_'))
-    path = f"{performer_id}_{sanitized_name}.{file_extension}"
     
     # Ensure bucket exists before uploading
     ensure_bucket_exists("performers")
-    supabase.storage.from_("performers").upload(path, file_bytes)
-    profile_image_url = supabase.storage.from_("performers").get_public_url(path)
     
-    # Update performer with image URL
-    supabase.table("performers").update({
-        "profile_image_url": profile_image_url
-    }).eq("id", performer_id).execute()
+    # Upload profile image
+    file_bytes = await image.read()
+    file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
+    profile_path = f"{performer_id}_{sanitized_name}.{file_extension}"
+    supabase.storage.from_("performers").upload(profile_path, file_bytes)
+    profile_image_url = supabase.storage.from_("performers").get_public_url(profile_path)
+    
+    update_data = {"profile_image_url": profile_image_url}
+    
+    # Upload header image if provided
+    if header_image:
+        header_bytes = await header_image.read()
+        header_extension = header_image.filename.split('.')[-1] if '.' in header_image.filename else 'jpg'
+        header_path = f"{performer_id}_{sanitized_name}_header.{header_extension}"
+        supabase.storage.from_("performers").upload(header_path, header_bytes)
+        header_image_url = supabase.storage.from_("performers").get_public_url(header_path)
+        update_data["header_image_url"] = header_image_url
+    
+    # Upload gallery images if provided
+    if gallery_images:
+        gallery_urls = []
+        for idx, gallery_image in enumerate(gallery_images):
+            gallery_bytes = await gallery_image.read()
+            gallery_extension = gallery_image.filename.split('.')[-1] if '.' in gallery_image.filename else 'jpg'
+            gallery_path = f"{performer_id}_{sanitized_name}_gallery_{idx}.{gallery_extension}"
+            supabase.storage.from_("performers").upload(gallery_path, gallery_bytes)
+            gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
+            gallery_urls.append(gallery_url)
+        update_data["gallery_image_urls"] = gallery_urls
+    
+    # Update performer with image URLs
+    supabase.table("performers").update(update_data).eq("id", performer_id).execute()
 
     # Invalidate cache
     invalidate_performers_cache()
@@ -415,7 +441,10 @@ async def update_performer(
     locations: str = Form(None),
     genres: str = Form(None),
     videos: str = Form(None),
-    image: Optional[UploadFile] = File(None)
+    popular_songs: str = Form(None),
+    image: Optional[UploadFile] = File(None),
+    header_image: Optional[UploadFile] = File(None),
+    gallery_images: Optional[list[UploadFile]] = File(None)
 ):
     import re
     
@@ -438,22 +467,45 @@ async def update_performer(
         update_data["genres"] = json.loads(genres)
     if videos:
         update_data["videos"] = json.loads(videos)
+    if popular_songs:
+        update_data["popular_songs"] = json.loads(popular_songs)
+    
+    # Get performer name for proper file naming
+    performer_response = supabase.table("performers").select("name").eq("id", id).execute()
+    performer_name = performer_response.data[0]["name"] if performer_response.data else "performer"
+    sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', performer_name.lower().replace(' ', '_'))
+    
+    # Ensure bucket exists before uploading
+    ensure_bucket_exists("performers")
     
     if image:
-        # Get performer name for proper file naming
-        performer_response = supabase.table("performers").select("name").eq("id", id).execute()
-        performer_name = performer_response.data[0]["name"] if performer_response.data else "performer"
-        
         file_bytes = await image.read()
         file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
-        sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', performer_name.lower().replace(' ', '_'))
         path = f"{id}_{sanitized_name}.{file_extension}"
         
-        # Ensure bucket exists before uploading
-        ensure_bucket_exists("performers")
         # Upload with upsert option to overwrite if exists
         supabase.storage.from_("performers").upload(path, file_bytes, {"upsert": "true"})
         update_data["profile_image_url"] = supabase.storage.from_("performers").get_public_url(path)
+    
+    if header_image:
+        header_bytes = await header_image.read()
+        header_extension = header_image.filename.split('.')[-1] if '.' in header_image.filename else 'jpg'
+        header_path = f"{id}_{sanitized_name}_header.{header_extension}"
+        
+        supabase.storage.from_("performers").upload(header_path, header_bytes, {"upsert": "true"})
+        update_data["header_image_url"] = supabase.storage.from_("performers").get_public_url(header_path)
+    
+    if gallery_images:
+        gallery_urls = []
+        for idx, gallery_image in enumerate(gallery_images):
+            gallery_bytes = await gallery_image.read()
+            gallery_extension = gallery_image.filename.split('.')[-1] if '.' in gallery_image.filename else 'jpg'
+            gallery_path = f"{id}_{sanitized_name}_gallery_{idx}.{gallery_extension}"
+            
+            supabase.storage.from_("performers").upload(gallery_path, gallery_bytes, {"upsert": "true"})
+            gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
+            gallery_urls.append(gallery_url)
+        update_data["gallery_image_urls"] = gallery_urls
 
     supabase.table("performers").update(update_data).eq("id", id).execute()
     
@@ -684,130 +736,130 @@ def delete_event(request: Request, event_id: str):
     return {"message": "Event deleted"}
 
 
-@app.post("/api/submit-requirement")
-@limiter.limit("5/minute")
-async def submit_requirement(
-    request: Request,
-    eventType: str = Form(...),
-    eventDate: str = Form(...),
-    eventLocation: str = Form(...),
-    budget: str = Form(None),
-    artistType: str = Form(...),
-    name: str = Form(...),
-    email: str = Form(...),
-    phone: str = Form(...),
-    message: str = Form(None)
-):
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-    from datetime import datetime
+# @app.post("/api/submit-requirement")
+# @limiter.limit("5/minute")
+# async def submit_requirement(
+#     request: Request,
+#     eventType: str = Form(...),
+#     eventDate: str = Form(...),
+#     eventLocation: str = Form(...),
+#     budget: str = Form(None),
+#     artistType: str = Form(...),
+#     name: str = Form(...),
+#     email: str = Form(...),
+#     phone: str = Form(...),
+#     message: str = Form(None)
+# ):
+#     import smtplib
+#     from email.mime.text import MIMEText
+#     from email.mime.multipart import MIMEMultipart
+#     from datetime import datetime
     
-    # Store requirement in database
-    try:
-        supabase.table("requirements").insert({
-            "event_type": eventType,
-            "event_date": eventDate,
-            "event_location": eventLocation,
-            "budget": budget,
-            "artist_type": artistType,
-            "customer_name": name,
-            "customer_email": email,
-            "customer_phone": phone,
-            "message": message,
-            "status": "pending"
-        }).execute()
-    except Exception as e:
-        print(f"Database error: {e}")
+#     # Store requirement in database
+#     try:
+#         supabase.table("requirements").insert({
+#             "event_type": eventType,
+#             "event_date": eventDate,
+#             "event_location": eventLocation,
+#             "budget": budget,
+#             "artist_type": artistType,
+#             "customer_name": name,
+#             "customer_email": email,
+#             "customer_phone": phone,
+#             "message": message,
+#             "status": "pending"
+#         }).execute()
+#     except Exception as e:
+#         print(f"Database error: {e}")
     
-    # Send confirmation email to customer
-    try:
-        # Email configuration (CHANGE THESE VALUES)
-        SMTP_SERVER = "smtp.gmail.com"
-        SMTP_PORT = 587
-        SENDER_EMAIL = "your-email@gmail.com"  # Change this
-        SENDER_PASSWORD = "your-app-password"  # Change this (use app password for Gmail)
+#     # Send confirmation email to customer
+#     try:
+#         # Email configuration (CHANGE THESE VALUES)
+#         SMTP_SERVER = "smtp.gmail.com"
+#         SMTP_PORT = 587
+#         SENDER_EMAIL = "your-email@gmail.com"  # Change this
+#         SENDER_PASSWORD = "your-app-password"  # Change this (use app password for Gmail)
         
-        # Create email content
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = 'Event Booking Request Received - We\'ll Get Back to You Soon!'
-        msg['From'] = SENDER_EMAIL
-        msg['To'] = email
+#         # Create email content
+#         msg = MIMEMultipart('alternative')
+#         msg['Subject'] = 'Event Booking Request Received - We\'ll Get Back to You Soon!'
+#         msg['From'] = SENDER_EMAIL
+#         msg['To'] = email
         
-        # HTML email body
-        html_body = f"""
-        <html>
-            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-                    <div style="background: linear-gradient(135deg, #f97316 0%, #ec4899 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-                        <h1 style="color: white; margin: 0;">Thank You for Your Request!</h1>
-                    </div>
+#         # HTML email body
+#         html_body = f"""
+#         <html>
+#             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+#                 <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+#                     <div style="background: linear-gradient(135deg, #f97316 0%, #ec4899 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+#                         <h1 style="color: white; margin: 0;">Thank You for Your Request!</h1>
+#                     </div>
                     
-                    <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px;">
-                        <p>Dear {name},</p>
+#                     <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px;">
+#                         <p>Dear {name},</p>
                         
-                        <p>Thank you for submitting your event requirement. We have received your request and our team will review it carefully.</p>
+#                         <p>Thank you for submitting your event requirement. We have received your request and our team will review it carefully.</p>
                         
-                        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                            <h3 style="margin-top: 0; color: #f97316;">Your Request Details:</h3>
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr>
-                                    <td style="padding: 8px 0; font-weight: bold;">Event Type:</td>
-                                    <td style="padding: 8px 0;">{eventType}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; font-weight: bold;">Event Date:</td>
-                                    <td style="padding: 8px 0;">{eventDate}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; font-weight: bold;">Location:</td>
-                                    <td style="padding: 8px 0;">{eventLocation}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; font-weight: bold;">Artist Type:</td>
-                                    <td style="padding: 8px 0;">{artistType}</td>
-                                </tr>
-                                {f'<tr><td style="padding: 8px 0; font-weight: bold;">Budget:</td><td style="padding: 8px 0;">{budget}</td></tr>' if budget else ''}
-                            </table>
-                        </div>
+#                         <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+#                             <h3 style="margin-top: 0; color: #f97316;">Your Request Details:</h3>
+#                             <table style="width: 100%; border-collapse: collapse;">
+#                                 <tr>
+#                                     <td style="padding: 8px 0; font-weight: bold;">Event Type:</td>
+#                                     <td style="padding: 8px 0;">{eventType}</td>
+#                                 </tr>
+#                                 <tr>
+#                                     <td style="padding: 8px 0; font-weight: bold;">Event Date:</td>
+#                                     <td style="padding: 8px 0;">{eventDate}</td>
+#                                 </tr>
+#                                 <tr>
+#                                     <td style="padding: 8px 0; font-weight: bold;">Location:</td>
+#                                     <td style="padding: 8px 0;">{eventLocation}</td>
+#                                 </tr>
+#                                 <tr>
+#                                     <td style="padding: 8px 0; font-weight: bold;">Artist Type:</td>
+#                                     <td style="padding: 8px 0;">{artistType}</td>
+#                                 </tr>
+#                                 {f'<tr><td style="padding: 8px 0; font-weight: bold;">Budget:</td><td style="padding: 8px 0;">{budget}</td></tr>' if budget else ''}
+#                             </table>
+#                         </div>
                         
-                        <p><strong>What happens next?</strong></p>
-                        <ul>
-                            <li>Our team will review your requirements within 24 hours</li>
-                            <li>We'll match you with the best available artists</li>
-                            <li>You'll receive personalized recommendations via email</li>
-                            <li>One of our coordinators will contact you on {phone}</li>
-                        </ul>
+#                         <p><strong>What happens next?</strong></p>
+#                         <ul>
+#                             <li>Our team will review your requirements within 24 hours</li>
+#                             <li>We'll match you with the best available artists</li>
+#                             <li>You'll receive personalized recommendations via email</li>
+#                             <li>One of our coordinators will contact you on {phone}</li>
+#                         </ul>
                         
-                        <p>If you have any urgent queries, feel free to reach out to us.</p>
+#                         <p>If you have any urgent queries, feel free to reach out to us.</p>
                         
-                        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #f3f4f6;">
-                            <p style="color: #666; font-size: 14px;">Best regards,<br><strong>The Event Team</strong></p>
-                        </div>
-                    </div>
-                </div>
-            </body>
-        </html>
-        """
+#                         <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #f3f4f6;">
+#                             <p style="color: #666; font-size: 14px;">Best regards,<br><strong>The Event Team</strong></p>
+#                         </div>
+#                     </div>
+#                 </div>
+#             </body>
+#         </html>
+#         """
         
-        html_part = MIMEText(html_body, 'html')
-        msg.attach(html_part)
+#         html_part = MIMEText(html_body, 'html')
+#         msg.attach(html_part)
         
-        # Send email
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SENDER_EMAIL, SENDER_PASSWORD)
-            server.send_message(msg)
+#         # Send email
+#         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+#             server.starttls()
+#             server.login(SENDER_EMAIL, SENDER_PASSWORD)
+#             server.send_message(msg)
             
-        return {
-            "message": "Requirement submitted successfully",
-            "email_sent": True
-        }
+#         return {
+#             "message": "Requirement submitted successfully",
+#             "email_sent": True
+#         }
         
-    except Exception as e:
-        print(f"Email error: {e}")
-        return {
-            "message": "Requirement submitted successfully",
-            "email_sent": False,
-            "email_error": str(e)
-        }
+#     except Exception as e:
+#         print(f"Email error: {e}")
+#         return {
+#             "message": "Requirement submitted successfully",
+#             "email_sent": False,
+#             "email_error": str(e)
+#         }
