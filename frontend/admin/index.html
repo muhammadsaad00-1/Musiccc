@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Event Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0b;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1a1a1a 0%, #0f0f10 100%);
+            border-right: 1px solid #2a2a2a;
+            padding: 24px;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 40px;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #888;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #f9731620 0%, #ec489920 100%);
+            color: #fff;
+            border: 1px solid #f9731650;
+        }
+
+        .nav-link i {
+            width: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            padding: 32px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: #f97316;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #0a0a0b;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .card-description {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #2a2a2a;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn-edit, .btn-delete {
+            flex: 1;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .btn-edit:hover {
+            background: #3a3a3a;
+        }
+
+        .btn-delete {
+            background: #991b1b;
+            color: #fff;
+        }
+
+        .btn-delete:hover {
+            background: #b91c1c;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #aaa;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            background: #0a0a0b;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #f97316;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: block;
+            padding: 40px;
+            background: #0a0a0b;
+            border: 2px dashed #2a2a2a;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-label:hover {
+            border-color: #f97316;
+        }
+
+        .image-preview {
+            margin-top: 12px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .image-preview img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            background: #2a2a2a;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: #3a3a3a;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 2000;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.active {
+            display: block;
+        }
+
+        .toast.success {
+            border-color: #10b981;
+            background: #10b98120;
+        }
+
+        .toast.error {
+            border-color: #ef4444;
+            background: #ef444420;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .multi-select {
+            min-height: 120px;
+        }
+
+        small {
+            color: #666;
+            font-size: 12px;
+            display: block;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-music"></i> EventHub
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link active" data-section="performers">
+                    <i class="fas fa-microphone"></i>
+                    <span>Performers</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-section="events">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Events</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-section="requirements">
+                    <i class="fas fa-inbox"></i>
+                    <span>Requirements</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Performers Section -->
+        <div class="section active" id="performers-section">
+            <div class="header">
+                <h1 class="page-title">Performers</h1>
+                <button class="btn-primary" onclick="openPerformerModal()">
+                    <i class="fas fa-plus"></i>
+                    Add Performer
+                </button>
+            </div>
+            <div class="cards-grid" id="performers-grid">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading performers...
+                </div>
+            </div>
+        </div>
+
+        <!-- Events Section -->
+        <div class="section" id="events-section">
+            <div class="header">
+                <h1 class="page-title">Events</h1>
+                <button class="btn-primary" onclick="openEventModal()">
+                    <i class="fas fa-plus"></i>
+                    Add Event
+                </button>
+            </div>
+            <div class="cards-grid" id="events-grid">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading events...
+                </div>
+            </div>
+        </div>
+
+        <!-- Requirements Section -->
+        <div class="section" id="requirements-section">
+            <div class="header">
+                <h1 class="page-title">Booking Requirements</h1>
+            </div>
+            <div class="cards-grid" id="requirements-grid">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading requirements...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performer Modal -->
+    <div id="performer-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="performer-modal-title"><i class="fas fa-microphone"></i> Add Performer</h2>
+                <button class="close-btn" onclick="closeModal('performer-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="performer-form">
+                    <div class="form-group">
+                        <label class="form-label">Performer Name *</label>
+                        <input type="text" id="performer-name" name="name" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="performer-description" name="description" class="form-textarea"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Category *</label>
+                            <select id="performer-category" name="category" class="form-select" required>
+                                <option value="">Select Category</option>
+                                <option value="Singer">Singer</option>
+                                <option value="Comedian">Comedian</option>
+                                <option value="DJ">DJ</option>
+                                <option value="Photography">Photography</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Price</label>
+                            <input type="number" id="performer-price" name="price" class="form-input" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Instagram URL</label>
+                            <input type="url" id="performer-instagram" name="instagram_url" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">YouTube URL</label>
+                            <input type="url" id="performer-youtube" name="youtube_url" class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Locations (comma separated)</label>
+                        <input type="text" id="performer-locations" name="locations" class="form-input" placeholder="Mumbai, Delhi, Bangalore">
+                        <small>Cities where the performer is available</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Genres (comma separated)</label>
+                        <input type="text" id="performer-genres" name="genres" class="form-input" placeholder="Pop, Rock, Jazz">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Video URLs (comma separated)</label>
+                        <input type="text" id="performer-videos" name="videos" class="form-input" placeholder="https://youtube.com/...">
+                        <small>YouTube video URLs separated by commas</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Popular Songs (comma separated)</label>
+                        <input type="text" id="performer-popular-songs" name="popular_songs" class="form-input" placeholder="Song 1, Song 2, Song 3">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Profile Image</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" name="image" class="file-input" id="profile-image" accept="image/*">
+                            <label for="profile-image" class="file-label">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: #666;"></i>
+                                <p style="margin-top: 8px; color: #888;">Click to upload profile image (optional when editing)</p>
+                            </label>
+                            <div id="profile-preview" class="image-preview"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Header Image</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" name="header_image" class="file-input" id="header-image" accept="image/*">
+                            <label for="header-image" class="file-label">
+                                <i class="fas fa-image" style="font-size: 32px; color: #666;"></i>
+                                <p style="margin-top: 8px; color: #888;">Click to upload header image (optional)</p>
+                            </label>
+                            <div id="header-preview" class="image-preview"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Gallery Images</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" name="gallery_images" class="file-input" id="gallery-images" accept="image/*" multiple>
+                            <label for="gallery-images" class="file-label">
+                                <i class="fas fa-images" style="font-size: 32px; color: #666;"></i>
+                                <p style="margin-top: 8px; color: #888;">Click to upload multiple gallery images (optional)</p>
+                            </label>
+                            <div id="gallery-preview" class="image-preview" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('performer-modal')">Cancel</button>
+                        <button type="submit" id="performer-submit-btn" class="btn-primary" style="flex: 1;">
+                            <i class="fas fa-save"></i> Save Performer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Modal -->
+    <div id="event-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="event-modal-title"><i class="fas fa-calendar-alt"></i> Add Event</h2>
+                <button class="close-btn" onclick="closeModal('event-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="event-form">
+                    <div class="form-group">
+                        <label class="form-label">Event Name *</label>
+                        <input type="text" id="event-name" name="name" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="event-description" name="description" class="form-textarea"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Event Recommendations</label>
+                        <textarea id="event-recommendations" name="event_recommendations" class="form-textarea" rows="3"></textarea>
+                        <small>Recommendations for suitable performer types or requirements</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Pricing</label>
+                        <input type="number" id="event-pricing" name="pricing" class="form-input" step="0.01">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Select Performers</label>
+                        <select name="performer_ids" class="form-select multi-select" id="event-performers" multiple>
+                            <option value="">Loading performers...</option>
+                        </select>
+                        <small>Hold Ctrl/Cmd to select multiple performers</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Event Image</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" name="image" class="file-input" id="event-image" accept="image/*">
+                            <label for="event-image" class="file-label">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: #666;"></i>
+                                <p style="margin-top: 8px; color: #888;">Click to upload event image (optional when editing)</p>
+                            </label>
+                            <div id="event-preview" class="image-preview"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal('event-modal')">Cancel</button>
+                        <button type="submit" id="event-submit-btn" class="btn-primary" style="flex: 1;">
+                            <i class="fas fa-save"></i> Save Event
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -123,26 +123,26 @@ export default function ArtistPage({ params }: ArtistPageProps) {
   const [loading, setLoading] = useState(true);
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
   const [isBackendArtist, setIsBackendArtist] = useState(false);
-  const [spotifyData, setSpotifyData] = useState<any>(null);
-  const [loadingSpotify, setLoadingSpotify] = useState(false);
+  const [youtubeData, setYoutubeData] = useState<any>(null);
+  const [loadingYoutube, setLoadingYoutube] = useState(false);
 
-  // Fetch Spotify data for the artist
-  async function fetchSpotifyData(artistName: string) {
-    setLoadingSpotify(true);
+  // Fetch YouTube data for the artist
+  async function fetchYoutubeData(artistName: string) {
+    setLoadingYoutube(true);
     try {
       const response = await fetch(
-        `http://localhost:8001/api/spotify/artist/${encodeURIComponent(artistName)}`,
+        `http://localhost:8000/api/youtube/artist/${encodeURIComponent(artistName)}`,
       );
       if (response.ok) {
         const data = await response.json();
         if (data.found) {
-          setSpotifyData(data);
+          setYoutubeData(data);
         }
       }
     } catch (error) {
-      console.error("Error fetching Spotify data:", error);
+      console.error("Error fetching YouTube data:", error);
     } finally {
-      setLoadingSpotify(false);
+      setLoadingYoutube(false);
     }
   }
 
@@ -157,8 +157,8 @@ export default function ArtistPage({ params }: ArtistPageProps) {
         setArtist(mockArtist);
         setIsBackendArtist(false);
         setLoading(false);
-        // Fetch Spotify data for mock artists too
-        fetchSpotifyData(mockArtist.name);
+        // Fetch YouTube data for mock artists too
+        fetchYoutubeData(mockArtist.name);
         return;
       }
 
@@ -174,8 +174,8 @@ export default function ArtistPage({ params }: ArtistPageProps) {
             setArtist(transformedArtist);
             setIsBackendArtist(true);
             setLoading(false);
-            // Fetch Spotify data
-            fetchSpotifyData(performer.name);
+            // Fetch YouTube data
+            fetchYoutubeData(performer.name);
             return;
           }
         }
@@ -450,167 +450,147 @@ export default function ArtistPage({ params }: ArtistPageProps) {
         </div>
       </section>
 
-      {/* Spotify Discography Section */}
-      {(spotifyData?.albums?.length > 0 || loadingSpotify) && (
+      {/* Fallback to mock album carousel */}
+      {artist.albums && artist.albums.length > 0 && (
         <section className="py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <Disc3 className="w-6 h-6 text-green-500" />
-                Discography
-                <span className="text-sm font-normal text-gray-500 ml-2">
-                  from Spotify
-                </span>
-              </h2>
-              {spotifyData?.spotify_url && (
-                <a
-                  href={spotifyData.spotify_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-green-500 hover:text-green-400 transition-colors text-sm"
-                >
-                  <span>View on Spotify</span>
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              )}
-            </div>
-
-            {loadingSpotify ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {spotifyData.albums.map((album: any) => (
-                  <a
-                    key={album.id}
-                    href={album.spotify_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group bg-[#1a1a1a] rounded-xl p-4 border border-gray-800 hover:border-gray-700 transition-all hover:bg-[#2a2a2a]"
-                  >
-                    <div className="relative aspect-square rounded-lg overflow-hidden mb-3">
-                      <Image
-                        src={
-                          album.cover ||
-                          "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400"
-                        }
-                        alt={album.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                        <Play className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    </div>
-                    <h3 className="font-medium text-white text-sm truncate group-hover:text-green-400 transition-colors">
-                      {album.name}
-                    </h3>
-                    <p className="text-gray-500 text-xs mt-1">
-                      {album.year} •{" "}
-                      {album.type === "single" ? "Single" : "Album"}
-                    </p>
-                  </a>
-                ))}
-              </div>
-            )}
+            <AlbumCarousel albums={artist.albums} artistName={artist.name} />
           </div>
         </section>
       )}
 
-      {/* Fallback to mock album carousel if no Spotify data */}
-      {!spotifyData?.albums?.length &&
-        !loadingSpotify &&
-        artist.albums &&
-        artist.albums.length > 0 && (
-          <section className="py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <AlbumCarousel albums={artist.albums} artistName={artist.name} />
-            </div>
-          </section>
-        )}
-
-      {/* Spotify Top Songs Section */}
-      {(spotifyData?.topTracks?.length > 0 || loadingSpotify) && (
+      {/* YouTube Top Songs Section */}
+      {(youtubeData?.topSongs?.length > 0 || loadingYoutube) && (
         <section className="py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-2">
-              <Music className="w-6 h-6 text-green-500" />
+              <Music className="w-6 h-6 text-orange-500" />
               Top Songs
               <span className="text-sm font-normal text-gray-500 ml-2">
-                from Spotify
+                from YouTube
               </span>
             </h2>
 
-            {loadingSpotify ? (
+            {loadingYoutube ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
+                <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
               </div>
             ) : (
               <div className="bg-[#1a1a1a] rounded-2xl border border-gray-800 overflow-hidden">
-                {spotifyData.topTracks.map((song: any, index: number) => (
-                  <a
+                {youtubeData.topSongs.map((song: any, index: number) => (
+                  <div
                     key={song.id}
-                    href={song.spotify_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-4 p-4 hover:bg-[#2a2a2a] transition-colors border-b border-gray-800 last:border-b-0 group"
+                    onClick={() => {
+                      if (playingVideo === song.videoId) {
+                        setPlayingVideo(null);
+                      } else {
+                        setPlayingVideo(song.videoId);
+                      }
+                    }}
+                    className="flex items-center gap-4 p-4 hover:bg-[#2a2a2a] transition-colors border-b border-gray-800 last:border-b-0 group cursor-pointer"
                   >
                     {/* Track Number */}
                     <div className="w-8 text-center">
                       <span className="text-gray-500 group-hover:hidden">
                         {index + 1}
                       </span>
-                      <Play className="w-4 h-4 text-green-500 hidden group-hover:block mx-auto" />
+                      {playingVideo === song.videoId ? (
+                        <Pause className="w-4 h-4 text-orange-500 hidden group-hover:block mx-auto" />
+                      ) : (
+                        <Play className="w-4 h-4 text-orange-500 hidden group-hover:block mx-auto" />
+                      )}
                     </div>
 
-                    {/* Album Art */}
-                    {song.image && (
+                    {/* Thumbnail */}
+                    {song.thumbnail && (
                       <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
                         <Image
-                          src={song.image}
+                          src={song.thumbnail}
                           alt={song.name}
                           fill
                           className="object-cover"
                         />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          {playingVideo === song.videoId ? (
+                            <Pause className="w-4 h-4 text-white" />
+                          ) : (
+                            <Play className="w-4 h-4 text-white" />
+                          )}
+                        </div>
                       </div>
                     )}
 
                     {/* Song Info */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-white group-hover:text-green-400 transition-colors truncate">
+                      <h4 className="font-medium text-white group-hover:text-orange-400 transition-colors truncate">
                         {song.name}
                       </h4>
-                      {song.album && (
-                        <p className="text-gray-500 text-sm truncate">
-                          {song.album}
-                        </p>
-                      )}
+                      <p className="text-gray-500 text-sm truncate">
+                        {artist.name}
+                      </p>
                     </div>
 
-                    {/* Plays */}
-                    <div className="text-gray-500 text-sm hidden sm:block">
-                      {song.plays}
-                    </div>
+                    {/* Views */}
+                    {song.views && (
+                      <div className="text-gray-500 text-sm hidden sm:block">
+                        {song.views}
+                      </div>
+                    )}
 
                     {/* Duration */}
-                    <div className="text-gray-500 text-sm w-12 text-right">
-                      {song.duration}
-                    </div>
+                    {song.duration && (
+                      <div className="text-gray-500 text-sm w-16 text-right">
+                        {song.duration}
+                      </div>
+                    )}
 
-                    {/* Spotify Icon */}
-                    <ExternalLink className="w-4 h-4 text-gray-600 group-hover:text-green-500 transition-colors" />
-                  </a>
+                    {/* YouTube Icon */}
+                    <Youtube className="w-4 h-4 text-gray-600 group-hover:text-red-500 transition-colors" />
+                  </div>
                 ))}
+                
+                {/* Embedded Player */}
+                {playingVideo && (
+                  <div className="relative aspect-video bg-black">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={`https://www.youtube.com/embed/${playingVideo}?autoplay=1`}
+                      title="YouTube video player"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
         </section>
       )}
 
-      {/* Fallback to mock popular songs if no Spotify data */}
-      {!spotifyData?.topTracks?.length &&
-        !loadingSpotify &&
+      {/* Discography Section - Carousel View */}
+      {(youtubeData?.topSongs?.length > 0 || (artist.popularSongs && artist.popularSongs.length > 0)) && (
+        <section className="py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <AlbumCarousel 
+              albums={(youtubeData?.topSongs || artist.popularSongs || []).slice(0, 5).map((song: any, index: number) => ({
+                id: song.id || index + 1,
+                name: song.name || 'Unknown',
+                year: new Date().getFullYear().toString(),
+                cover: song.thumbnail || (song.videoId ? `https://img.youtube.com/vi/${song.videoId}/mqdefault.jpg` : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400'),
+                tracks: index + 1,
+              }))}
+              artistName={artist.name}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* Fallback to mock popular songs if no YouTube data */}
+      {!youtubeData?.topSongs?.length &&
+        !loadingYoutube &&
         artist.popularSongs &&
         artist.popularSongs.length > 0 && (
           <section className="py-12">

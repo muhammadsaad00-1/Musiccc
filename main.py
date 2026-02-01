@@ -201,6 +201,42 @@ def update_requirement_status(requirement_id: str, status: str = Form(...)):
         raise
 
 
+# Alternative routes for admin panel (same functionality, different paths)
+@app.get("/requirements")
+def get_all_requirements(status: str = None, limit: int = 50):
+    """Get all requirements (alias for admin panel)"""
+    return get_requirements(status, limit)
+
+
+@app.patch("/requirements/{requirement_id}/status")
+async def patch_requirement_status(requirement_id: str, request: Request):
+    """Update requirement status using PATCH (for admin panel)"""
+    body = await request.json()
+    status = body.get("status")
+    try:
+        response = supabase.table("booking_requirements").update({
+            "status": status
+        }).eq("id", requirement_id).execute()
+        
+        if response.data:
+            return {"success": True, "message": "Status updated"}
+        return {"success": False, "message": "Requirement not found"}
+    except Exception as e:
+        print(f"Error updating requirement status: {e}")
+        raise
+
+
+@app.delete("/requirements/{requirement_id}")
+def delete_requirement(requirement_id: str):
+    """Delete a booking requirement"""
+    try:
+        response = supabase.table("booking_requirements").delete().eq("id", requirement_id).execute()
+        return {"success": True, "message": "Requirement deleted"}
+    except Exception as e:
+        print(f"Error deleting requirement: {e}")
+        raise
+
+
 @app.post("/admin/performers")
 @limiter.limit("10/minute")
 async def create_performer(
@@ -406,24 +442,64 @@ def get_performer(request: Request, id: str):
         raise
 
 
-@app.get("/api/spotify/artist/{artist_name}")
-async def get_artist_spotify_data(artist_name: str):
+@app.get("/api/youtube/artist/{artist_name}")
+async def get_artist_youtube_data(artist_name: str, max_results: int = 5):
     """
-    Fetch artist's discography and top songs from Spotify.
-    Returns top tracks, albums, and artist metadata.
+    Fetch artist's top songs from YouTube.
+    Returns top videos/songs for the artist.
     """
-    from spotify_api import get_artist_discography
-    
     try:
-        discography = await get_artist_discography(artist_name)
-        return discography
+        # Using youtube-search-python package
+        from youtube_search import YoutubeSearch
+        
+        search_query = f"{artist_name} top songs"
+        results = YoutubeSearch(search_query, max_results=max_results).to_dict()
+        
+        top_songs = []
+        for idx, video in enumerate(results):
+            # Handle the case where video might be a string or dict
+            if isinstance(video, dict):
+                video_id = video.get('id', '')
+                # Extract thumbnail URL safely
+                thumbnails = video.get('thumbnails', [])
+                thumbnail_url = None
+                if thumbnails and len(thumbnails) > 0:
+                    if isinstance(thumbnails[0], dict):
+                        thumbnail_url = thumbnails[0].get('url')
+                    elif isinstance(thumbnails[0], str):
+                        thumbnail_url = thumbnails[0]
+                
+                top_songs.append({
+                    "id": idx + 1,
+                    "name": video.get('title', 'Unknown'),
+                    "videoId": video_id,
+                    "thumbnail": thumbnail_url or f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg",
+                    "duration": video.get('duration', 'N/A'),
+                    "views": video.get('views', 'N/A'),
+                    "url": f"https://www.youtube.com/watch?v={video_id}"
+                })
+        
+        return {
+            "found": len(top_songs) > 0,
+            "artist": artist_name,
+            "topSongs": top_songs,
+            "source": "youtube"
+        }
+    except ImportError:
+        # Fallback if youtube-search not installed
+        return {
+            "found": False,
+            "message": "YouTube search package not installed. Run: pip install youtube-search",
+            "topSongs": []
+        }
     except Exception as e:
-        print(f"Spotify API error: {e}")
+        import traceback
+        print(f"YouTube API error: {e}")
+        print(traceback.format_exc())
         return {
             "found": False,
             "message": str(e),
-            "topTracks": [],
-            "albums": []
+            "topSongs": []
         }
 
 
@@ -478,7 +554,7 @@ async def update_performer(
     # Ensure bucket exists before uploading
     ensure_bucket_exists("performers")
     
-    if image:
+    if image and image.filename:
         file_bytes = await image.read()
         file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
         path = f"{id}_{sanitized_name}.{file_extension}"
@@ -487,7 +563,7 @@ async def update_performer(
         supabase.storage.from_("performers").upload(path, file_bytes, {"upsert": "true"})
         update_data["profile_image_url"] = supabase.storage.from_("performers").get_public_url(path)
     
-    if header_image:
+    if header_image and header_image.filename:
         header_bytes = await header_image.read()
         header_extension = header_image.filename.split('.')[-1] if '.' in header_image.filename else 'jpg'
         header_path = f"{id}_{sanitized_name}_header.{header_extension}"
@@ -495,17 +571,19 @@ async def update_performer(
         supabase.storage.from_("performers").upload(header_path, header_bytes, {"upsert": "true"})
         update_data["header_image_url"] = supabase.storage.from_("performers").get_public_url(header_path)
     
-    if gallery_images:
-        gallery_urls = []
-        for idx, gallery_image in enumerate(gallery_images):
-            gallery_bytes = await gallery_image.read()
-            gallery_extension = gallery_image.filename.split('.')[-1] if '.' in gallery_image.filename else 'jpg'
-            gallery_path = f"{id}_{sanitized_name}_gallery_{idx}.{gallery_extension}"
-            
-            supabase.storage.from_("performers").upload(gallery_path, gallery_bytes, {"upsert": "true"})
-            gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
-            gallery_urls.append(gallery_url)
-        update_data["gallery_image_urls"] = gallery_urls
+    if gallery_images and len(gallery_images) > 0:
+        # Check if actual files were uploaded (not empty file list)
+        if gallery_images[0].filename:
+            gallery_urls = []
+            for idx, gallery_image in enumerate(gallery_images):
+                gallery_bytes = await gallery_image.read()
+                gallery_extension = gallery_image.filename.split('.')[-1] if '.' in gallery_image.filename else 'jpg'
+                gallery_path = f"{id}_{sanitized_name}_gallery_{idx}.{gallery_extension}"
+                
+                supabase.storage.from_("performers").upload(gallery_path, gallery_bytes, {"upsert": "true"})
+                gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
+                gallery_urls.append(gallery_url)
+            update_data["gallery_image_urls"] = gallery_urls
 
     supabase.table("performers").update(update_data).eq("id", id).execute()
     
