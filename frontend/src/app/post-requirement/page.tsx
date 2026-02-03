@@ -212,8 +212,19 @@ export default function PostRequirementPage() {
     try {
       const submitData = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
-        submitData.append(key, value);
+        submitData.append(key, value as any);
       });
+
+      // Append event_name from URL params (`package` or `event_name`) or default to "Custom"
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventName =
+          urlParams.get("package") || urlParams.get("event_name") || "Custom";
+        submitData.append("event_name", eventName);
+      } catch (err) {
+        // Fallback for non-browser contexts
+        submitData.append("event_name", "Custom");
+      }
 
       const response = await fetch(
         "http://localhost:8000/api/submit-requirement",

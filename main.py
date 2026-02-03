@@ -37,6 +37,12 @@ def invalidate_events_cache():
     for key in keys_to_remove:
         cache.pop(key, None)
 
+def invalidate_reviews_cache():
+    """Invalidate all review-related cache entries"""
+    keys_to_remove = [k for k in cache.keys() if k.startswith('reviews_')]
+    for key in keys_to_remove:
+        cache.pop(key, None)
+
 app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -95,6 +101,7 @@ async def submit_requirement(
     email: str = Form(...),
     phone: str = Form(...),
     message: str = Form(None),
+    event_name: str = Form("Custom"),
 ):
     """
     Submit a new booking requirement.
@@ -115,6 +122,7 @@ async def submit_requirement(
             "customer_email": email,
             "customer_phone": phone,
             "message": message,
+            "event_name": event_name,
             "status": "pending",
             "created_at": datetime.now().isoformat()
         }
@@ -812,6 +820,97 @@ def delete_event(request: Request, event_id: str):
     invalidate_events_cache()
     
     return {"message": "Event deleted"}
+
+
+# ============================================
+# REVIEWS ENDPOINTS
+# ============================================
+
+@app.get("/api/reviews")
+@limiter.limit("100/minute")
+def get_reviews(request: Request, limit: int = 50):
+    """
+    Get all reviews ordered by creation date (newest first).
+    """
+    cache_key = get_cache_key("reviews_all", limit=limit)
+    
+    # Check cache
+    if cache_key in cache:
+        return cache[cache_key]
+    
+    try:
+        response = supabase.table("reviews").select("*").order("created_at", desc=True).limit(limit).execute()
+        result = response.data
+        
+        # Store in cache
+        cache[cache_key] = result
+        
+        return result
+    except Exception as e:
+        print(f"Error fetching reviews: {e}")
+        raise
+
+
+@app.post("/api/reviews")
+@limiter.limit("5/minute")
+async def submit_review(
+    request: Request,
+    user_name: str = Form(...),
+    rating: int = Form(...),
+    review: str = Form(None)
+):
+    """
+    Submit a new review.
+    Validates that rating is between 1 and 5.
+    """
+    try:
+        # Validate rating
+        if rating < 1 or rating > 5:
+            return {
+                "success": False,
+                "message": "Rating must be between 1 and 5"
+            }
+        
+        # Validate user_name is not empty
+        if not user_name or not user_name.strip():
+            return {
+                "success": False,
+                "message": "User name is required"
+            }
+        
+        # Prepare data for database
+        review_data = {
+            "user_name": user_name.strip(),
+            "rating": rating,
+            "review": review.strip() if review else None
+        }
+        
+        # Save to database
+        response = supabase.table("reviews").insert(review_data).execute()
+        
+        if response.data:
+            review_id = response.data[0]["id"]
+            
+            # Invalidate cache
+            invalidate_reviews_cache()
+            
+            return {
+                "success": True,
+                "message": "Review submitted successfully",
+                "id": review_id
+            }
+        else:
+            return {"success": False, "message": "Failed to save review"}
+            
+    except Exception as e:
+        print(f"Error submitting review: {e}")
+        # If table doesn't exist, provide helpful message
+        if "relation" in str(e).lower() and "does not exist" in str(e).lower():
+            return {
+                "success": False, 
+                "message": "Database table 'reviews' needs to be created. See setup instructions."
+            }
+        raise
 
 
 # @app.post("/api/submit-requirement")

@@ -24,6 +24,7 @@ import {
 
 interface Requirement {
   id: string;
+  event_name: string;
   event_type: string;
   event_date: string;
   event_location: string;
@@ -259,6 +260,9 @@ export default function InquiriesPage() {
                       Customer
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Package
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Event
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -295,6 +299,11 @@ export default function InquiriesPage() {
                               {req.customer_phone}
                             </p>
                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-orange-400 font-medium">
+                            {req.event_name || "Custom"}
+                          </span>
                         </td>
                         <td className="px-6 py-4">
                           <div>
@@ -435,6 +444,12 @@ export default function InquiriesPage() {
                   Event Details
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Package Name</p>
+                    <p className="text-orange-400 font-medium">
+                      {selectedRequirement.event_name || "Custom"}
+                    </p>
+                  </div>
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Event Type</p>
                     <p className="text-white font-medium">
