@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   Send,
   CheckCircle,
@@ -131,6 +132,8 @@ export default function PostRequirementPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedArtist, setSelectedArtist] = useState<any>(null);
+  const [loadingArtist, setLoadingArtist] = useState(false);
   const [formData, setFormData] = useState({
     eventType: "",
     eventDate: "",
@@ -145,6 +148,48 @@ export default function PostRequirementPage() {
 
   // Auto-fill effect for step transitions
   const [showStepContent, setShowStepContent] = useState(true);
+
+  // Fetch artist data if coming from artist page
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const artistSlug = urlParams.get("artist");
+
+    if (artistSlug) {
+      setLoadingArtist(true);
+      fetch(`http://localhost:8000/performers/by-name/${encodeURIComponent(artistSlug)}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (!data.error) {
+            setSelectedArtist(data);
+            // Map category to artistType
+            const categoryMap: Record<string, string> = {
+              Singer: "singer",
+              Musician: "musician",
+              DJ: "dj",
+              Dancer: "dancer",
+              Comedian: "comedian",
+              Anchor: "other",
+              "Makeup Artist": "other",
+              Photographer: "other",
+              "Mehndi Artist": "other",
+              Decorator: "other",
+            };
+            const artistType = categoryMap[data.category] || "other";
+            setFormData((prev) => ({
+              ...prev,
+              artistType: artistType,
+              message: `Interested in booking ${data.name} for my event.`,
+            }));
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching artist:", error);
+        })
+        .finally(() => {
+          setLoadingArtist(false);
+        });
+    }
+  }, []);
 
   useEffect(() => {
     setShowStepContent(true);
@@ -221,6 +266,12 @@ export default function PostRequirementPage() {
         const eventName =
           urlParams.get("package") || urlParams.get("event_name") || "Custom";
         submitData.append("event_name", eventName);
+        
+        // If artist was selected, append artist information
+        if (selectedArtist) {
+          submitData.append("artist_name", selectedArtist.name);
+          submitData.append("artist_id", selectedArtist.id);
+        }
       } catch (err) {
         // Fallback for non-browser contexts
         submitData.append("event_name", "Custom");
@@ -375,6 +426,34 @@ export default function PostRequirementPage() {
             Tell us what you need and we'll find the perfect match
           </p>
         </div>
+
+        {/* Selected Artist Card */}
+        {selectedArtist && (
+          <div className="mb-8 max-w-lg mx-auto">
+            <div className="bg-gradient-to-br from-orange-500/10 via-pink-500/10 to-purple-500/10 border border-orange-500/30 rounded-2xl p-6 backdrop-blur-sm">
+              <div className="flex items-center gap-4">
+                <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border-2 border-orange-500/50">
+                  <Image
+                    src={selectedArtist.profile_image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400"}
+                    alt={selectedArtist.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    <span className="text-xs text-green-400 font-medium">Artist Selected</span>
+                  </div>
+                  <h3 className="text-white font-bold text-lg">{selectedArtist.name}</h3>
+                  <p className="text-gray-400 text-sm">
+                    {selectedArtist.category} • {selectedArtist.locations?.[0] || "Pakistan"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Enhanced Progress Steps */}
         <div className="mb-10">
@@ -540,15 +619,33 @@ export default function PostRequirementPage() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-white">
-                    Choose Artist Type
+                    {selectedArtist ? "Artist Type (Auto-Selected)" : "Choose Artist Type"}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    What kind of performer do you need?
+                    {selectedArtist 
+                      ? `Based on ${selectedArtist.name}'s category`
+                      : "What kind of performer do you need?"}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-6">
+                {selectedArtist && (
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-blue-300 text-sm font-medium">
+                          Artist type automatically selected based on {selectedArtist.name}
+                        </p>
+                        <p className="text-blue-400/70 text-xs mt-1">
+                          You can change this if you need a different type of artist
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="grid grid-cols-3 gap-3">
                   {artistTypes.map((type) => (
                     <ArtistTypeCard
@@ -746,6 +843,14 @@ export default function PostRequirementPage() {
                     Booking Summary
                   </h3>
                   <div className="grid grid-cols-2 gap-3 text-sm">
+                    {selectedArtist && (
+                      <div className="col-span-2 pb-2 border-b border-gray-700/50">
+                        <span className="text-gray-500">Selected Artist:</span>
+                        <span className="text-orange-400 ml-2 font-semibold">
+                          {selectedArtist.name}
+                        </span>
+                      </div>
+                    )}
                     <div>
                       <span className="text-gray-500">Event:</span>
                       <span className="text-white ml-2">
@@ -765,7 +870,7 @@ export default function PostRequirementPage() {
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Artist:</span>
+                      <span className="text-gray-500">Artist Type:</span>
                       <span className="text-white ml-2 capitalize">
                         {formData.artistType || "-"}
                       </span>

@@ -169,7 +169,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Link
             href="/admin/artists"
             className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-6 hover:border-gray-700 transition-colors group"
@@ -185,6 +185,24 @@ export default function AdminDashboard() {
             </h3>
             <p className="text-gray-500">
               Add, edit, or remove artists from the platform
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/events"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-6 hover:border-gray-700 transition-colors group"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-emerald-600/20 text-green-400 rounded-xl flex items-center justify-center">
+                <Calendar className="w-6 h-6" />
+              </div>
+              <ArrowUpRight className="w-5 h-5 text-gray-600 group-hover:text-green-400 transition-colors" />
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-1">
+              Manage Events
+            </h3>
+            <p className="text-gray-500">
+              Create and manage event packages
             </p>
           </Link>
 

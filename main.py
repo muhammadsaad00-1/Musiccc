@@ -647,19 +647,19 @@ async def create_event(
         ]
         supabase.table("event_performers").insert(event_performer_rows).execute()
     
-    # Now upload image with proper naming: {id}_{sanitized_name}.{extension}
+    # Now upload header image with proper naming: {id}_{sanitized_name}.{extension}
     file_bytes = await image.read()
     file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
     sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name.lower().replace(' ', '_'))
-    path = f"{event_id}_{sanitized_name}.{file_extension}"
+    path = f"{event_id}_{sanitized_name}_header.{file_extension}"
     # Ensure bucket exists before uploading
     ensure_bucket_exists("events")
     supabase.storage.from_("events").upload(path, file_bytes)
-    image_url = supabase.storage.from_("events").get_public_url(path)
+    header_image_url = supabase.storage.from_("events").get_public_url(path)
     
-    # Update event with image URL
+    # Update event with header image URL
     supabase.table("events").update({
-        "image_url": image_url
+        "header_image_url": header_image_url
     }).eq("id", event_id).execute()
 
     # Invalidate cache
@@ -696,7 +696,7 @@ def get_events(request: Request):
                 "description": event["description"],
                 "event_recommendations": event.get("event_recommendations"),
                 "pricing": event["pricing"],
-                "image_url": event.get("image_url"),
+                "header_image_url": event.get("header_image_url"),
                 "performers": performers
             })
         
@@ -737,7 +737,7 @@ def get_event(request: Request, id: str):
             "description": event["description"],
             "event_recommendations": event.get("event_recommendations"),
             "pricing": event["pricing"],
-            "image_url": event.get("image_url"),
+            "header_image_url": event.get("header_image_url"),
             "performers": performers_details,
             "performer_ids": performer_ids
         }
@@ -794,13 +794,13 @@ async def update_event(
         file_bytes = await image.read()
         file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
         sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', event_name.lower().replace(' ', '_'))
-        path = f"{event_id}_{sanitized_name}.{file_extension}"
+        path = f"{event_id}_{sanitized_name}_header.{file_extension}"
         
         # Ensure bucket exists before uploading
         ensure_bucket_exists("events")
         # Upload with upsert option to overwrite if exists
         supabase.storage.from_("events").upload(path, file_bytes, {"upsert": "true"})
-        update_data["image_url"] = supabase.storage.from_("events").get_public_url(path)
+        update_data["header_image_url"] = supabase.storage.from_("events").get_public_url(path)
     
     if update_data:
         supabase.table("events").update(update_data).eq("id", event_id).execute()

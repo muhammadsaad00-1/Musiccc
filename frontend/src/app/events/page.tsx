@@ -1,6 +1,9 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, Users, Music, Sparkles, PartyPopper, ArrowRight } from 'lucide-react';
+import { Calendar, Users, Music, Sparkles, PartyPopper, ArrowRight, Loader2 } from 'lucide-react';
 import { eventTypeDetails } from '@/lib/mockData';
 
 const eventIcons: { [key: string]: React.ReactNode } = {
@@ -11,7 +14,43 @@ const eventIcons: { [key: string]: React.ReactNode } = {
     concert: <Music className="w-8 h-8" />,
 };
 
+interface Event {
+    id: string;
+    name: string;
+    description: string;
+    event_recommendations: string;
+    pricing: number;
+    header_image_url: string;
+    performers: any[];
+}
+
 export default function EventsPage() {
+    const [backendEvents, setBackendEvents] = useState<Event[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                const response = await fetch('http://localhost:8000/events');
+                if (response.ok) {
+                    const data = await response.json();
+                    setBackendEvents(data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch events:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchEvents();
+    }, []);
+
+    // Create slug from event name
+    const createSlug = (name: string) => {
+        return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    };
+
     return (
         <div className="min-h-screen bg-[#0a0a0b]">
             {/* Hero */}
@@ -40,57 +79,117 @@ export default function EventsPage() {
             {/* Event Types Grid */}
             <section className="py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {eventTypeDetails.map((event) => (
-                            <Link
-                                key={event.id}
-                                href={`/events/${event.slug}`}
-                                className="group relative overflow-hidden rounded-3xl border border-gray-800 hover:border-gray-700 transition-all duration-500"
-                            >
-                                {/* Background Image */}
-                                <div className="relative h-80">
-                                    <Image
-                                        src={event.image}
-                                        alt={event.name}
-                                        fill
-                                        className="object-cover group-hover:scale-110 transition-transform duration-700"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/60 to-transparent" />
-                                </div>
-
-                                {/* Content */}
-                                <div className="absolute bottom-0 left-0 right-0 p-6">
-                                    {/* Icon */}
-                                    <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-pink-600 rounded-2xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform">
-                                        {eventIcons[event.id] || <Calendar className="w-8 h-8" />}
+                    {loading ? (
+                        <div className="flex items-center justify-center py-20">
+                            <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+                        </div>
+                    ) : (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {/* Mock Events */}
+                            {eventTypeDetails.map((event) => (
+                                <Link
+                                    key={event.id}
+                                    href={`/events/${event.slug}`}
+                                    className="group relative overflow-hidden rounded-3xl border border-gray-800 hover:border-gray-700 transition-all duration-500"
+                                >
+                                    {/* Background Image */}
+                                    <div className="relative h-80">
+                                        <Image
+                                            src={event.image}
+                                            alt={event.name}
+                                            fill
+                                            className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/60 to-transparent" />
                                     </div>
 
-                                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">
-                                        {event.name}
-                                    </h3>
-                                    <p className="text-gray-400 text-sm mb-4">
-                                        {event.description}
-                                    </p>
+                                    {/* Content */}
+                                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                                        {/* Icon */}
+                                        <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-pink-600 rounded-2xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform">
+                                            {eventIcons[event.id] || <Calendar className="w-8 h-8" />}
+                                        </div>
 
-                                    {/* Popular Categories */}
-                                    <div className="flex flex-wrap gap-2 mb-4">
-                                        {event.popularCategories.slice(0, 3).map((cat) => (
-                                            <span key={cat} className="px-2 py-1 bg-[#1a1a1a] text-gray-400 text-xs rounded-full border border-gray-800">
-                                                {cat}
+                                        <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">
+                                            {event.name}
+                                        </h3>
+                                        <p className="text-gray-400 text-sm mb-4">
+                                            {event.description}
+                                        </p>
+
+                                        {/* Popular Categories */}
+                                        <div className="flex flex-wrap gap-2 mb-4">
+                                            {event.popularCategories.slice(0, 3).map((cat) => (
+                                                <span key={cat} className="px-2 py-1 bg-[#1a1a1a] text-gray-400 text-xs rounded-full border border-gray-800">
+                                                    {cat}
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm text-gray-500">{event.priceRange}</span>
+                                            <span className="flex items-center gap-1 text-orange-400 text-sm font-medium group-hover:translate-x-1 transition-transform">
+                                                Explore <ArrowRight className="w-4 h-4" />
                                             </span>
-                                        ))}
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+
+                            {/* Backend Events */}
+                            {backendEvents.map((event) => (
+                                <Link
+                                    key={event.id}
+                                    href={`/events/${createSlug(event.name)}`}
+                                    className="group relative overflow-hidden rounded-3xl border border-gray-800 hover:border-gray-700 transition-all duration-500"
+                                >
+                                    {/* Background Image */}
+                                    <div className="relative h-80">
+                                        <Image
+                                            src={event.header_image_url || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'}
+                                            alt={event.name}
+                                            fill
+                                            className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/60 to-transparent" />
                                     </div>
 
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-500">{event.priceRange}</span>
-                                        <span className="flex items-center gap-1 text-orange-400 text-sm font-medium group-hover:translate-x-1 transition-transform">
-                                            Explore <ArrowRight className="w-4 h-4" />
-                                        </span>
+                                    {/* Content */}
+                                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                                        {/* Icon */}
+                                        <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-pink-600 rounded-2xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform">
+                                            <Calendar className="w-8 h-8" />
+                                        </div>
+
+                                        <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">
+                                            {event.name}
+                                        </h3>
+                                        <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                                            {event.description || event.event_recommendations}
+                                        </p>
+
+                                        {/* Performers Count */}
+                                        {event.performers && event.performers.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mb-4">
+                                                <span className="px-2 py-1 bg-[#1a1a1a] text-gray-400 text-xs rounded-full border border-gray-800">
+                                                    {event.performers.length} Artists
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm text-gray-500">
+                                                {event.pricing ? `PKR ${event.pricing.toLocaleString()}+` : 'Custom Pricing'}
+                                            </span>
+                                            <span className="flex items-center gap-1 text-orange-400 text-sm font-medium group-hover:translate-x-1 transition-transform">
+                                                Explore <ArrowRight className="w-4 h-4" />
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </section>
 

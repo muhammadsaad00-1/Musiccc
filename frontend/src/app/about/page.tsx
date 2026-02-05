@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { Users, Award, Calendar, Heart } from 'lucide-react';
+import ReviewsCarousel from '@/components/home/ReviewsCarousel';
 
 const stats = [
     { icon: <Users className="w-6 h-6" />, value: '500+', label: 'Verified Artists' },
@@ -126,6 +127,21 @@ export default function AboutPage() {
                             </p>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            {/* Testimonials Section */}
+            <section className="py-16 lg:py-24">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                            What Our Clients Say
+                        </h2>
+                        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                            Don't just take our word for it. Here's what our satisfied customers have to say about their experience.
+                        </p>
+                    </div>
+                    <ReviewsCarousel />
                 </div>
             </section>
         </div>

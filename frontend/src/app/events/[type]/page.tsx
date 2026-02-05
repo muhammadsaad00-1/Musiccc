@@ -1,7 +1,10 @@
+'use client';
+
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import ArtistCard from '@/components/artists/ArtistCard';
 import { eventTypeDetails, mockArtists, mockCategories } from '@/lib/mockData';
 
@@ -9,28 +12,95 @@ interface EventTypePageProps {
     params: Promise<{ type: string }>;
 }
 
-export async function generateStaticParams() {
-    return eventTypeDetails.map((event) => ({
-        type: event.slug,
-    }));
+interface BackendEvent {
+    id: string;
+    name: string;
+    description: string;
+    event_recommendations: string;
+    pricing: number;
+    header_image_url: string;
+    performers: any[];
 }
 
-export default async function EventTypePage({ params }: EventTypePageProps) {
-    const { type } = await params;
-    const event = eventTypeDetails.find((e) => e.slug === type);
+export default function EventTypePage({ params }: EventTypePageProps) {
+    const [type, setType] = useState<string>('');
+    const [event, setEvent] = useState<any>(null);
+    const [relevantArtists, setRelevantArtists] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const initPage = async () => {
+            const resolvedParams = await params;
+            setType(resolvedParams.type);
+
+            // First try to find in mock data
+            const mockEvent = eventTypeDetails.find((e) => e.slug === resolvedParams.type);
+            
+            if (mockEvent) {
+                setEvent(mockEvent);
+                
+                // Get artists from popular categories for this event type
+                const relevantCategoryIds = mockCategories
+                    .filter((cat) => mockEvent.popularCategories.includes(cat.name))
+                    .map((cat) => cat.id);
+
+                const filteredArtists = mockArtists.filter((artist) =>
+                    relevantCategoryIds.includes(artist.category_id)
+                );
+                setRelevantArtists(filteredArtists);
+                setLoading(false);
+            } else {
+                // Try to fetch from backend
+                try {
+                    const response = await fetch('http://localhost:8000/events');
+                    if (response.ok) {
+                        const backendEvents: BackendEvent[] = await response.json();
+                        const createSlug = (name: string) => {
+                            return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                        };
+                        
+                        const backendEvent = backendEvents.find(
+                            (e) => createSlug(e.name) === resolvedParams.type
+                        );
+
+                        if (backendEvent) {
+                            setEvent({
+                                ...backendEvent,
+                                slug: resolvedParams.type,
+                                image: backendEvent.header_image_url,
+                            });
+                            
+                            // Use performers from backend event
+                            if (backendEvent.performers && backendEvent.performers.length > 0) {
+                                setRelevantArtists(backendEvent.performers);
+                            }
+                        } else {
+                            notFound();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch event:', error);
+                    notFound();
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+
+        initPage();
+    }, [params]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+            </div>
+        );
+    }
 
     if (!event) {
         notFound();
     }
-
-    // Get artists from popular categories for this event type
-    const relevantCategoryIds = mockCategories
-        .filter((cat) => event.popularCategories.includes(cat.name))
-        .map((cat) => cat.id);
-
-    const relevantArtists = mockArtists.filter((artist) =>
-        relevantCategoryIds.includes(artist.category_id)
-    );
 
     return (
         <div className="min-h-screen bg-[#0a0a0b]">
@@ -69,7 +139,7 @@ export default async function EventTypePage({ params }: EventTypePageProps) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h2 className="text-lg text-gray-400 mb-6">Popular for {event.name}</h2>
                     <div className="flex flex-wrap gap-3">
-                        {event.popularCategories.map((category) => {
+                        {event.popularCategories?.map((category: string) => {
                             const cat = mockCategories.find((c) => c.name === category);
                             return (
                                 <Link
@@ -81,6 +151,11 @@ export default async function EventTypePage({ params }: EventTypePageProps) {
                                 </Link>
                             );
                         })}
+                        {!event.popularCategories && event.performers && (
+                            <span className="px-6 py-3 bg-[#1a1a1a] text-gray-400 rounded-full border border-gray-800">
+                                {event.performers.length} Featured Artists
+                            </span>
+                        )}
                     </div>
                 </div>
             </section>
@@ -91,55 +166,40 @@ export default async function EventTypePage({ params }: EventTypePageProps) {
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h2 className="text-2xl font-bold text-white mb-2">Recommended Artists</h2>
-                            <p className="text-gray-400">Perfect performers for your {event.name.toLowerCase()}</p>
+                            <p className="text-gray-400">
+                                {relevantArtists.length > 0 
+                                    ? `Perfect performers for your ${event.name.toLowerCase()}`
+                                    : 'No artists available yet'}
+                            </p>
                         </div>
-                        <Link
-                            href="/search"
-                            className="text-orange-400 hover:text-orange-300 font-medium flex items-center gap-1"
-                        >
-                            View All <ArrowRight className="w-4 h-4" />
-                        </Link>
+                        {relevantArtists.length > 0 && (
+                            <Link
+                                href="/search"
+                                className="text-orange-400 hover:text-orange-300 font-medium flex items-center gap-1"
+                            >
+                                View All <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        )}
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {relevantArtists.map((artist) => (
-                            <ArtistCard key={artist.id} artist={artist} />
-                        ))}
-                    </div>
-
-                    {relevantArtists.length === 0 && (
-                        <div className="text-center py-16 bg-[#1a1a1a] rounded-xl border border-gray-800">
-                            <p className="text-gray-400">No artists found for this event type yet.</p>
+                    {relevantArtists.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {relevantArtists.map((artist) => (
+                                <ArtistCard key={artist.id} artist={artist} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12">
+                            <p className="text-gray-500 mb-6">No artists found for this event type yet.</p>
+                            <Link
+                                href="/post-requirement"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full hover:shadow-lg hover:shadow-pink-500/30 transition-all"
+                            >
+                                Post Your Requirement
+                                <ArrowRight className="w-4 h-4" />
+                            </Link>
                         </div>
                     )}
-                </div>
-            </section>
-
-            {/* Price Range Info */}
-            <section className="py-16 bg-[#0f0f10]">
-                <div className="max-w-4xl mx-auto px-4 text-center">
-                    <h2 className="text-2xl font-bold text-white mb-4">Budget Guide</h2>
-                    <p className="text-gray-400 mb-6">
-                        Typical entertainment budget for {event.name.toLowerCase()} events in Pakistan
-                    </p>
-                    <div className="inline-block px-8 py-4 bg-gradient-to-r from-orange-500/20 to-pink-600/20 rounded-2xl border border-orange-500/30">
-                        <span className="text-2xl font-bold text-white">{event.priceRange}</span>
-                    </div>
-                </div>
-            </section>
-
-            {/* CTA */}
-            <section className="py-16">
-                <div className="max-w-4xl mx-auto px-4 text-center">
-                    <h2 className="text-3xl font-bold text-white mb-4">Planning a {event.name}?</h2>
-                    <p className="text-gray-400 mb-8">Get personalized artist recommendations for your event</p>
-                    <Link
-                        href="/post-requirement"
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-pink-500/30 transition-all"
-                    >
-                        Get Recommendations
-                        <ArrowRight className="w-5 h-5" />
-                    </Link>
                 </div>
             </section>
         </div>
