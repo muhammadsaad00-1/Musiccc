@@ -43,6 +43,12 @@ def invalidate_reviews_cache():
     for key in keys_to_remove:
         cache.pop(key, None)
 
+def invalidate_packages_cache():
+    """Invalidate all package-related cache entries"""
+    keys_to_remove = [k for k in cache.keys() if k.startswith('packages_')]
+    for key in keys_to_remove:
+        cache.pop(key, None)
+
 app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -102,6 +108,10 @@ async def submit_requirement(
     phone: str = Form(...),
     message: str = Form(None),
     event_name: str = Form("Custom"),
+    package_id: str = Form(None),
+    package_name: str = Form(None),
+    artist_id: str = Form(None),
+    artist_name: str = Form(None),
 ):
     """
     Submit a new booking requirement.
@@ -126,6 +136,16 @@ async def submit_requirement(
             "status": "pending",
             "created_at": datetime.now().isoformat()
         }
+        
+        # Add package information if provided
+        if package_id:
+            requirement_data["package_id"] = package_id
+        if package_name:
+            requirement_data["package_name"] = package_name
+        if artist_id:
+            requirement_data["artist_id"] = artist_id
+        if artist_name:
+            requirement_data["artist_name"] = artist_name
         
         # Save to database
         response = supabase.table("booking_requirements").insert(requirement_data).execute()
@@ -820,6 +840,263 @@ def delete_event(request: Request, event_id: str):
     invalidate_events_cache()
     
     return {"message": "Event deleted"}
+
+
+# ============================================
+# PACKAGES ENDPOINTS
+# ============================================
+
+@app.post("/admin/packages")
+@limiter.limit("10/minute")
+async def create_package(
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(None),
+    event_type: str = Form(...),
+    pricing: float = Form(...),
+    features: str = Form(None),  # JSON string of list
+    duration: str = Form(None),
+    max_guests: int = Form(None),
+    performer_ids: str = Form(None),  # JSON string of list of performer UUIDs
+    image: UploadFile = File(...)
+):
+    """Create a new package with performers and header image"""
+    import re
+    
+    # Parse JSON strings to lists
+    features_list = json.loads(features) if features else []
+    performer_ids_list = json.loads(performer_ids) if performer_ids else []
+    
+    # First, insert package without image URL to get the generated UUID
+    insert_response = supabase.table("packages").insert({
+        "name": name,
+        "description": description,
+        "event_type": event_type,
+        "pricing": pricing,
+        "features": features_list,
+        "duration": duration,
+        "max_guests": max_guests,
+        "is_active": True
+    }).execute()
+    
+    package_id = insert_response.data[0]["id"]
+    
+    # Insert performer associations into package_performers junction table
+    if performer_ids_list:
+        package_performer_rows = [
+            {"package_id": package_id, "performer_id": performer_id}
+            for performer_id in performer_ids_list
+        ]
+        supabase.table("package_performers").insert(package_performer_rows).execute()
+    
+    # Upload header image
+    file_bytes = await image.read()
+    file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
+    sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name.lower().replace(' ', '_'))
+    path = f"{package_id}_{sanitized_name}_header.{file_extension}"
+    
+    # Ensure bucket exists before uploading
+    ensure_bucket_exists("packages")
+    supabase.storage.from_("packages").upload(path, file_bytes)
+    header_image_url = supabase.storage.from_("packages").get_public_url(path)
+    
+    # Update package with header image URL
+    supabase.table("packages").update({
+        "header_image_url": header_image_url
+    }).eq("id", package_id).execute()
+    
+    # Invalidate cache
+    invalidate_packages_cache()
+    
+    return {"message": "Package created", "id": package_id}
+
+
+@app.get("/packages")
+@limiter.limit("100/minute")
+def get_packages(request: Request, event_type: str = None, is_active: bool = None):
+    """Get all packages with their associated performers"""
+    cache_key = get_cache_key("packages_all", event_type=event_type, is_active=is_active)
+    
+    # Check cache
+    if cache_key in cache:
+        return cache[cache_key]
+    
+    try:
+        # Get all packages
+        query = supabase.table("packages").select("*")
+        
+        if event_type:
+            query = query.eq("event_type", event_type)
+        
+        if is_active is not None:
+            query = query.eq("is_active", is_active)
+        
+        packages_response = query.execute()
+        packages = []
+        
+        for package in packages_response.data:
+            # Get performers for this package through the junction table
+            package_performers_response = supabase.table("package_performers").select(
+                "performers(*)"
+            ).eq("package_id", package["id"]).execute()
+            
+            performers = [pp["performers"] for pp in package_performers_response.data]
+            
+            packages.append({
+                "id": package["id"],
+                "name": package["name"],
+                "description": package["description"],
+                "event_type": package["event_type"],
+                "pricing": package["pricing"],
+                "features": package.get("features", []),
+                "duration": package.get("duration"),
+                "max_guests": package.get("max_guests"),
+                "header_image_url": package.get("header_image_url"),
+                "is_active": package.get("is_active", True),
+                "created_at": package.get("created_at"),
+                "performers": performers
+            })
+        
+        cache[cache_key] = packages
+        
+        return packages
+    except Exception as e:
+        raise
+
+
+@app.get("/packages/{id}")
+@limiter.limit("100/minute")
+def get_package(request: Request, id: str):
+    """Get a single package with performers"""
+    cache_key = get_cache_key("packages_id", id=id)
+    
+    # Check cache
+    if cache_key in cache:
+        return cache[cache_key]
+    
+    try:
+        response = supabase.table("packages").select("*").eq("id", id).execute()
+        if not response.data:
+            return {"error": "Package not found"}
+        
+        package = response.data[0]
+        
+        # Fetch performers through the package_performers junction table
+        package_performers_response = supabase.table("package_performers").select(
+            "performer_id, performers(*)"
+        ).eq("package_id", id).execute()
+        
+        performers_details = [pp["performers"] for pp in package_performers_response.data]
+        performer_ids = [pp["performer_id"] for pp in package_performers_response.data]
+        
+        result = {
+            "id": package["id"],
+            "name": package["name"],
+            "description": package["description"],
+            "event_type": package["event_type"],
+            "pricing": package["pricing"],
+            "features": package.get("features", []),
+            "duration": package.get("duration"),
+            "max_guests": package.get("max_guests"),
+            "header_image_url": package.get("header_image_url"),
+            "is_active": package.get("is_active", True),
+            "created_at": package.get("created_at"),
+            "performers": performers_details,
+            "performer_ids": performer_ids
+        }
+        
+        cache[cache_key] = result
+        
+        return result
+    except Exception as e:
+        raise
+
+
+@app.put("/admin/packages/{package_id}")
+@limiter.limit("20/minute")
+async def update_package(
+    request: Request,
+    package_id: str,
+    name: str = Form(None),
+    description: str = Form(None),
+    event_type: str = Form(None),
+    pricing: float = Form(None),
+    features: str = Form(None),
+    duration: str = Form(None),
+    max_guests: int = Form(None),
+    is_active: bool = Form(None),
+    performer_ids: str = Form(None),
+    image: Optional[UploadFile] = File(None)
+):
+    """Update a package"""
+    import re
+    
+    update_data = {}
+    if name:
+        update_data["name"] = name
+    if description:
+        update_data["description"] = description
+    if event_type:
+        update_data["event_type"] = event_type
+    if pricing is not None:
+        update_data["pricing"] = pricing
+    if features:
+        update_data["features"] = json.loads(features)
+    if duration:
+        update_data["duration"] = duration
+    if max_guests is not None:
+        update_data["max_guests"] = max_guests
+    if is_active is not None:
+        update_data["is_active"] = is_active
+    
+    # Handle performer associations through junction table
+    if performer_ids:
+        performer_ids_list = json.loads(performer_ids)
+        # Delete existing associations
+        supabase.table("package_performers").delete().eq("package_id", package_id).execute()
+        # Insert new associations
+        if performer_ids_list:
+            package_performer_rows = [
+                {"package_id": package_id, "performer_id": performer_id}
+                for performer_id in performer_ids_list
+            ]
+            supabase.table("package_performers").insert(package_performer_rows).execute()
+    
+    if image and image.filename:
+        # Get package name for proper file naming
+        package_response = supabase.table("packages").select("name").eq("id", package_id).execute()
+        package_name = package_response.data[0]["name"] if package_response.data else "package"
+        
+        file_bytes = await image.read()
+        file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
+        sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', package_name.lower().replace(' ', '_'))
+        path = f"{package_id}_{sanitized_name}_header.{file_extension}"
+        
+        # Ensure bucket exists before uploading
+        ensure_bucket_exists("packages")
+        # Upload with upsert option to overwrite if exists
+        supabase.storage.from_("packages").upload(path, file_bytes, {"upsert": "true"})
+        update_data["header_image_url"] = supabase.storage.from_("packages").get_public_url(path)
+    
+    if update_data:
+        supabase.table("packages").update(update_data).eq("id", package_id).execute()
+    
+    # Invalidate cache
+    invalidate_packages_cache()
+    
+    return {"message": "Package updated"}
+
+
+@app.delete("/admin/packages/{package_id}")
+@limiter.limit("10/minute")
+def delete_package(request: Request, package_id: str):
+    """Delete a package"""
+    supabase.table("packages").delete().eq("id", package_id).execute()
+    
+    # Invalidate cache
+    invalidate_packages_cache()
+    
+    return {"message": "Package deleted"}
 
 
 # ============================================

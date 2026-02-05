@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Loader2,
   Bell,
+  Package,
 } from "lucide-react";
 import { mockArtists, mockCategories } from "@/lib/mockData";
 
@@ -203,6 +204,24 @@ export default function AdminDashboard() {
             </h3>
             <p className="text-gray-500">
               Create and manage event packages
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/packages"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-6 hover:border-gray-700 transition-colors group"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-violet-600/20 text-purple-400 rounded-xl flex items-center justify-center">
+                <Package className="w-6 h-6" />
+              </div>
+              <ArrowUpRight className="w-5 h-5 text-gray-600 group-hover:text-purple-400 transition-colors" />
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-1">
+              Manage Packages
+            </h3>
+            <p className="text-gray-500">
+              Create bundled event packages with artists
             </p>
           </Link>
 

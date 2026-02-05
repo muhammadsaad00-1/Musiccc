@@ -134,6 +134,8 @@ export default function PostRequirementPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<any>(null);
   const [loadingArtist, setLoadingArtist] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<any>(null);
+  const [loadingPackage, setLoadingPackage] = useState(false);
   const [formData, setFormData] = useState({
     eventType: "",
     eventDate: "",
@@ -149,11 +151,13 @@ export default function PostRequirementPage() {
   // Auto-fill effect for step transitions
   const [showStepContent, setShowStepContent] = useState(true);
 
-  // Fetch artist data if coming from artist page
+  // Fetch artist or package data if coming from artist/package page
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const artistSlug = urlParams.get("artist");
+    const packageId = urlParams.get("package");
 
+    // Handle artist pre-fill
     if (artistSlug) {
       setLoadingArtist(true);
       fetch(`http://localhost:8000/performers/by-name/${encodeURIComponent(artistSlug)}`)
@@ -187,6 +191,39 @@ export default function PostRequirementPage() {
         })
         .finally(() => {
           setLoadingArtist(false);
+        });
+    }
+
+    // Handle package pre-fill
+    if (packageId) {
+      setLoadingPackage(true);
+      fetch(`http://localhost:8000/packages/${packageId}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (!data.error) {
+            setSelectedPackage(data);
+            
+            // Map budget based on pricing
+            let budgetRange = "";
+            if (data.pricing < 50000) budgetRange = "under-50k";
+            else if (data.pricing < 100000) budgetRange = "50k-100k";
+            else if (data.pricing < 300000) budgetRange = "100k-300k";
+            else if (data.pricing < 500000) budgetRange = "300k-500k";
+            else budgetRange = "500k+";
+
+            setFormData((prev) => ({
+              ...prev,
+              eventType: data.event_type || "",
+              budget: budgetRange,
+              message: `Interested in booking the "${data.name}" package for my event. ${data.performers.length > 0 ? `This package includes: ${data.performers.map((p: any) => p.name).join(", ")}.` : ""}`,
+            }));
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching package:", error);
+        })
+        .finally(() => {
+          setLoadingPackage(false);
         });
     }
   }, []);
@@ -260,12 +297,19 @@ export default function PostRequirementPage() {
         submitData.append(key, value as any);
       });
 
-      // Append event_name from URL params (`package` or `event_name`) or default to "Custom"
+      // Append event_name and package info from URL params or default to "Custom"
       try {
         const urlParams = new URLSearchParams(window.location.search);
-        const eventName =
-          urlParams.get("package") || urlParams.get("event_name") || "Custom";
-        submitData.append("event_name", eventName);
+        const packageId = urlParams.get("package");
+        const eventName = urlParams.get("event_name") || "Custom";
+        
+        if (packageId && selectedPackage) {
+          submitData.append("event_name", selectedPackage.name);
+          submitData.append("package_id", packageId);
+          submitData.append("package_name", selectedPackage.name);
+        } else {
+          submitData.append("event_name", eventName);
+        }
         
         // If artist was selected, append artist information
         if (selectedArtist) {
