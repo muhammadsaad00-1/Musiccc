@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import ArtistCard from "@/components/artists/ArtistCard";
 import { mockCategories, mockArtists } from "@/lib/mockData";
 import { SlidersHorizontal, Loader2 } from "lucide-react";
@@ -24,6 +25,33 @@ const categorySlugToBackendName: Record<string, string> = {
   photographers: "Photographer",
   "mehndi-artists": "Mehndi Artist",
   decorators: "Decorator",
+  // Additional category mappings for CategoryGrid
+  qawwals: "Singer", // Map to Singer category
+  "sufi-artists": "Singer", // Map to Singer category
+  "live-bands": "Musician", // Map to Musician category
+  "ghazal-artists": "Singer", // Map to Singer category
+  "folk-singers": "Singer", // Map to Singer category
+  "classical-musicians": "Musician", // Map to Musician category
+};
+
+// Define all valid category configurations
+const categoryConfigs: Record<string, { name: string; description: string; id: number }> = {
+  singers: { name: "Singers", description: "Professional singers for all types of events", id: 1 },
+  qawwals: { name: "Qawwals", description: "Traditional and modern Qawwali performances", id: 1 },
+  "sufi-artists": { name: "Sufi Artists", description: "Soul-stirring Sufi performances", id: 1 },
+  "ghazal-artists": { name: "Ghazal Artists", description: "Poetry in melody", id: 1 },
+  "folk-singers": { name: "Folk Singers", description: "Punjabi, Sindhi, Pashto and more", id: 1 },
+  musicians: { name: "Musicians", description: "Talented musicians and bands", id: 2 },
+  "live-bands": { name: "Live Bands", description: "Rock, Fusion, Jazz bands", id: 2 },
+  "classical-musicians": { name: "Classical Musicians", description: "Tabla, Sitar, Harmonium masters", id: 2 },
+  djs: { name: "DJs", description: "Top DJs for parties and events", id: 3 },
+  dancers: { name: "Dancers", description: "Classical, contemporary and folk dancers", id: 4 },
+  comedians: { name: "Comedians", description: "Stand-up comedians and entertainers", id: 5 },
+  anchors: { name: "Anchors", description: "Professional event hosts and MCs", id: 6 },
+  "makeup-artists": { name: "Makeup Artists", description: "Bridal and event makeup specialists", id: 7 },
+  photographers: { name: "Photographers", description: "Wedding and event photographers", id: 8 },
+  "mehndi-artists": { name: "Mehndi Artists", description: "Traditional and modern mehndi designs", id: 9 },
+  decorators: { name: "Decorators", description: "Event decoration and styling", id: 10 },
 };
 
 // Transform backend performer data to frontend Artist format
@@ -58,7 +86,11 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const category = mockCategories.find((c) => c.slug === categorySlug);
+  // First check if it's a valid category from our config
+  const categoryConfig = categoryConfigs[categorySlug];
+  
+  // Fallback to mockCategories if not in config
+  const category = categoryConfig || mockCategories.find((c) => c.slug === categorySlug);
 
   useEffect(() => {
     async function fetchArtists() {
@@ -233,13 +265,34 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16 bg-[#1a1a1a] rounded-xl border border-gray-800">
-                  <p className="text-gray-400 text-lg">
-                    No artists found in this category yet.
-                  </p>
-                  <p className="text-gray-600 mt-2">
-                    Check back soon or try a different category.
-                  </p>
+                <div className="text-center py-20">
+                  <div className="bg-[#1a1a1a] rounded-3xl border border-gray-800 p-12 max-w-md mx-auto">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center mx-auto mb-6">
+                      <svg className="w-10 h-10 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">
+                      No Artists Available Yet
+                    </h3>
+                    <p className="text-gray-400 mb-6">
+                      We're currently building our {category?.name || 'artist'} network. Check back soon for talented professionals!
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Link
+                        href="/search"
+                        className="px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-orange-500/20 transition-all"
+                      >
+                        Browse All Categories
+                      </Link>
+                      <Link
+                        href="/post-requirement"
+                        className="px-6 py-3 bg-[#0a0a0b] border border-gray-700 text-white font-semibold rounded-full hover:border-orange-500/50 transition-all"
+                      >
+                        Post Your Requirement
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
