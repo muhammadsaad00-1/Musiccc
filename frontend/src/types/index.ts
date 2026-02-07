@@ -29,6 +29,17 @@ export interface Artist {
     performance_duration?: string;
     languages?: string[];
     created_at?: string;
+    // Backend API properties
+    profile_image_url?: string;
+    header_image_url?: string;
+    description?: string;
+    locations?: string[];
+    price?: number;
+    genres?: string[];
+    instagram_url?: string;
+    youtube_url?: string;
+    videos?: string[];
+    popular_songs?: string[];
 }
 
 export interface Inquiry {

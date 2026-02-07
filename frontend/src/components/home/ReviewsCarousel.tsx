@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Star } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Star, Loader2, MessageSquare, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 
 interface Review {
     id: string;
@@ -11,169 +11,171 @@ interface Review {
     created_at?: string;
 }
 
-// Dummy reviews to supplement backend data
-const dummyReviews: Review[] = [
-    {
-        id: 'dummy-1',
-        user_name: 'Ahmed Khan',
-        rating: 5,
-        review: 'Booked a singer for our wedding reception and the experience was phenomenal! The platform made it so easy to find the perfect artist. Highly recommend Artist Factory!',
-    },
-    {
-        id: 'dummy-2',
-        user_name: 'Fatima Ali',
-        rating: 5,
-        review: 'Amazing service! Found a fantastic DJ for our corporate event in Karachi. The booking process was smooth and the artist was professional.',
-    },
-    {
-        id: 'dummy-3',
-        user_name: 'Hassan Raza',
-        rating: 4,
-        review: 'Great platform with a wide variety of talented artists. Helped us organize an incredible mehndi event. Will definitely use again!',
-    },
-    {
-        id: 'dummy-4',
-        user_name: 'Ayesha Malik',
-        rating: 5,
-        review: 'The best platform for finding artists in Pakistan! Booked a qawwal for our event and everyone was mesmerized. Thank you Artist Factory!',
-    },
-    {
-        id: 'dummy-5',
-        user_name: 'Bilal Ahmed',
-        rating: 5,
-        review: 'Professional service from start to finish. The photographers we booked captured every moment beautifully. Couldn\'t be happier!',
-    },
-    {
-        id: 'dummy-6',
-        user_name: 'Sana Tariq',
-        rating: 4,
-        review: 'Found amazing comedians for our family gathering. Everyone had a great time. The platform is user-friendly and reliable.',
-    },
-];
-
-export default function ReviewsCarousel() {
-    const [reviews, setReviews] = useState<Review[]>(dummyReviews);
+export default function ReviewsCarousel({ artistId, className }: { artistId?: string; className?: string }) {
+    const [reviews, setReviews] = useState<Review[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [isPaused, setIsPaused] = useState(false);
 
     useEffect(() => {
-        // Fetch reviews from backend
         const fetchReviews = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/reviews?limit=20');
+                const url = artistId
+                    ? `http://localhost:8000/api/reviews?artist_id=${artistId}`
+                    : 'http://localhost:8000/api/reviews?limit=20';
+
+                const response = await fetch(url);
                 if (response.ok) {
                     const backendReviews = await response.json();
-                    // Merge backend reviews with dummy data
-                    setReviews([...backendReviews, ...dummyReviews]);
+                    if (backendReviews && backendReviews.length > 0) {
+                        setReviews(backendReviews);
+                    }
                 }
             } catch (error) {
-                console.log('Using dummy data only');
-                // Keep dummy reviews as fallback
+                console.log('Could not load reviews');
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchReviews();
-    }, []);
+    }, [artistId]);
 
-    // Auto-advance carousel
+    // Auto-advance every 5 seconds
     useEffect(() => {
+        if (reviews.length === 0 || isPaused) return;
+
         const timer = setInterval(() => {
-            setCurrentIndex((prev) => (prev + 1) % Math.ceil(reviews.length / 3));
+            setCurrentIndex((prev) => (prev + 1) % reviews.length);
         }, 5000);
+
         return () => clearInterval(timer);
+    }, [reviews.length, isPaused]);
+
+    const goToPrevious = useCallback(() => {
+        setCurrentIndex((prev) => (prev - 1 + reviews.length) % reviews.length);
+    }, [reviews.length]);
+
+    const goToNext = useCallback(() => {
+        setCurrentIndex((prev) => (prev + 1) % reviews.length);
     }, [reviews.length]);
 
     const renderStars = (rating: number) => {
         return (
-            <div className="flex gap-1">
+            <div className="flex gap-1 justify-center">
                 {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                         key={star}
-                        className={`w-5 h-5 ${
-                            star <= rating
-                                ? 'fill-orange-400 text-orange-400'
-                                : 'text-gray-600'
-                        }`}
+                        className={`w-6 h-6 ${star <= rating
+                            ? 'fill-orange-400 text-orange-400'
+                            : 'text-gray-600'
+                            }`}
                     />
                 ))}
             </div>
         );
     };
 
-    const visibleReviews = reviews.slice(currentIndex * 3, currentIndex * 3 + 3);
-
     if (isLoading) {
         return (
             <div className="flex justify-center items-center py-20">
-                <div className="text-gray-400">Loading reviews...</div>
+                <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+                <span className="ml-2 text-gray-400">Loading reviews...</span>
             </div>
         );
     }
 
+    if (reviews.length === 0) {
+        return (
+            <div className="text-center py-16 bg-[#1a1a1a] rounded-2xl border border-gray-800">
+                <MessageSquare className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">No Reviews Yet</h3>
+                <p className="text-gray-400">Be the first to share your experience!</p>
+            </div>
+        );
+    }
+
+    const currentReview = reviews[currentIndex];
+
     return (
-        <div className="relative">
-            {/* Reviews Grid */}
-            <div className="grid md:grid-cols-3 gap-6">
-                {visibleReviews.map((review, idx) => (
-                    <div
-                        key={review.id}
-                        className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 transform transition-all duration-500 hover:scale-105"
-                        style={{
-                            animation: `fadeIn 0.5s ease-in ${idx * 0.1}s both`,
-                        }}
-                    >
-                        {/* Stars */}
-                        <div className="mb-4">{renderStars(review.rating)}</div>
+        <div
+            className="relative max-w-4xl mx-auto"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+        >
+            {/* Main Review Card */}
+            <div className="relative bg-gradient-to-br from-[#1a1a1a] to-[#252525] rounded-3xl p-8 md:p-12 border border-gray-800 hover:border-orange-500/50 text-center transition-all duration-500 group">
+                {/* Neon Glow Effect */}
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-pink-600/0 group-hover:from-orange-500/10 group-hover:via-orange-500/20 group-hover:to-pink-600/10 transition-all duration-500" />
 
-                        {/* Review Text */}
-                        <p className="text-gray-300 mb-6 line-clamp-4 min-h-[100px]">
-                            "{review.review}"
-                        </p>
+                {/* Quote Icon */}
+                <div className="absolute top-6 left-6 opacity-20 group-hover:opacity-40 transition-opacity">
+                    <Quote className="w-16 h-16 text-orange-500" />
+                </div>
 
-                        {/* User Name */}
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold">
-                                {review.user_name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <p className="text-white font-medium">{review.user_name}</p>
-                                <p className="text-gray-500 text-sm">Verified Customer</p>
-                            </div>
-                        </div>
+                {/* Stars */}
+                <div className="relative mb-6">
+                    {renderStars(currentReview.rating)}
+                </div>
+
+                {/* Review Text */}
+                <p className="relative text-xl md:text-2xl lg:text-3xl font-medium text-white leading-relaxed mb-8 max-w-3xl mx-auto group-hover:text-gray-100 transition-colors">
+                    "<span className="text-orange-400/90">{currentReview.review.charAt(0)}</span>{currentReview.review.slice(1)}"
+                </p>
+
+                {/* User Info */}
+                <div className="relative flex items-center justify-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-pink-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-orange-500/30">
+                        {currentReview.user_name.charAt(0).toUpperCase()}
                     </div>
-                ))}
+                    <div className="text-left">
+                        <p className="text-white font-semibold text-lg">{currentReview.user_name}</p>
+                        <p className="text-orange-400/70 text-sm">Verified Customer ✓</p>
+                    </div>
+                </div>
             </div>
 
-            {/* Navigation Dots */}
-            <div className="flex justify-center gap-2 mt-8">
-                {Array.from({ length: Math.ceil(reviews.length / 3) }).map((_, idx) => (
+            {/* Navigation Arrows */}
+            {reviews.length > 1 && (
+                <>
                     <button
-                        key={idx}
-                        onClick={() => setCurrentIndex(idx)}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                            idx === currentIndex
-                                ? 'bg-orange-500 w-8'
-                                : 'bg-gray-600 hover:bg-gray-500'
-                        }`}
-                        aria-label={`Go to slide ${idx + 1}`}
-                    />
-                ))}
-            </div>
+                        onClick={goToPrevious}
+                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-6 w-12 h-12 bg-[#1a1a1a] border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:border-orange-500 hover:bg-orange-500/10 transition-all duration-300 shadow-lg"
+                        aria-label="Previous review"
+                    >
+                        <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <button
+                        onClick={goToNext}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-6 w-12 h-12 bg-[#1a1a1a] border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:border-orange-500 hover:bg-orange-500/10 transition-all duration-300 shadow-lg"
+                        aria-label="Next review"
+                    >
+                        <ChevronRight className="w-6 h-6" />
+                    </button>
+                </>
+            )}
 
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-            `}</style>
+            {/* Progress Dots */}
+            {reviews.length > 1 && (
+                <div className="flex justify-center gap-2 mt-8">
+                    {reviews.map((_, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => setCurrentIndex(idx)}
+                            className={`h-2 rounded-full transition-all duration-300 ${idx === currentIndex
+                                ? 'bg-gradient-to-r from-orange-500 to-pink-600 w-8'
+                                : 'bg-gray-600 hover:bg-gray-500 w-2'
+                                }`}
+                            aria-label={`Go to review ${idx + 1}`}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {/* Auto-advance indicator */}
+            <p className="text-center text-gray-600 text-xs mt-4">
+                {isPaused ? 'Paused' : 'Auto-advancing'} • {currentIndex + 1} of {reviews.length}
+            </p>
         </div>
     );
 }

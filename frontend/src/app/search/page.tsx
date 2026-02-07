@@ -3,8 +3,9 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import ArtistCard from "@/components/artists/ArtistCard";
-import { mockArtists, mockCategories, cities } from "@/lib/mockData";
-import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
+import { mockCategories } from "@/lib/mockData"; // Keep categories for static filter options
+import { Search, SlidersHorizontal, Loader2, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 // Transform backend performer to frontend artist format
 function transformPerformerToArtist(performer: any): any {
@@ -43,7 +44,7 @@ function getCategoryIdFromName(categoryName: string): number {
     Anchor: 6,
     "Makeup Artist": 7,
     Photographer: 8,
-    Photography: 8, // Alias for Photographer
+    Photography: 8,
     "Mehndi Artist": 9,
     Decorator: 10,
   };
@@ -60,7 +61,7 @@ function SearchContent() {
   const [category, setCategory] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [allPerformers, setAllPerformers] = useState<any[]>([]);
-  const [availableCities, setAvailableCities] = useState<string[]>(cities);
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch all performers from backend
@@ -76,13 +77,11 @@ function SearchContent() {
           );
           setAllPerformers(transformedPerformers);
         } else {
-          // Fallback to mock data if API fails
-          setAllPerformers(mockArtists);
+          setAllPerformers([]);
         }
       } catch (error) {
         console.error("Error fetching performers:", error);
-        // Fallback to mock data
-        setAllPerformers(mockArtists);
+        setAllPerformers([]);
       } finally {
         setLoading(false);
       }
@@ -104,7 +103,6 @@ function SearchContent() {
         }
       } catch (error) {
         console.error("Error fetching cities:", error);
-        // Keep default cities from mockData
       }
     }
 
@@ -144,6 +142,15 @@ function SearchContent() {
       {/* Search Header */}
       <section className="bg-[#1a1a1a] border-b border-gray-800 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 group"
+          >
+            <div className="w-8 h-8 rounded-full bg-[#0a0a0b] border border-gray-700 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition-all">
+              <ArrowLeft className="w-4 h-4" />
+            </div>
+            <span className="text-sm font-medium">Back to Home</span>
+          </Link>
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Main Search */}
             <div className="flex-1 relative">
@@ -219,7 +226,7 @@ function SearchContent() {
               <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
             </div>
           ) : results.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {results.map((artist) => (
                 <ArtistCard key={artist.id} artist={artist} />
               ))}

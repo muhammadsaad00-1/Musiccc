@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Menu, X, Search, ChevronDown, Zap, Mic2, Music, PartyPopper, MapPin, Star, Calendar } from 'lucide-react';
+import { Menu, X, Search, ChevronDown, Zap, Mic2, Music, Home, MapPin, Star, Calendar, Info, Phone } from 'lucide-react';
 
 // Pakistan-focused artist categories
 const artistCategories = [
@@ -39,7 +39,6 @@ const cities = [
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [isEventsOpen, setIsEventsOpen] = useState(false);
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0b]/95 backdrop-blur-md border-b border-gray-800/50">
@@ -57,16 +56,23 @@ export default function Header() {
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden lg:flex items-center space-x-6">
-                        {/* Book Artists Dropdown */}
+                    <nav className="hidden lg:flex items-center space-x-8">
+                        {/* Home */}
+                        <Link
+                            href="/"
+                            className="flex items-center gap-1 text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 font-medium transition-all duration-300"
+                        >
+                            Home
+                        </Link>
+
+                        {/* Artists Dropdown */}
                         <div
                             className="relative"
                             onMouseEnter={() => setIsDropdownOpen(true)}
                             onMouseLeave={() => setIsDropdownOpen(false)}
                         >
                             <button className="flex items-center space-x-1 text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 font-medium transition-all duration-300 py-6">
-                                <Mic2 className="w-4 h-4 mr-1" />
-                                <span>Book Artists</span>
+                                <span>Artists</span>
                                 <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
 
@@ -88,7 +94,7 @@ export default function Header() {
                                                     {artistCategories.map((category) => (
                                                         <Link
                                                             key={category.slug}
-                                                            href={`/artists/${category.slug}`}
+                                                            href={`/artists?category=${category.slug}`}
                                                             className="flex items-center gap-2 text-gray-400 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 transition-all duration-200"
                                                         >
                                                             <span>{category.icon}</span>
@@ -139,10 +145,10 @@ export default function Header() {
 
                                                 {/* Quick CTA */}
                                                 <Link
-                                                    href="/post-requirement"
+                                                    href="/search"
                                                     className="mt-6 block px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-600 text-white text-center text-sm font-semibold rounded-lg hover:shadow-lg hover:shadow-pink-500/30 transition-all"
                                                 >
-                                                    Quick Book Now
+                                                    Browse All Artists
                                                 </Link>
                                             </div>
                                         </div>
@@ -151,23 +157,6 @@ export default function Header() {
                             )}
                         </div>
 
-                        {/* Events Link */}
-                        <Link
-                            href="/events"
-                            className="flex items-center gap-1 text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 font-medium transition-all duration-300"
-                        >
-                            <PartyPopper className="w-4 h-4" />
-                            Events
-                        </Link>
-
-                        {/* Packages */}
-                        <Link
-                            href="/packages"
-                            className="text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 font-medium transition-all duration-300"
-                        >
-                            Packages
-                        </Link>
-
                         {/* Express Booking */}
                         <Link
                             href="/post-requirement"
@@ -175,6 +164,22 @@ export default function Header() {
                         >
                             <Zap className="w-4 h-4" />
                             Express Booking
+                        </Link>
+
+                        {/* About Us */}
+                        <Link
+                            href="/about"
+                            className="text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 font-medium transition-all duration-300"
+                        >
+                            About Us
+                        </Link>
+
+                        {/* Contact Us */}
+                        <Link
+                            href="/contact"
+                            className="text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 font-medium transition-all duration-300"
+                        >
+                            Contact Us
                         </Link>
                     </nav>
 
@@ -187,16 +192,10 @@ export default function Header() {
                             <Search className="w-5 h-5" />
                         </Link>
                         <Link
-                            href="/admin/login"
-                            className="px-4 py-2 text-gray-300 hover:text-white border border-gray-700 hover:border-gray-600 rounded-full transition-all text-sm font-medium"
-                        >
-                            Admin Login
-                        </Link>
-                        <Link
                             href="/post-requirement"
                             className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-pink-500/30 transition-all text-sm"
                         >
-                            Post Requirement
+                            Book Now
                         </Link>
                     </div>
 
@@ -214,16 +213,25 @@ export default function Header() {
             {isMenuOpen && (
                 <div className="lg:hidden bg-[#1a1a1a] border-t border-gray-800 animate-slideDown max-h-[80vh] overflow-y-auto">
                     <div className="px-4 py-4 space-y-4">
+                        {/* Home */}
+                        <Link
+                            href="/"
+                            className="block py-2 text-white font-medium"
+                            onClick={() => setIsMenuOpen(false)}
+                        >
+                            🏠 Home
+                        </Link>
+
                         {/* Artists */}
                         <div className="pb-4 border-b border-gray-800">
                             <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                <Mic2 className="w-3 h-3" /> Book Artists
+                                <Mic2 className="w-3 h-3" /> Artists
                             </p>
                             <div className="grid grid-cols-2 gap-2">
                                 {artistCategories.map((category) => (
                                     <Link
                                         key={category.slug}
-                                        href={`/artists/${category.slug}`}
+                                        href={`/artists?category=${category.slug}`}
                                         className="flex items-center gap-2 text-gray-300 hover:text-white py-1.5 text-sm"
                                         onClick={() => setIsMenuOpen(false)}
                                     >
@@ -257,35 +265,16 @@ export default function Header() {
                             </div>
                         </div>
 
-                        {/* Cities */}
-                        <div className="pb-4 border-b border-gray-800">
-                            <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                <MapPin className="w-3 h-3" /> Cities
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                                {cities.map((city) => (
-                                    <Link
-                                        key={city.slug}
-                                        href={`/search?city=${city.slug}`}
-                                        className="px-3 py-1 bg-[#2a2a2a] text-gray-300 rounded-full text-sm hover:bg-orange-500/20 hover:text-orange-400 transition-colors"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        {city.name}
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-
                         {/* Quick Links */}
-                        <Link href="/packages" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
-                            📦 Event Packages
-                        </Link>
                         <Link href="/post-requirement" className="flex items-center gap-2 py-2 text-yellow-400 font-medium" onClick={() => setIsMenuOpen(false)}>
                             <Zap className="w-4 h-4" />
                             Express Booking
                         </Link>
-                        <Link href="/admin/login" className="block py-2 text-gray-400 border-t border-gray-800 pt-4 font-medium" onClick={() => setIsMenuOpen(false)}>
-                            🔐 Admin Login
+                        <Link href="/about" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
+                            ℹ️ About Us
+                        </Link>
+                        <Link href="/contact" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
+                            📞 Contact Us
                         </Link>
 
                         {/* CTA */}
@@ -294,7 +283,7 @@ export default function Header() {
                             className="block w-full text-center px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
                             onClick={() => setIsMenuOpen(false)}
                         >
-                            Post Your Requirement
+                            Book Now
                         </Link>
                     </div>
                 </div>

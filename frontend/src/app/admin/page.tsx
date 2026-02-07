@@ -17,7 +17,7 @@ import {
   Package,
   LogOut,
 } from "lucide-react";
-import { mockArtists, mockCategories } from "@/lib/mockData";
+
 import { supabase } from "@/lib/supabase";
 
 interface RequirementStats {
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
     const checkAuth = async () => {
       const isLoggedIn = sessionStorage.getItem("adminLoggedIn");
       const accessToken = sessionStorage.getItem("adminAccessToken");
-      
+
       if (isLoggedIn !== "true" || !accessToken) {
         router.push("/admin/login");
         return;
@@ -65,14 +65,14 @@ export default function AdminDashboard() {
         });
 
         const data = await response.json();
-        
+
         if (!data.success) {
           // Session invalid, redirect to login
           sessionStorage.clear();
           router.push("/admin/login");
           return;
         }
-        
+
         setAdminUsername(sessionStorage.getItem("adminUsername") || "Admin");
       } catch (error) {
         console.error("Auth verification failed:", error);
@@ -112,8 +112,8 @@ export default function AdminDashboard() {
         setRecentArtists(data.slice(0, 5));
       } catch (error) {
         console.error("Failed to fetch artists:", error);
-        setArtistCount(mockArtists.length);
-        setRecentArtists(mockArtists.slice(0, 5));
+        setArtistCount(0);
+        setRecentArtists([]);
       }
     };
 
@@ -123,7 +123,7 @@ export default function AdminDashboard() {
 
   const handleLogout = async () => {
     const accessToken = sessionStorage.getItem("adminAccessToken");
-    
+
     try {
       // Call backend logout endpoint
       await fetch("http://localhost:8000/api/admin/logout", {
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Logout error:", error);
     }
-    
+
     // Clear all session data
     sessionStorage.clear();
     router.push("/admin/login");
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
     {
       icon: <FolderOpen className="w-6 h-6" />,
       label: "Categories",
-      value: mockCategories.length.toString(),
+      value: "10", // Static count for category types
       color: "from-blue-500/20 to-cyan-500/20",
       iconColor: "text-blue-400",
     },
@@ -416,15 +416,14 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            req.status === "pending"
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${req.status === "pending"
                               ? "bg-yellow-500/20 text-yellow-400"
                               : req.status === "contacted"
                                 ? "bg-blue-500/20 text-blue-400"
                                 : req.status === "booked"
                                   ? "bg-green-500/20 text-green-400"
                                   : "bg-gray-700 text-gray-400"
-                          }`}
+                            }`}
                         >
                           {req.status.charAt(0).toUpperCase() +
                             req.status.slice(1)}

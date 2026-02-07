@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Clock, ArrowRight, Calendar } from 'lucide-react';
+import { Clock, ArrowRight, Calendar, ArrowLeft } from 'lucide-react';
 import { blogPosts } from '@/lib/mockData';
 
 export default function BlogPage() {
@@ -15,14 +15,25 @@ export default function BlogPage() {
                     <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/10 rounded-full blur-[100px]" />
                     <div className="absolute bottom-20 right-10 w-96 h-96 bg-pink-600/10 rounded-full blur-[120px]" />
                 </div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-                        Blog &
-                        <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-orange-400 bg-clip-text text-transparent"> Magazine</span>
-                    </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                        Event planning tips, artist spotlights, and industry insights
-                    </p>
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-gray-700 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition-all">
+                            <ArrowLeft className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-medium">Back to Home</span>
+                    </Link>
+                    <div className="text-center">
+                        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">
+                            Blog &
+                            <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-orange-400 bg-clip-text text-transparent"> Magazine</span>
+                        </h1>
+                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                            Event planning tips, artist spotlights, and industry insights
+                        </p>
+                    </div>
                 </div>
             </section>
 

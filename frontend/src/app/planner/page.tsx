@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Calculator, Calendar, Clock, DollarSign, Plus, Minus, ArrowRight, CheckCircle } from 'lucide-react';
+import { Calculator, Calendar, Clock, DollarSign, Plus, Minus, ArrowRight, CheckCircle, ArrowLeft } from 'lucide-react';
 import { mockCategories } from '@/lib/mockData';
 
 interface BudgetItem {
@@ -62,18 +62,29 @@ export default function PlannerPage() {
                     <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/10 rounded-full blur-[100px]" />
                     <div className="absolute bottom-20 right-10 w-96 h-96 bg-pink-600/10 rounded-full blur-[120px]" />
                 </div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] rounded-full text-gray-300 text-sm mb-6 border border-gray-800">
-                        <Calculator className="w-4 h-4 text-orange-400" />
-                        <span>Event Planning Made Easy</span>
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-gray-700 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition-all">
+                            <ArrowLeft className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-medium">Back to Home</span>
+                    </Link>
+                    <div className="text-center">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] rounded-full text-gray-300 text-sm mb-6 border border-gray-800">
+                            <Calculator className="w-4 h-4 text-orange-400" />
+                            <span>Event Planning Made Easy</span>
+                        </div>
+                        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">
+                            Event
+                            <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-orange-400 bg-clip-text text-transparent"> Planner Tool</span>
+                        </h1>
+                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                            Plan your event budget and timeline with our easy-to-use planning tools
+                        </p>
                     </div>
-                    <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-                        Event
-                        <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-orange-400 bg-clip-text text-transparent"> Planner Tool</span>
-                    </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                        Plan your event budget and timeline with our easy-to-use planning tools
-                    </p>
                 </div>
             </section>
 
@@ -84,8 +95,8 @@ export default function PlannerPage() {
                         <button
                             onClick={() => setActiveTab('budget')}
                             className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${activeTab === 'budget'
-                                    ? 'bg-gradient-to-r from-orange-500 to-pink-600 text-white'
-                                    : 'bg-[#1a1a1a] text-gray-400 hover:text-white'
+                                ? 'bg-gradient-to-r from-orange-500 to-pink-600 text-white'
+                                : 'bg-[#1a1a1a] text-gray-400 hover:text-white'
                                 }`}
                         >
                             <DollarSign className="w-5 h-5" />
@@ -94,8 +105,8 @@ export default function PlannerPage() {
                         <button
                             onClick={() => setActiveTab('timeline')}
                             className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${activeTab === 'timeline'
-                                    ? 'bg-gradient-to-r from-orange-500 to-pink-600 text-white'
-                                    : 'bg-[#1a1a1a] text-gray-400 hover:text-white'
+                                ? 'bg-gradient-to-r from-orange-500 to-pink-600 text-white'
+                                : 'bg-[#1a1a1a] text-gray-400 hover:text-white'
                                 }`}
                         >
                             <Clock className="w-5 h-5" />

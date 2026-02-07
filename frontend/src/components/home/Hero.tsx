@@ -1,6 +1,11 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import SearchBar from '@/components/ui/SearchBar';
-import { Mic2, Music, Star, MapPin, Sparkles } from 'lucide-react';
+import AnimatedCounter from '@/components/ui/AnimatedCounter';
+import { Mic2, Music, Star, MapPin, Sparkles, Users, Calendar, Award } from 'lucide-react';
 
 const popularCategories = [
     { name: 'Singers', slug: 'singers', icon: '🎤' },
@@ -17,108 +22,241 @@ const eventTypes = [
     { name: 'Corporate', slug: 'corporate', highlight: false },
 ];
 
-export default function Hero() {
+// Fixed particle positions to avoid hydration mismatch
+const particlePositions = [
+    { left: 20, top: 25, duration: 18, delay: 0 },
+    { left: 75, top: 15, duration: 22, delay: 2 },
+    { left: 45, top: 60, duration: 25, delay: 4 },
+    { left: 85, top: 45, duration: 20, delay: 1 },
+    { left: 30, top: 80, duration: 24, delay: 3 },
+    { left: 60, top: 35, duration: 19, delay: 5 },
+    { left: 15, top: 55, duration: 23, delay: 2.5 },
+    { left: 70, top: 70, duration: 21, delay: 1.5 },
+];
+
+const FloatingParticles = () => {
     return (
-        <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-[#0a0a0b]">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {particlePositions.map((particle, i) => (
+                <div
+                    key={i}
+                    className="absolute w-1 h-1 bg-orange-500/20 rounded-full animate-float"
+                    style={{
+                        left: `${particle.left}%`,
+                        top: `${particle.top}%`,
+                        animationDuration: `${particle.duration}s`,
+                        animationDelay: `${particle.delay}s`,
+                    }}
+                />
+            ))}
+            <style jsx>{`
+                @keyframes float {
+                    0%, 100% {
+                        transform: translateY(0) translateX(0);
+                        opacity: 0.2;
+                    }
+                    50% {
+                        transform: translateY(-20px) translateX(10px);
+                        opacity: 0.5;
+                    }
+                }
+                .animate-float {
+                    animation: float ease-in-out infinite;
+                }
+            `}</style>
+        </div>
+    );
+};
+
+interface Stats {
+    artists: number;
+    events: number;
+    cities: number;
+    rating: number;
+}
+
+export default function Hero() {
+    const [stats, setStats] = useState<Stats>({
+        artists: 200,
+        events: 5000,
+        cities: 20,
+        rating: 4.9,
+    });
+
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    const heroImages = [
+        "https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=1000&auto=format&fit=crop", // Singer
+        "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1000&auto=format&fit=crop", // Mic
+        "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=1000&auto=format&fit=crop", // Concert
+        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1000&auto=format&fit=crop"  // DJ
+    ];
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        // Fetch real stats from backend
+        const fetchStats = async () => {
+            try {
+                const response = await fetch('http://localhost:8000/api/stats');
+                if (response.ok) {
+                    const data = await response.json();
+                    setStats({
+                        artists: data.total_artists || 200,
+                        events: data.total_events || 5000,
+                        cities: data.total_cities || 20,
+                        rating: data.average_rating || 4.9,
+                    });
+                }
+            } catch (error) {
+                // Keep default values
+                console.log('Using default stats');
+            }
+        };
+
+        fetchStats();
+    }, []);
+
+    return (
+        <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-[#0a0a0b] pt-20 lg:pt-0">
             {/* Background Effects */}
-            <div className="absolute inset-0">
-                {/* Gradient orbs */}
-                <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/20 rounded-full blur-[100px]" />
-                <div className="absolute bottom-20 right-10 w-96 h-96 bg-pink-600/15 rounded-full blur-[120px]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-pink-500/10 rounded-full blur-[150px]" />
-
-                {/* Decorative music notes */}
-                <div className="absolute top-32 right-20 text-4xl opacity-10 animate-pulse">🎵</div>
-                <div className="absolute bottom-40 left-20 text-5xl opacity-10 animate-pulse delay-1000">🎤</div>
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-900/20 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-900/20 rounded-full blur-[100px]" />
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02]" />
             </div>
 
-            {/* Content */}
-            <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500/10 to-pink-600/10 rounded-full text-gray-300 text-sm mb-8 border border-orange-500/30">
-                    <Mic2 className="w-4 h-4 text-orange-400" />
-                    <span>Pakistan's Premier Artist Booking Platform</span>
-                    <Sparkles className="w-4 h-4 text-pink-400" />
-                </div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
+                <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+                    {/* Left Content (now Right on Desktop) */}
+                    <div className="text-left space-y-8 lg:order-2 lg:col-span-7">
+                        {/* Badge */}
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full backdrop-blur-md">
+                            <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                            <span className="text-sm text-gray-300 font-medium">#1 Artist Booking Platform in Pakistan</span>
+                        </div>
 
-                {/* Heading */}
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-                    Book <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-orange-400 bg-clip-text text-transparent">Singers & Qawwals</span>
-                    <span className="block mt-2">for Your Events</span>
-                </h1>
+                        {/* Heading */}
+                        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight">
+                            Book <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600">Top Artists</span><br />
+                            For Your Event
+                        </h1>
 
-                {/* Subtitle */}
-                <p className="text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-                    From soulful <span className="text-white font-medium">Qawwals</span> to chart-topping <span className="text-white font-medium">Singers</span> —
-                    book the perfect musical talent for weddings, concerts, and celebrations across <span className="text-orange-400">Lahore, Karachi, Islamabad</span> & beyond.
-                </p>
+                        {/* Subtitle */}
+                        <p className="text-lg text-gray-400 max-w-xl leading-relaxed">
+                            From soulful <strong>Qawwals</strong> to high-energy <strong>Live Bands</strong>, we connect you with Pakistan&apos;s finest talent for weddings, corporate events, and concerts.
+                        </p>
 
-                {/* Event Type Quick Links */}
-                <div className="flex flex-wrap justify-center gap-3 mb-8">
-                    {eventTypes.map((event) => (
-                        <Link
-                            key={event.slug}
-                            href={`/events/${event.slug}`}
-                            className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${event.highlight
-                                    ? 'bg-gradient-to-r from-orange-500 to-pink-600 text-white hover:shadow-lg hover:shadow-pink-500/30'
-                                    : 'bg-[#1a1a1a] text-gray-300 border border-gray-800 hover:border-gray-700'
-                                }`}
-                        >
-                            {event.name}
-                        </Link>
-                    ))}
-                </div>
+                        {/* Search Bar - Wider */}
+                        <div className="w-full relative group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                            <div className="relative bg-[#0a0a0b] rounded-xl">
+                                <SearchBar size="large" />
+                            </div>
+                        </div>
 
-                {/* Search Bar */}
-                <div className="max-w-3xl mx-auto mb-8">
-                    <SearchBar size="large" />
-                </div>
+                        {/* Buttons & Stats */}
+                        <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                            <Link
+                                href="/post-requirement"
+                                className="px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-1 transition-all text-center"
+                            >
+                                Book An Artist
+                            </Link>
+                            <Link
+                                href="/artists"
+                                className="px-8 py-4 bg-[#1a1a1a] text-white font-bold rounded-xl border border-gray-800 hover:bg-[#252525] hover:border-gray-700 transition-all text-center flex items-center justify-center gap-2"
+                            >
+                                <Users className="w-5 h-5 text-gray-400" />
+                                Find All Artists
+                            </Link>
+                        </div>
 
-                {/* Popular Categories */}
-                <div className="flex flex-wrap justify-center gap-3 text-sm mb-12">
-                    <span className="text-gray-500 flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-400" />
-                        Popular:
-                    </span>
-                    {popularCategories.map((cat) => (
-                        <Link
-                            key={cat.slug}
-                            href={`/artists/${cat.slug}`}
-                            className="px-4 py-1.5 bg-[#1a1a1a] hover:bg-gradient-to-r hover:from-orange-500/20 hover:to-pink-600/20 text-gray-300 hover:text-white rounded-full border border-gray-800 hover:border-orange-500/50 transition-all flex items-center gap-1.5"
-                        >
-                            <span>{cat.icon}</span>
-                            {cat.name}
-                        </Link>
-                    ))}
-                </div>
-
-                {/* Stats */}
-                <div className="flex flex-wrap justify-center gap-8 sm:gap-16 pt-8 border-t border-gray-800">
-                    <div className="text-center">
-                        <div className="text-3xl sm:text-4xl font-bold text-white">200+</div>
-                        <div className="text-gray-500 text-sm mt-1">Singers & Qawwals</div>
+                        {/* Quick Stats Row */}
+                        <div className="flex items-center gap-8 pt-6 border-t border-white/5">
+                            <div>
+                                <div className="text-2xl font-bold text-white"><AnimatedCounter end={stats.artists} duration={2000} suffix="+" /></div>
+                                <div className="text-sm text-gray-500">Artists</div>
+                            </div>
+                            <div className="w-px h-8 bg-white/10" />
+                            <div>
+                                <div className="text-2xl font-bold text-white"><AnimatedCounter end={stats.events} duration={2500} suffix="+" /></div>
+                                <div className="text-sm text-gray-500">Events</div>
+                            </div>
+                            <div className="w-px h-8 bg-white/10" />
+                            <div>
+                                <div className="text-2xl font-bold text-white flex items-center gap-1">
+                                    <AnimatedCounter end={stats.rating} decimals={1} duration={1500} />
+                                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                </div>
+                                <div className="text-sm text-gray-500">Rating</div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="text-center">
-                        <div className="text-3xl sm:text-4xl font-bold text-white">5,000+</div>
-                        <div className="text-gray-500 text-sm mt-1">Events Performed</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-3xl sm:text-4xl font-bold text-white">20+</div>
-                        <div className="text-gray-500 text-sm mt-1">Cities in Pakistan</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">4.9★</div>
-                        <div className="text-gray-500 text-sm mt-1">Average Rating</div>
+
+                    {/* Right Image (now Left on Desktop) */}
+                    <div className="relative lg:h-[800px] flex items-end justify-center lg:justify-start lg:order-1 lg:col-span-5">
+                        {/* Main Character Image */}
+                        <div className="relative z-10 w-full max-w-lg aspect-[3/4] lg:aspect-auto lg:h-[90%]">
+                            <Image
+                                key={currentImageIndex}
+                                src={heroImages[currentImageIndex]}
+                                alt="Featured Artist"
+                                fill
+                                className="object-cover rounded-t-3xl lg:rounded-t-[3rem] shadow-2xl shadow-orange-900/20 animate-in fade-in duration-700"
+                                priority
+                            />
+
+                            {/* Gradient Overlay at bottom */}
+                            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0a0a0b] to-transparent" />
+
+                            {/* Floating Element 1 */}
+                            <div className="absolute top-10 -left-10 z-30 bg-[#1a1a1a]/80 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl animate-float delay-100 hidden sm:block">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                                        <Award className="w-5 h-5 text-green-500" />
+                                    </div>
+                                    <div>
+                                        <div className="text-white font-bold text-sm">Top Rated</div>
+                                        <div className="text-xs text-gray-400">Verified Artists</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Floating Element 2 */}
+                            <div className="absolute bottom-20 -right-5 z-30 bg-[#1a1a1a]/80 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl animate-float delay-300 hidden sm:block">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center">
+                                        <Music className="w-5 h-5 text-orange-500" />
+                                    </div>
+                                    <div>
+                                        <div className="text-white font-bold text-sm">Live Music</div>
+                                        <div className="text-xs text-gray-400">For Any Event</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Background Splashes behind image */}
+                        <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-tr from-orange-600/20 to-pink-600/20 rounded-full blur-[100px] -z-10" />
                     </div>
                 </div>
             </div>
 
-            {/* Scroll Indicator */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-                <div className="w-6 h-10 border-2 border-gray-700 rounded-full flex justify-center pt-2">
-                    <div className="w-1 h-2 bg-gradient-to-b from-orange-500 to-pink-600 rounded-full" />
-                </div>
-            </div>
+            <style jsx>{`
+                @keyframes float {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+                .animate-float {
+                    animation: float 4s ease-in-out infinite;
+                }
+            `}</style>
         </section>
     );
 }

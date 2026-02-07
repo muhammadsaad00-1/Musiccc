@@ -8,9 +8,11 @@ interface SearchBarProps {
     size?: 'default' | 'large';
     showLocation?: boolean;
     className?: string;
+    autoFocus?: boolean;
+    onSearch?: () => void;
 }
 
-export default function SearchBar({ size = 'default', showLocation = true, className = '' }: SearchBarProps) {
+export default function SearchBar({ size = 'default', showLocation = true, className = '', autoFocus = false, onSearch }: SearchBarProps) {
     const router = useRouter();
     const [query, setQuery] = useState('');
     const [location, setLocation] = useState('');
@@ -20,6 +22,8 @@ export default function SearchBar({ size = 'default', showLocation = true, class
         const params = new URLSearchParams();
         if (query) params.append('q', query);
         if (location) params.append('location', location);
+
+        if (onSearch) onSearch();
         router.push(`/search?${params.toString()}`);
     };
 
@@ -39,6 +43,7 @@ export default function SearchBar({ size = 'default', showLocation = true, class
                 <Search className={`text-gray-500 flex-shrink-0 ${isLarge ? 'w-6 h-6' : 'w-5 h-5'}`} />
                 <input
                     type="text"
+                    autoFocus={autoFocus}
                     placeholder="Search for artists, singers, DJs..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}

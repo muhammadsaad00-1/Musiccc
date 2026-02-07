@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Package, Users, Clock, Check, ArrowRight, Loader2 } from 'lucide-react';
-import { eventPackages } from '@/lib/mockData';
+import { Package, Users, Clock, Check, ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
 
 interface PackageType {
     id: string;
@@ -20,36 +19,6 @@ interface PackageType {
     performers: any[];
 }
 
-// Transform mock package data to match backend format
-function transformMockPackageToPackageType(mockPkg: any): PackageType {
-    // Parse price from "PKR 250,000" format
-    const priceStr = mockPkg.price.replace(/PKR\s*/g, '').replace(/,/g, '');
-    const pricing = parseInt(priceStr) || 0;
-
-    // Map eventType to match backend event_type format
-    const eventTypeMap: Record<string, string> = {
-        'wedding': 'Wedding',
-        'corporate': 'Corporate',
-        'birthday': 'Birthday',
-        'mehendi': 'Mehendi',
-        'concert': 'Concert',
-    };
-
-    return {
-        id: `mock-${mockPkg.id}`,
-        name: mockPkg.name,
-        description: mockPkg.description,
-        event_type: eventTypeMap[mockPkg.eventType] || mockPkg.eventType,
-        pricing: pricing,
-        features: mockPkg.includes || [],
-        duration: '3-4 hours',
-        max_guests: 100,
-        header_image_url: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800',
-        is_active: true,
-        performers: [],
-    };
-}
-
 export default function PackagesPage() {
     const [packages, setPackages] = useState<PackageType[]>([]);
     const [loading, setLoading] = useState(true);
@@ -59,42 +28,20 @@ export default function PackagesPage() {
         const fetchPackages = async () => {
             setLoading(true);
             try {
-                const url = selectedEventType === 'all' 
+                const url = selectedEventType === 'all'
                     ? 'http://localhost:8000/packages?is_active=true'
                     : `http://localhost:8000/packages?event_type=${selectedEventType}&is_active=true`;
-                
-                let backendPackages: PackageType[] = [];
-                
-                // Fetch from backend API
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        backendPackages = await response.json();
-                    }
-                } catch (err) {
-                    console.log('Backend API not available, using mock data only');
+
+                const response = await fetch(url);
+                if (response.ok) {
+                    const backendPackages = await response.json();
+                    setPackages(backendPackages);
+                } else {
+                    setPackages([]);
                 }
-                
-                // Transform and filter mock packages
-                const mockPackagesTransformed = eventPackages
-                    .map(transformMockPackageToPackageType)
-                    .filter(pkg => 
-                        selectedEventType === 'all' || 
-                        pkg.event_type.toLowerCase() === selectedEventType.toLowerCase()
-                    );
-                
-                // Combine backend and mock packages (backend first)
-                setPackages([...backendPackages, ...mockPackagesTransformed]);
             } catch (error) {
                 console.error('Failed to fetch packages:', error);
-                // Fallback to mock data only
-                const mockPackagesTransformed = eventPackages
-                    .map(transformMockPackageToPackageType)
-                    .filter(pkg => 
-                        selectedEventType === 'all' || 
-                        pkg.event_type.toLowerCase() === selectedEventType.toLowerCase()
-                    );
-                setPackages(mockPackagesTransformed);
+                setPackages([]);
             } finally {
                 setLoading(false);
             }
@@ -113,20 +60,31 @@ export default function PackagesPage() {
                     <div className="absolute top-20 left-10 w-72 h-72 bg-purple-500/10 rounded-full blur-[100px]" />
                     <div className="absolute bottom-20 right-10 w-96 h-96 bg-pink-600/10 rounded-full blur-[120px]" />
                 </div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] rounded-full text-gray-300 text-sm mb-6 border border-gray-800">
-                        <Package className="w-4 h-4 text-purple-400" />
-                        <span>All-Inclusive Event Packages</span>
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-gray-700 flex items-center justify-center group-hover:border-purple-500/50 group-hover:bg-purple-500/10 transition-all">
+                            <ArrowLeft className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-medium">Back to Home</span>
+                    </Link>
+                    <div className="text-center">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] rounded-full text-gray-300 text-sm mb-6 border border-gray-800">
+                            <Package className="w-4 h-4 text-purple-400" />
+                            <span>All-Inclusive Event Packages</span>
+                        </div>
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
+                            Curated
+                            <span className="block bg-gradient-to-r from-purple-400 via-pink-500 to-orange-400 bg-clip-text text-transparent">
+                                Event Packages
+                            </span>
+                        </h1>
+                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                            Complete event solutions with handpicked artists and services
+                        </p>
                     </div>
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-                        Curated
-                        <span className="block bg-gradient-to-r from-purple-400 via-pink-500 to-orange-400 bg-clip-text text-transparent">
-                            Event Packages
-                        </span>
-                    </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                        Complete event solutions with handpicked artists and services
-                    </p>
                 </div>
             </section>
 
@@ -138,11 +96,10 @@ export default function PackagesPage() {
                             <button
                                 key={type}
                                 onClick={() => setSelectedEventType(type)}
-                                className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
-                                    selectedEventType === type
-                                        ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-pink-500/30'
-                                        : 'bg-[#1a1a1a] text-gray-400 hover:text-white border border-gray-800 hover:border-gray-700'
-                                }`}
+                                className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedEventType === type
+                                    ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-pink-500/30'
+                                    : 'bg-[#1a1a1a] text-gray-400 hover:text-white border border-gray-800 hover:border-gray-700'
+                                    }`}
                             >
                                 {type === 'all' ? 'All Packages' : type}
                             </button>
@@ -273,7 +230,7 @@ export default function PackagesPage() {
                             <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                             <h3 className="text-xl font-semibold text-white mb-2">No packages found</h3>
                             <p className="text-gray-400 mb-8">
-                                {selectedEventType === 'all' 
+                                {selectedEventType === 'all'
                                     ? 'No packages available at the moment'
                                     : `No packages available for ${selectedEventType} events`}
                             </p>

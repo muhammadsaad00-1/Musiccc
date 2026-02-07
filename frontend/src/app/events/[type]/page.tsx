@@ -35,10 +35,10 @@ export default function EventTypePage({ params }: EventTypePageProps) {
 
             // First try to find in mock data
             const mockEvent = eventTypeDetails.find((e) => e.slug === resolvedParams.type);
-            
+
             if (mockEvent) {
                 setEvent(mockEvent);
-                
+
                 // Get artists from popular categories for this event type
                 const relevantCategoryIds = mockCategories
                     .filter((cat) => mockEvent.popularCategories.includes(cat.name))
@@ -58,7 +58,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                         const createSlug = (name: string) => {
                             return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
                         };
-                        
+
                         const backendEvent = backendEvents.find(
                             (e) => createSlug(e.name) === resolvedParams.type
                         );
@@ -69,7 +69,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                                 slug: resolvedParams.type,
                                 image: backendEvent.header_image_url,
                             });
-                            
+
                             // Use performers from backend event and transform them to match ArtistCard structure
                             if (backendEvent.performers && backendEvent.performers.length > 0) {
                                 const transformedPerformers = backendEvent.performers.map((performer: any) => ({
@@ -178,7 +178,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                         <div>
                             <h2 className="text-2xl font-bold text-white mb-2">Recommended Artists</h2>
                             <p className="text-gray-400">
-                                {relevantArtists.length > 0 
+                                {relevantArtists.length > 0
                                     ? `Perfect performers for your ${event.name.toLowerCase()}`
                                     : 'No artists available yet'}
                             </p>
@@ -194,7 +194,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                     </div>
 
                     {relevantArtists.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                             {relevantArtists.map((artist) => (
                                 <ArtistCard key={artist.id} artist={artist} />
                             ))}

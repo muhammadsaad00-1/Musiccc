@@ -1,15 +1,63 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, X, Check, MapPin, Clock, ArrowRight } from 'lucide-react';
-import { mockArtists, mockCategories } from '@/lib/mockData';
+import { Plus, X, Check, MapPin, Clock, ArrowRight, ArrowLeft } from 'lucide-react';
+
 import { Artist } from '@/types';
 
 export default function ComparePage() {
     const [selectedArtists, setSelectedArtists] = useState<Artist[]>([]);
     const [showSelector, setShowSelector] = useState(false);
+    const [allArtists, setAllArtists] = useState<Artist[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Category mapping for display
+    const categoryMap: Record<number, string> = {
+        1: "Singer", 2: "Musician", 3: "DJ", 4: "Dancer", 5: "Comedian",
+        6: "Anchor", 7: "Makeup Artist", 8: "Photographer", 9: "Mehndi Artist", 10: "Decorator"
+    };
+
+    // Fetch artists from API
+    useEffect(() => {
+        async function fetchArtists() {
+            setLoading(true);
+            try {
+                const response = await fetch('http://localhost:8000/performers');
+                if (response.ok) {
+                    const performers = await response.json();
+                    const transformed = performers.map((p: any) => ({
+                        id: p.id,
+                        name: p.name,
+                        slug: p.name?.toLowerCase().replace(/\s+/g, '-') || '',
+                        category_id: getCategoryIdFromName(p.category),
+                        location: p.locations?.[0] || 'Pakistan',
+                        price_range: p.price ? `PKR ${p.price.toLocaleString()}` : undefined,
+                        image_url: p.profile_image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400',
+                        is_verified: true,
+                        is_featured: false,
+                        languages: p.genres || [],
+                        performance_duration: undefined,
+                    }));
+                    setAllArtists(transformed);
+                }
+            } catch (error) {
+                console.error('Failed to fetch artists:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchArtists();
+    }, []);
+
+    function getCategoryIdFromName(categoryName: string): number {
+        const mapping: Record<string, number> = {
+            Singer: 1, Musician: 2, DJ: 3, Dancer: 4, Comedian: 5,
+            Anchor: 6, 'Makeup Artist': 7, Photographer: 8, 'Mehndi Artist': 9, Decorator: 10
+        };
+        return mapping[categoryName] || 1;
+    }
 
     const addArtist = (artist: Artist) => {
         if (selectedArtists.length < 4 && !selectedArtists.find((a) => a.id === artist.id)) {
@@ -22,22 +70,30 @@ export default function ComparePage() {
         setSelectedArtists(selectedArtists.filter((a) => a.id !== artistId));
     };
 
-    const getCategoryName = (categoryId: number) => {
-        return mockCategories.find((c) => c.id === categoryId)?.name || '';
-    };
 
     return (
         <div className="min-h-screen bg-[#0a0a0b]">
             {/* Hero */}
             <section className="relative py-16 border-b border-gray-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-                        Compare
-                        <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-orange-400 bg-clip-text text-transparent"> Artists</span>
-                    </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                        Compare up to 4 artists side by side to find the perfect match for your event
-                    </p>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-gray-700 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition-all">
+                            <ArrowLeft className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-medium">Back to Home</span>
+                    </Link>
+                    <div className="text-center">
+                        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+                            Compare
+                            <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-orange-400 bg-clip-text text-transparent"> Artists</span>
+                        </h1>
+                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                            Compare up to 4 artists side by side to find the perfect match for your event
+                        </p>
+                    </div>
                 </div>
             </section>
 
@@ -78,7 +134,7 @@ export default function ComparePage() {
                                             {/* Artist Info */}
                                             <div className="p-4">
                                                 <h3 className="font-semibold text-white">{artist.name}</h3>
-                                                <p className="text-sm text-gray-500">{getCategoryName(artist.category_id)}</p>
+                                                <p className="text-sm text-gray-500">{categoryMap[artist.category_id]}</p>
                                             </div>
                                         </>
                                     ) : (
@@ -121,7 +177,7 @@ export default function ComparePage() {
 
                             {/* Comparison Rows */}
                             {[
-                                { label: 'Category', getValue: (a: Artist) => getCategoryName(a.category_id) },
+                                { label: 'Category', getValue: (a: Artist) => categoryMap[a.category_id] },
                                 { label: 'Location', getValue: (a: Artist) => a.location },
                                 { label: 'Price Range', getValue: (a: Artist) => a.price_range || 'Contact for price' },
                                 { label: 'Duration', getValue: (a: Artist) => a.performance_duration || '—' },
@@ -205,39 +261,48 @@ export default function ComparePage() {
                             </button>
                         </div>
 
-                        {/* Artist List */}
                         <div className="overflow-y-auto max-h-[60vh] p-4 space-y-2">
-                            {mockArtists.map((artist) => {
-                                const isSelected = selectedArtists.some((a) => a.id === artist.id);
-                                return (
-                                    <button
-                                        key={artist.id}
-                                        onClick={() => !isSelected && addArtist(artist)}
-                                        disabled={isSelected}
-                                        className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all ${isSelected
+                            {loading ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <div className="animate-spin w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full"></div>
+                                </div>
+                            ) : allArtists.length > 0 ? (
+                                allArtists.map((artist) => {
+                                    const isSelected = selectedArtists.some((a) => a.id === artist.id);
+                                    return (
+                                        <button
+                                            key={artist.id}
+                                            onClick={() => !isSelected && addArtist(artist)}
+                                            disabled={isSelected}
+                                            className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all ${isSelected
                                                 ? 'bg-gray-800 opacity-50 cursor-not-allowed'
                                                 : 'bg-[#0a0a0b] hover:bg-[#2a2a2a] border border-gray-800 hover:border-gray-700'
-                                            }`}
-                                    >
-                                        <Image
-                                            src={artist.image_url}
-                                            alt={artist.name}
-                                            width={60}
-                                            height={60}
-                                            className="rounded-full object-cover"
-                                        />
-                                        <div className="flex-1 text-left">
-                                            <h3 className="font-semibold text-white">{artist.name}</h3>
-                                            <p className="text-sm text-gray-500">
-                                                {getCategoryName(artist.category_id)} • {artist.location}
-                                            </p>
-                                        </div>
-                                        {isSelected && (
-                                            <span className="text-sm text-gray-500">Added</span>
-                                        )}
-                                    </button>
-                                );
-                            })}
+                                                }`}
+                                        >
+                                            <Image
+                                                src={artist.image_url}
+                                                alt={artist.name}
+                                                width={60}
+                                                height={60}
+                                                className="rounded-full object-cover"
+                                            />
+                                            <div className="flex-1 text-left">
+                                                <h3 className="font-semibold text-white">{artist.name}</h3>
+                                                <p className="text-sm text-gray-500">
+                                                    {categoryMap[artist.category_id]} • {artist.location}
+                                                </p>
+                                            </div>
+                                            {isSelected && (
+                                                <span className="text-sm text-gray-500">Added</span>
+                                            )}
+                                        </button>
+                                    );
+                                })
+                            ) : (
+                                <div className="text-center py-8 text-gray-500">
+                                    No artists available
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -19,11 +19,13 @@ import {
   Youtube,
   ExternalLink,
   ChevronRight,
+  ChevronLeft,
   Pause,
   Loader2,
 } from "lucide-react";
-import { mockArtists, mockCategories } from "@/lib/mockData";
+
 import AlbumCarousel from "@/components/artists/AlbumCarousel";
+
 
 interface ArtistPageProps {
   params: Promise<{ slug: string }>;
@@ -125,6 +127,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
   const [isBackendArtist, setIsBackendArtist] = useState(false);
   const [youtubeData, setYoutubeData] = useState<any>(null);
   const [loadingYoutube, setLoadingYoutube] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   // Fetch YouTube data for the artist
   async function fetchYoutubeData(artistName: string) {
@@ -150,19 +153,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
     async function fetchArtist() {
       setLoading(true);
 
-      // First, try to find in mock data
-      const mockArtist = mockArtists.find((a) => a.slug === slug);
-
-      if (mockArtist) {
-        setArtist(mockArtist);
-        setIsBackendArtist(false);
-        setLoading(false);
-        // Fetch YouTube data for mock artists too
-        fetchYoutubeData(mockArtist.name);
-        return;
-      }
-
-      // If not in mock data, try to fetch from backend
+      // Fetch from backend API
       try {
         const response = await fetch(
           `http://localhost:8000/performers/by-name/${encodeURIComponent(slug)}`,
@@ -206,7 +197,21 @@ export default function ArtistPage({ params }: ArtistPageProps) {
     notFound();
   }
 
-  const category = mockCategories.find((c) => c.id === artist.category_id);
+  // Define category mapping for display
+  const categoryMap: Record<number, { name: string; slug: string }> = {
+    1: { name: "Singers", slug: "singers" },
+    2: { name: "Musicians", slug: "musicians" },
+    3: { name: "DJs", slug: "djs" },
+    4: { name: "Dancers", slug: "dancers" },
+    5: { name: "Comedians", slug: "comedians" },
+    6: { name: "Anchors", slug: "anchors" },
+    7: { name: "Makeup Artists", slug: "makeup-artists" },
+    8: { name: "Photographers", slug: "photographers" },
+    9: { name: "Mehndi Artists", slug: "mehndi-artists" },
+    10: { name: "Decorators", slug: "decorators" },
+  };
+
+  const category = categoryMap[artist.category_id];
   const hasMedia =
     artist.albums?.length > 0 ||
     artist.popularSongs?.length > 0 ||
@@ -219,21 +224,61 @@ export default function ArtistPage({ params }: ArtistPageProps) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0b]">
-      {/* Hero Section with Cover */}
+      {/* Hero Section with Cover Carousel */}
       <section className="relative h-[50vh] min-h-[400px] max-h-[500px]">
-        {/* Cover Image */}
-        <Image
-          src={artist.cover_image || artist.image_url}
-          alt={artist.name}
-          fill
-          className="object-cover"
-          priority
-        />
+        {/* Cover Image Carousel */}
+        {(artist.gallery_urls && artist.gallery_urls.length > 0) ? (
+          <>
+            {artist.gallery_urls.map((url: string, index: number) => (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-all duration-1000 ease-in-out ${index === galleryIndex
+                  ? 'opacity-100 scale-100'
+                  : 'opacity-0 scale-105'
+                  }`}
+              >
+                <Image
+                  src={url}
+                  alt={`${artist.name} ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  priority={index === 0}
+                />
+              </div>
+            ))}
+
+            {/* Slide Indicators in Header */}
+            {artist.gallery_urls.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                {artist.gallery_urls.map((_: string, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => setGalleryIndex(index)}
+                    className={`h-2 rounded-full transition-all ${index === galleryIndex
+                      ? 'w-8 bg-gradient-to-r from-orange-500 to-pink-600'
+                      : 'w-2 bg-white/50 hover:bg-white/70'
+                      }`}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <Image
+            src={artist.cover_image || artist.image_url}
+            alt={artist.name}
+            fill
+            className="object-cover"
+            priority
+          />
+        )}
+
+        {/* Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/70 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0b]/80 via-transparent to-transparent" />
 
         {/* Back Button */}
-        <div className="absolute top-24 left-0 right-0">
+        <div className="absolute top-24 left-0 right-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Link
               href={`/artists/${category?.slug || "singers"}`}
@@ -404,6 +449,22 @@ export default function ArtistPage({ params }: ArtistPageProps) {
         </section>
       )}
 
+      {/* Sticky Mobile Booking Bar */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0a0a0b]/90 backdrop-blur-lg border-t border-gray-800 md:hidden z-50">
+        <div className="flex items-center gap-4 max-w-7xl mx-auto">
+          <div className="flex-1">
+            <p className="text-xs text-gray-400">Starting from</p>
+            <p className="text-lg font-bold text-white">{artist.price_range || "Custom Price"}</p>
+          </div>
+          <Link
+            href={`/post-requirement?artist=${artist.slug}`}
+            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full text-white font-semibold shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 transition-all"
+          >
+            Book Now
+          </Link>
+        </div>
+      </div>
+
       {/* About Section */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -412,7 +473,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
               <Music className="w-6 h-6 text-orange-400" />
               About {artist.name}
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-4 max-w-4xl">
               {bioParagraphs.length > 0 ? (
                 bioParagraphs.map((paragraph: string, index: number) => (
                   <p
@@ -430,10 +491,41 @@ export default function ArtistPage({ params }: ArtistPageProps) {
               )}
             </div>
 
+            {/* Gallery Strip */}
+            {artist.gallery_urls && artist.gallery_urls.length > 0 && (
+              <div className="mt-8 pt-8 border-t border-gray-800">
+                <h3 className="text-lg font-semibold text-white mb-4">Photos</h3>
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                  {artist.gallery_urls.map((url: string, index: number) => (
+                    <div
+                      key={index}
+                      className="relative h-40 w-60 flex-shrink-0 rounded-xl overflow-hidden border border-gray-800 group cursor-pointer"
+                      onClick={() => {
+                        setGalleryIndex(index);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      <Image
+                        src={url}
+                        alt={`${artist.name} photo ${index + 1}`}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-xs font-medium px-2 py-1 bg-black/50 rounded-full border border-white/20">
+                          View in Header
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Languages/Genres */}
             {artist.languages && artist.languages.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-gray-800">
-                <p className="text-gray-500 text-sm mb-3">Genres</p>
+              <div className="mt-6 pt-6 border-t border-gray-800">
+                <p className="text-gray-500 text-sm mb-3">Genres & Languages</p>
                 <div className="flex flex-wrap gap-2">
                   {artist.languages.map((lang: string) => (
                     <span
@@ -449,6 +541,9 @@ export default function ArtistPage({ params }: ArtistPageProps) {
           </div>
         </div>
       </section>
+
+      {/* Hidden Carousel ID for smooth scrolling */}
+      <div id="gallery-carousel" />
 
       {/* Fallback to mock album carousel */}
       {artist.albums && artist.albums.length > 0 && (
@@ -548,14 +643,14 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                     <Youtube className="w-4 h-4 text-gray-600 group-hover:text-red-500 transition-colors" />
                   </div>
                 ))}
-                
+
                 {/* Embedded Player */}
                 {playingVideo && (
                   <div className="relative aspect-video bg-black">
                     <iframe
                       width="100%"
                       height="100%"
-                      src={`https://www.youtube.com/embed/${playingVideo}?autoplay=1`}
+                      src={`https://www.youtube.com/embed/${playingVideo}?autoplay=1&mute=1&modestbranding=1&rel=0`}
                       title="YouTube video player"
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -574,7 +669,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
       {(youtubeData?.topSongs?.length > 0 || (artist.popularSongs && artist.popularSongs.length > 0)) && (
         <section className="py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <AlbumCarousel 
+            <AlbumCarousel
               albums={(youtubeData?.topSongs || artist.popularSongs || []).slice(0, 5).map((song: any, index: number) => ({
                 id: song.id || index + 1,
                 name: song.name || 'Unknown',
@@ -672,7 +767,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                         <iframe
                           width="100%"
                           height="100%"
-                          src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1`}
+                          src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&mute=1&modestbranding=1&rel=0`}
                           title={video.title}
                           frameBorder="0"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -723,29 +818,9 @@ export default function ArtistPage({ params }: ArtistPageProps) {
         </section>
       )}
 
-      {/* Gallery */}
-      {artist.gallery_urls && artist.gallery_urls.length > 0 && (
-        <section className="py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-white mb-8">Gallery</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {artist.gallery_urls.map((url: string, index: number) => (
-                <div
-                  key={index}
-                  className="relative aspect-video rounded-xl overflow-hidden border border-gray-800 group"
-                >
-                  <Image
-                    src={url}
-                    alt={`${artist.name} gallery ${index + 1}`}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+
+
+
 
       {/* Booking CTA */}
       <section className="py-16">

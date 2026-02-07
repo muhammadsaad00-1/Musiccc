@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, MapPin, Quote, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
-import { testimonials } from '@/lib/mockData';
+import { Star, MapPin, Quote, ArrowRight, Loader2, CheckCircle, User, ArrowLeft } from 'lucide-react';
 
 export default function TestimonialsPage() {
     const [name, setName] = useState('');
@@ -13,6 +12,26 @@ export default function TestimonialsPage() {
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
     const [submitSuccess, setSubmitSuccess] = useState(false);
+    const [reviews, setReviews] = useState<any[]>([]);
+    const [loadingReviews, setLoadingReviews] = useState(true);
+
+    // Fetch reviews from API
+    useEffect(() => {
+        async function fetchReviews() {
+            try {
+                const response = await fetch('http://localhost:8000/api/reviews');
+                if (response.ok) {
+                    const data = await response.json();
+                    setReviews(data.reviews || data || []);
+                }
+            } catch (error) {
+                console.error('Error fetching reviews:', error);
+            } finally {
+                setLoadingReviews(false);
+            }
+        }
+        fetchReviews();
+    }, [submitSuccess]);
 
     const submitReview = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -66,14 +85,25 @@ export default function TestimonialsPage() {
                     <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/10 rounded-full blur-[100px]" />
                     <div className="absolute bottom-20 right-10 w-96 h-96 bg-pink-600/10 rounded-full blur-[120px]" />
                 </div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-                        Success
-                        <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-orange-400 bg-clip-text text-transparent"> Stories</span>
-                    </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                        See how we've helped make events unforgettable across Pakistan
-                    </p>
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-gray-700 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition-all">
+                            <ArrowLeft className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-medium">Back to Home</span>
+                    </Link>
+                    <div className="text-center">
+                        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">
+                            Success
+                            <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-orange-400 bg-clip-text text-transparent"> Stories</span>
+                        </h1>
+                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                            See how we've helped make events unforgettable across Pakistan
+                        </p>
+                    </div>
                 </div>
             </section>
 
@@ -103,60 +133,56 @@ export default function TestimonialsPage() {
             {/* Testimonials Grid */}
             <section className="py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {testimonials.map((testimonial) => (
-                            <div
-                                key={testimonial.id}
-                                className="bg-[#1a1a1a] rounded-3xl border border-gray-800 overflow-hidden hover:border-gray-700 transition-all"
-                            >
-                                {/* Image */}
-                                <div className="relative h-48">
-                                    <Image
-                                        src={testimonial.image}
-                                        alt={testimonial.name}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/30 to-transparent" />
+                    {loadingReviews ? (
+                        <div className="flex items-center justify-center py-20">
+                            <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+                        </div>
+                    ) : reviews.length > 0 ? (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {reviews.map((testimonial, index) => (
+                                <div
+                                    key={testimonial.id || index}
+                                    className="bg-[#1a1a1a] rounded-3xl border border-gray-800 overflow-hidden hover:border-gray-700 transition-all"
+                                >
+                                    {/* Header with avatar */}
+                                    <div className="p-6">
+                                        <div className="flex items-center gap-4 mb-4">
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center">
+                                                <User className="w-6 h-6 text-orange-400" />
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-white">{testimonial.user_name || testimonial.name}</p>
+                                                <p className="text-sm text-gray-500">
+                                                    {new Date(testimonial.created_at).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
 
-                                    {/* Event Badge */}
-                                    <div className="absolute top-4 left-4 px-3 py-1 bg-gradient-to-r from-orange-500 to-pink-600 text-white text-sm font-medium rounded-full">
-                                        {testimonial.event}
+                                        {/* Rating */}
+                                        <div className="flex gap-1 mb-4">
+                                            {[...Array(testimonial.rating || 5)].map((_, i) => (
+                                                <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                                            ))}
+                                        </div>
+
+                                        {/* Quote */}
+                                        <div className="relative">
+                                            <Quote className="absolute -top-2 -left-2 w-8 h-8 text-orange-500/30" />
+                                            <p className="text-gray-300 leading-relaxed pl-4">
+                                                "{testimonial.review || testimonial.testimonial}"
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* Content */}
-                                <div className="p-6">
-                                    {/* Rating */}
-                                    <div className="flex gap-1 mb-4">
-                                        {[...Array(testimonial.rating)].map((_, i) => (
-                                            <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                                        ))}
-                                    </div>
-
-                                    {/* Quote */}
-                                    <div className="relative mb-6">
-                                        <Quote className="absolute -top-2 -left-2 w-8 h-8 text-orange-500/30" />
-                                        <p className="text-gray-300 leading-relaxed pl-4">
-                                            "{testimonial.testimonial}"
-                                        </p>
-                                    </div>
-
-                                    {/* Author */}
-                                    <div className="border-t border-gray-800 pt-4">
-                                        <p className="font-semibold text-white">{testimonial.name}</p>
-                                        <p className="text-sm text-gray-500 flex items-center gap-1">
-                                            <MapPin className="w-3 h-3" />
-                                            {testimonial.location} • {testimonial.date}
-                                        </p>
-                                        <p className="text-sm text-orange-400 mt-1">
-                                            Booked: {testimonial.artistBooked}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-20 bg-[#1a1a1a] rounded-2xl border border-gray-800">
+                            <Quote className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold text-white mb-2">No Reviews Yet</h3>
+                            <p className="text-gray-400">Be the first to share your experience!</p>
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -202,18 +228,16 @@ export default function TestimonialsPage() {
                                                 key={value}
                                                 type="button"
                                                 onClick={() => setRating(value)}
-                                                className={`p-2 rounded-lg border transition-colors ${
-                                                    rating >= value
-                                                        ? 'border-yellow-500/60 bg-yellow-500/10'
-                                                        : 'border-gray-800 bg-[#0a0a0b]'
-                                                }`}
+                                                className={`p-2 rounded-lg border transition-colors ${rating >= value
+                                                    ? 'border-yellow-500/60 bg-yellow-500/10'
+                                                    : 'border-gray-800 bg-[#0a0a0b]'
+                                                    }`}
                                             >
                                                 <Star
-                                                    className={`w-5 h-5 ${
-                                                        rating >= value
-                                                            ? 'text-yellow-400 fill-yellow-400'
-                                                            : 'text-gray-600'
-                                                    }`}
+                                                    className={`w-5 h-5 ${rating >= value
+                                                        ? 'text-yellow-400 fill-yellow-400'
+                                                        : 'text-gray-600'
+                                                        }`}
                                                 />
                                             </button>
                                         ))}

@@ -14,7 +14,7 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
     const location = artist.location || (artist.locations && artist.locations[0]) || 'Pakistan';
     const shortBio = artist.short_bio || artist.description || artist.bio?.substring(0, 80);
     const priceRange = artist.price_range || (artist.price ? `PKR ${artist.price.toLocaleString()}+` : null);
-    
+
     return (
         <Link
             href={`/artist/${artistSlug}`}
