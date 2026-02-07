@@ -73,6 +73,11 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
+                                <Link href="/testimonials" className="hover:text-white transition-colors">
+                                    Leave a Review
+                                </Link>
+                            </li>
+                            <li>
                                 <Link href="/post-requirement" className="hover:text-white transition-colors">
                                     Post Your Requirement
                                 </Link>

@@ -490,16 +490,20 @@ export default function InquiriesPage() {
                       {formatBudget(selectedRequirement.budget)}
                     </p>
                   </div>
-                  {selectedRequirement.message && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">
-                        Additional Notes
-                      </p>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">
+                      Additional Notes
+                    </p>
+                    {selectedRequirement.message ? (
                       <p className="text-gray-300 italic">
                         {selectedRequirement.message}
                       </p>
-                    </div>
-                  )}
+                    ) : (
+                      <p className="text-gray-600 italic">
+                        No additional message provided
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 

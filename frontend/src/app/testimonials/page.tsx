@@ -1,9 +1,63 @@
+"use client";
+
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, MapPin, Quote, ArrowRight } from 'lucide-react';
+import { Star, MapPin, Quote, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 import { testimonials } from '@/lib/mockData';
 
 export default function TestimonialsPage() {
+    const [name, setName] = useState('');
+    const [rating, setRating] = useState(5);
+    const [review, setReview] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
+    const [submitSuccess, setSubmitSuccess] = useState(false);
+
+    const submitReview = async (event: React.FormEvent) => {
+        event.preventDefault();
+        if (!name.trim()) {
+            setSubmitError('Please enter your name.');
+            return;
+        }
+
+        if (!review.trim()) {
+            setSubmitError('Please add your review.');
+            return;
+        }
+
+        setSubmitting(true);
+        setSubmitError('');
+        setSubmitSuccess(false);
+
+        try {
+            const formData = new FormData();
+            formData.append('user_name', name.trim());
+            formData.append('rating', String(rating));
+            formData.append('review', review.trim());
+
+            const response = await fetch('http://localhost:8000/api/reviews', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data?.success) {
+                throw new Error(data?.message || 'Failed to submit review');
+            }
+
+            setSubmitSuccess(true);
+            setName('');
+            setRating(5);
+            setReview('');
+        } catch (error) {
+            setSubmitError(error instanceof Error ? error.message : 'Failed to submit review');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#0a0a0b]">
             {/* Hero */}
@@ -102,6 +156,108 @@ export default function TestimonialsPage() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Review Form */}
+            <section className="py-16 border-t border-gray-800">
+                <div className="max-w-4xl mx-auto px-4">
+                    <div className="bg-[#111114] border border-gray-800 rounded-3xl p-8 sm:p-10">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+                            <div>
+                                <p className="text-sm uppercase tracking-wider text-orange-400 font-semibold mb-2">
+                                    Share your experience
+                                </p>
+                                <h2 className="text-3xl font-bold text-white">Leave a Review</h2>
+                                <p className="text-gray-400 mt-2">
+                                    Your testimonial helps others book with confidence.
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 text-yellow-400">
+                                {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className="w-5 h-5 fill-yellow-400" />
+                                ))}
+                                <span className="text-sm text-gray-400">Trusted by clients nationwide</span>
+                            </div>
+                        </div>
+
+                        <form onSubmit={submitReview} className="space-y-6">
+                            <div className="grid gap-6 sm:grid-cols-2">
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-2">Your Name</label>
+                                    <input
+                                        type="text"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        placeholder="Enter your full name"
+                                        className="w-full rounded-xl bg-[#0a0a0b] border border-gray-800 px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-2">Rating</label>
+                                    <div className="flex items-center gap-2">
+                                        {[1, 2, 3, 4, 5].map((value) => (
+                                            <button
+                                                key={value}
+                                                type="button"
+                                                onClick={() => setRating(value)}
+                                                className={`p-2 rounded-lg border transition-colors ${
+                                                    rating >= value
+                                                        ? 'border-yellow-500/60 bg-yellow-500/10'
+                                                        : 'border-gray-800 bg-[#0a0a0b]'
+                                                }`}
+                                            >
+                                                <Star
+                                                    className={`w-5 h-5 ${
+                                                        rating >= value
+                                                            ? 'text-yellow-400 fill-yellow-400'
+                                                            : 'text-gray-600'
+                                                    }`}
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-gray-400 mb-2">Your Review</label>
+                                <textarea
+                                    value={review}
+                                    onChange={(e) => setReview(e.target.value)}
+                                    rows={5}
+                                    placeholder="Tell us about your experience with Artist Factory"
+                                    className="w-full rounded-xl bg-[#0a0a0b] border border-gray-800 px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                                />
+                            </div>
+
+                            {submitError && (
+                                <p className="text-sm text-red-400">{submitError}</p>
+                            )}
+
+                            {submitSuccess && (
+                                <div className="flex items-center gap-2 text-sm text-green-400">
+                                    <CheckCircle className="w-4 h-4" />
+                                    Thank you! Your review has been submitted.
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={submitting}
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold hover:shadow-lg hover:shadow-orange-500/20 transition-all disabled:opacity-60"
+                            >
+                                {submitting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Submitting...
+                                    </>
+                                ) : (
+                                    'Submit Review'
+                                )}
+                            </button>
+                        </form>
                     </div>
                 </div>
             </section>
