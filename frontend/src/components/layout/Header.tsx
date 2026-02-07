@@ -187,6 +187,12 @@ export default function Header() {
                             <Search className="w-5 h-5" />
                         </Link>
                         <Link
+                            href="/admin/login"
+                            className="px-4 py-2 text-gray-300 hover:text-white border border-gray-700 hover:border-gray-600 rounded-full transition-all text-sm font-medium"
+                        >
+                            Admin Login
+                        </Link>
+                        <Link
                             href="/post-requirement"
                             className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-pink-500/30 transition-all text-sm"
                         >
@@ -277,6 +283,9 @@ export default function Header() {
                         <Link href="/post-requirement" className="flex items-center gap-2 py-2 text-yellow-400 font-medium" onClick={() => setIsMenuOpen(false)}>
                             <Zap className="w-4 h-4" />
                             Express Booking
+                        </Link>
+                        <Link href="/admin/login" className="block py-2 text-gray-400 border-t border-gray-800 pt-4 font-medium" onClick={() => setIsMenuOpen(false)}>
+                            🔐 Admin Login
                         </Link>
 
                         {/* CTA */}

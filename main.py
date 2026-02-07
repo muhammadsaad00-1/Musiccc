@@ -64,18 +64,34 @@ app.add_middleware(
 
 # Helper function to ensure storage bucket exists
 def ensure_bucket_exists(bucket_name: str):
-    """Create a storage bucket if it doesn't exist"""
+    """Create a storage bucket if it doesn't exist with public access"""
     try:
         # Try to get bucket info - if it fails, bucket doesn't exist
         supabase.storage.get_bucket(bucket_name)
-    except Exception:
+        print(f"Bucket '{bucket_name}' already exists")
+    except Exception as e:
         # Create the bucket with public access
         try:
-            supabase.storage.create_bucket(bucket_name, options={"public": True})
-            print(f"Created storage bucket: {bucket_name}")
-        except Exception as e:
-            # Bucket might already exist or other error
-            print(f"Bucket creation note: {e}")
+            # Create bucket with public: true
+            supabase.storage.create_bucket(
+                bucket_name,
+                options={"public": True, "file_size_limit": 52428800}  # 50MB limit
+            )
+            print(f"✅ Created storage bucket: {bucket_name}")
+            
+            # Set RLS policy to allow all operations (since we're using service_role key)
+            # This is handled by the public: True option
+            
+        except Exception as create_error:
+            error_str = str(create_error).lower()
+            if "already exists" in error_str or "duplicate" in error_str:
+                print(f"Bucket '{bucket_name}' already exists")
+            elif "row-level security" in error_str or "403" in error_str:
+                print(f"⚠️  Bucket '{bucket_name}' exists but has RLS restrictions.")
+                print(f"   Go to: https://supabase.com/dashboard/project/ubskhylblogbuhzxhadk/storage/buckets")
+                print(f"   And make sure '{bucket_name}' bucket is set to PUBLIC")
+            else:
+                print(f"Bucket creation note: {create_error}")
 
 # Mount static files for frontend
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
@@ -90,6 +106,128 @@ def read_root(request: Request):
 @limiter.limit("30/minute")
 def read_admin(request: Request):
     return FileResponse("frontend/admin/admin.html")
+
+
+# ============================================
+# ADMIN AUTHENTICATION ENDPOINTS
+# ============================================
+
+@app.post("/api/admin/login")
+@limiter.limit("5/minute")
+async def admin_login(request: Request):
+    """
+    Admin login using Supabase authentication.
+    Validates credentials against Supabase Auth.
+    """
+    try:
+        body = await request.json()
+        email = body.get("email")
+        password = body.get("password")
+        
+        if not email or not password:
+            return {
+                "success": False,
+                "message": "Email and password are required"
+            }
+        
+        # Authenticate with Supabase
+        auth_response = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": password
+        })
+        
+        if auth_response.user:
+            return {
+                "success": True,
+                "message": "Login successful",
+                "user": {
+                    "id": auth_response.user.id,
+                    "email": auth_response.user.email,
+                    "role": auth_response.user.role
+                },
+                "session": {
+                    "access_token": auth_response.session.access_token,
+                    "refresh_token": auth_response.session.refresh_token
+                }
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Invalid credentials"
+            }
+            
+    except Exception as e:
+        print(f"Login error: {e}")
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+
+@app.post("/api/admin/verify")
+@limiter.limit("30/minute")
+async def verify_admin_session(request: Request):
+    """
+    Verify admin session token.
+    """
+    try:
+        body = await request.json()
+        access_token = body.get("access_token")
+        
+        if not access_token:
+            return {
+                "success": False,
+                "message": "Access token required"
+            }
+        
+        # Verify token with Supabase
+        user = supabase.auth.get_user(access_token)
+        
+        if user:
+            return {
+                "success": True,
+                "user": {
+                    "id": user.user.id,
+                    "email": user.user.email
+                }
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Invalid session"
+            }
+            
+    except Exception as e:
+        print(f"Verification error: {e}")
+        return {
+            "success": False,
+            "message": "Session verification failed"
+        }
+
+
+@app.post("/api/admin/logout")
+@limiter.limit("10/minute")
+async def admin_logout(request: Request):
+    """
+    Admin logout - sign out from Supabase.
+    """
+    try:
+        body = await request.json()
+        access_token = body.get("access_token")
+        
+        if access_token:
+            supabase.auth.sign_out(access_token)
+        
+        return {
+            "success": True,
+            "message": "Logged out successfully"
+        }
+    except Exception as e:
+        print(f"Logout error: {e}")
+        return {
+            "success": True,
+            "message": "Logged out"
+        }
 
 
 # ============================================
@@ -312,13 +450,27 @@ async def create_performer(
     ensure_bucket_exists("performers")
     
     # Upload profile image
-    file_bytes = await image.read()
-    file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
-    profile_path = f"{performer_id}_{sanitized_name}.{file_extension}"
-    supabase.storage.from_("performers").upload(profile_path, file_bytes)
-    profile_image_url = supabase.storage.from_("performers").get_public_url(profile_path)
-    
-    update_data = {"profile_image_url": profile_image_url}
+    try:
+        file_bytes = await image.read()
+        file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
+        profile_path = f"{performer_id}_{sanitized_name}.{file_extension}"
+        
+        # Upload file
+        upload_response = supabase.storage.from_("performers").upload(profile_path, file_bytes)
+        profile_image_url = supabase.storage.from_("performers").get_public_url(profile_path)
+        
+        update_data = {"profile_image_url": profile_image_url}
+    except Exception as upload_error:
+        print(f"❌ Upload error: {upload_error}")
+        error_str = str(upload_error).lower()
+        if "403" in error_str or "unauthorized" in error_str or "row-level security" in error_str:
+            raise Exception(
+                "Storage upload failed due to RLS policy. "
+                "Please go to Supabase Dashboard > Storage > 'performers' bucket > "
+                "Click 'Edit bucket' and enable 'Public bucket' option. "
+                "Or add RLS policies to allow service_role access."
+            )
+        raise
     
     # Upload header image if provided
     if header_image:
@@ -668,14 +820,30 @@ async def create_event(
         supabase.table("event_performers").insert(event_performer_rows).execute()
     
     # Now upload header image with proper naming: {id}_{sanitized_name}.{extension}
-    file_bytes = await image.read()
-    file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
-    sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name.lower().replace(' ', '_'))
-    path = f"{event_id}_{sanitized_name}_header.{file_extension}"
-    # Ensure bucket exists before uploading
-    ensure_bucket_exists("events")
-    supabase.storage.from_("events").upload(path, file_bytes)
-    header_image_url = supabase.storage.from_("events").get_public_url(path)
+    try:
+        file_bytes = await image.read()
+        file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
+        sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name.lower().replace(' ', '_'))
+        path = f"{event_id}_{sanitized_name}_header.{file_extension}"
+        
+        # Ensure bucket exists before uploading
+        ensure_bucket_exists("events")
+        
+        # Upload file
+        upload_response = supabase.storage.from_("events").upload(path, file_bytes)
+        header_image_url = supabase.storage.from_("events").get_public_url(path)
+        
+    except Exception as upload_error:
+        print(f"❌ Event image upload error: {upload_error}")
+        error_str = str(upload_error).lower()
+        if "403" in error_str or "unauthorized" in error_str or "row-level security" in error_str:
+            raise Exception(
+                "Storage upload failed due to RLS policy. "
+                "Please go to Supabase Dashboard > Storage > 'events' bucket > "
+                "Click 'Edit bucket' and enable 'Public bucket' option. "
+                "URL: https://supabase.com/dashboard/project/ubskhylblogbuhzxhadk/storage/buckets"
+            )
+        raise
     
     # Update event with header image URL
     supabase.table("events").update({

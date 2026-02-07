@@ -70,9 +70,20 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                                 image: backendEvent.header_image_url,
                             });
                             
-                            // Use performers from backend event
+                            // Use performers from backend event and transform them to match ArtistCard structure
                             if (backendEvent.performers && backendEvent.performers.length > 0) {
-                                setRelevantArtists(backendEvent.performers);
+                                const transformedPerformers = backendEvent.performers.map((performer: any) => ({
+                                    ...performer,
+                                    // Map backend fields to frontend expected fields
+                                    image_url: performer.profile_image_url || performer.image_url,
+                                    slug: performer.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+                                    location: performer.locations && performer.locations.length > 0 ? performer.locations[0] : 'Pakistan',
+                                    short_bio: performer.description,
+                                    price_range: performer.price ? `PKR ${performer.price.toLocaleString()}+` : 'Contact for pricing',
+                                    category_id: performer.category,
+                                    bio: performer.description
+                                }));
+                                setRelevantArtists(transformedPerformers);
                             }
                         } else {
                             notFound();

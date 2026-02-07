@@ -8,15 +8,22 @@ interface ArtistCardProps {
 }
 
 export default function ArtistCard({ artist }: ArtistCardProps) {
+    // Handle both backend and mock data structures
+    const imageUrl = artist.image_url || artist.profile_image_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400';
+    const artistSlug = artist.slug || artist.name?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const location = artist.location || (artist.locations && artist.locations[0]) || 'Pakistan';
+    const shortBio = artist.short_bio || artist.description || artist.bio?.substring(0, 80);
+    const priceRange = artist.price_range || (artist.price ? `PKR ${artist.price.toLocaleString()}+` : null);
+    
     return (
         <Link
-            href={`/artist/${artist.slug}`}
+            href={`/artist/${artistSlug}`}
             className="group bg-[#1a1a1a] rounded-3xl overflow-hidden border border-gray-800 hover:border-gray-700 transition-all duration-300 card-glow"
         >
             {/* Image Container */}
             <div className="relative aspect-[4/3] overflow-hidden">
                 <Image
-                    src={artist.image_url}
+                    src={imageUrl}
                     alt={artist.name}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -49,14 +56,14 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
 
                 {/* Short Bio */}
                 <p className="text-gray-500 text-sm line-clamp-2 mb-3">
-                    {artist.short_bio || artist.bio?.substring(0, 80)}
+                    {shortBio}
                 </p>
 
                 {/* Meta Info */}
                 <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400 mb-3">
                     <div className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
-                        <span>{artist.location}</span>
+                        <span>{location}</span>
                     </div>
                     {artist.performance_duration && (
                         <div className="flex items-center gap-1">
@@ -82,9 +89,9 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
 
                 {/* Price & CTA */}
                 <div className="flex items-center justify-between pt-3 border-t border-gray-800">
-                    {artist.price_range && (
+                    {priceRange && (
                         <span className="text-sm text-gray-400">
-                            {artist.price_range}
+                            {priceRange}
                         </span>
                     )}
                     <span className="px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-600 text-white text-sm font-medium rounded-full group-hover:shadow-lg group-hover:shadow-pink-500/30 transition-all">

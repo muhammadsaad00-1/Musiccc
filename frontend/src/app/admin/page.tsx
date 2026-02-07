@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Users,
@@ -14,8 +15,10 @@ import {
   Loader2,
   Bell,
   Package,
+  LogOut,
 } from "lucide-react";
 import { mockArtists, mockCategories } from "@/lib/mockData";
+import { supabase } from "@/lib/supabase";
 
 interface RequirementStats {
   total: number;
@@ -25,6 +28,7 @@ interface RequirementStats {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [requirementStats, setRequirementStats] = useState<RequirementStats>({
     total: 0,
     pending: 0,
@@ -35,8 +39,50 @@ export default function AdminDashboard() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [artistCount, setArtistCount] = useState(0);
   const [recentArtists, setRecentArtists] = useState<any[]>([]);
+  const [adminUsername, setAdminUsername] = useState("");
 
   useEffect(() => {
+    // Check authentication
+    const checkAuth = async () => {
+      const isLoggedIn = sessionStorage.getItem("adminLoggedIn");
+      const accessToken = sessionStorage.getItem("adminAccessToken");
+      
+      if (isLoggedIn !== "true" || !accessToken) {
+        router.push("/admin/login");
+        return;
+      }
+
+      // Verify token with backend
+      try {
+        const response = await fetch("http://localhost:8000/api/admin/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            access_token: accessToken,
+          }),
+        });
+
+        const data = await response.json();
+        
+        if (!data.success) {
+          // Session invalid, redirect to login
+          sessionStorage.clear();
+          router.push("/admin/login");
+          return;
+        }
+        
+        setAdminUsername(sessionStorage.getItem("adminUsername") || "Admin");
+      } catch (error) {
+        console.error("Auth verification failed:", error);
+        sessionStorage.clear();
+        router.push("/admin/login");
+        return;
+      }
+    };
+    checkAuth();
+
     const fetchStats = async () => {
       try {
         const response = await fetch("http://localhost:8000/api/requirements");
@@ -73,7 +119,30 @@ export default function AdminDashboard() {
 
     fetchStats();
     fetchArtists();
-  }, []);
+  }, [router]);
+
+  const handleLogout = async () => {
+    const accessToken = sessionStorage.getItem("adminAccessToken");
+    
+    try {
+      // Call backend logout endpoint
+      await fetch("http://localhost:8000/api/admin/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          access_token: accessToken,
+        }),
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+    
+    // Clear all session data
+    sessionStorage.clear();
+    router.push("/admin/login");
+  };
 
   const stats = [
     {
@@ -123,7 +192,7 @@ export default function AdminDashboard() {
             <div>
               <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
               <p className="text-sm text-gray-500">
-                Manage your artists and bookings
+                Welcome back, {adminUsername}
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -142,6 +211,13 @@ export default function AdminDashboard() {
               >
                 View Site →
               </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
             </div>
           </div>
         </div>
