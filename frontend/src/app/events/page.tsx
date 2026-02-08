@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, Users, Music, Sparkles, PartyPopper, ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
+import FAQSection from '@/components/ui/FAQSection';
 
 
 const eventIcons: { [key: string]: React.ReactNode } = {
@@ -164,6 +165,30 @@ export default function EventsPage() {
                     )}
                 </div>
             </section>
+
+            {/* FAQ Section */}
+            <FAQSection
+                title="Event Questions?"
+                subtitle="Everything you need to know about booking for different events"
+                faqs={[
+                    {
+                        question: "What types of events do you cater to?",
+                        answer: "We cater to all types of events including weddings, corporate events, birthday parties, mehendi ceremonies, concerts, and private celebrations."
+                    },
+                    {
+                        question: "How far in advance should I book?",
+                        answer: "We recommend booking at least 2-4 weeks before your event. For popular artists or peak wedding season, booking 1-2 months in advance is ideal."
+                    },
+                    {
+                        question: "Can artists travel to my event location?",
+                        answer: "Yes! Most artists are willing to travel. Travel arrangements and any additional costs will be discussed during the booking process."
+                    },
+                    {
+                        question: "What if I need multiple artists?",
+                        answer: "We can help you book multiple artists for your event. Contact us with your requirements and we'll create a custom package for you."
+                    }
+                ]}
+            />
 
             {/* CTA */}
             <section className="py-16">

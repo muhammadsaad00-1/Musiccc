@@ -32,7 +32,7 @@ const iconMap: Record<string, JSX.Element> = {
 };
 
 // Hot categories (featured)
-const hotCategories = ['Singer', 'Qawwal', 'Sufi', 'DJ'];
+const hotCategories = ['Singer', 'Qawwal', 'DJ'];
 
 interface Category {
     id: number;
@@ -133,7 +133,7 @@ export default function CategoryGrid() {
                     {categories.slice(0, 8).map((category) => (
                         <Link
                             key={category.id}
-                            href={`/artists?category=${category.slug || category.name.toLowerCase()}`}
+                            href={`/artists/${category.slug || category.name.toLowerCase()}`}
                             className="group relative bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 hover:border-orange-500/50 transition-all duration-300 overflow-hidden"
                         >
                             {/* HOT Badge */}

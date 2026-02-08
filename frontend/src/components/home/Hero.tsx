@@ -7,11 +7,11 @@ import SearchBar from '@/components/ui/SearchBar';
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 import { Mic2, Music, Star, MapPin, Sparkles, Users, Calendar, Award } from 'lucide-react';
 
-const popularCategories = [
+const categories = [
     { name: 'Singers', slug: 'singers', icon: '🎤' },
     { name: 'Qawwals', slug: 'qawwals', icon: '🎵' },
-    { name: 'Sufi Artists', slug: 'sufi-artists', icon: '✨' },
     { name: 'Live Bands', slug: 'live-bands', icon: '🎸' },
+    { name: 'Bhangra Artists', slug: 'bhangra-artists', icon: '💃' },
     { name: 'DJs', slug: 'djs', icon: '🎧' },
 ];
 

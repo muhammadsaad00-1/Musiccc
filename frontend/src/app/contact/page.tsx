@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Mail, Phone, MapPin, Send, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle, ArrowLeft, Star, Navigation } from 'lucide-react';
+import FAQSection from '@/components/ui/FAQSection';
 
 export default function ContactPage() {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        subject: '',
         message: '',
     });
 
@@ -65,8 +65,7 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-white mb-1">Email Us</h3>
-                                        <p className="text-gray-500">info@artistfactory.pk</p>
-                                        <p className="text-gray-500">support@artistfactory.pk</p>
+                                        <p className="text-gray-500">Theartistfactoryofficial@gmail.com</p>
                                     </div>
                                 </div>
                             </div>
@@ -92,12 +91,15 @@ export default function ContactPage() {
                                     <div>
                                         <h3 className="font-semibold text-white mb-1">Visit Us</h3>
                                         <p className="text-gray-500">
-                                            Gulberg III, Lahore<br />
-                                            Punjab, Pakistan
+                                            2nd Floor, 67 CCA 1<br />
+                                            Phase 6, DHA<br />
+                                            Opposite Jalal Sons<br />
+                                            Lahore, Pakistan
                                         </p>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
 
                         {/* Contact Form */}
@@ -115,12 +117,17 @@ export default function ContactPage() {
                                     </div>
                                 ) : (
                                     <>
-                                        <h2 className="text-2xl font-bold text-white mb-6">Send us a Message</h2>
+                                        <div className="mb-8">
+                                            <h2 className="text-3xl font-bold text-white mb-2">Send us a Message</h2>
+                                            <p className="text-gray-500">
+                                                Have a question or want to book an artist? Fill out the form below and we'll get back to you shortly.
+                                            </p>
+                                        </div>
                                         <form onSubmit={handleSubmit} className="space-y-6">
                                             <div className="grid sm:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                                                        Your Name *
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-medium text-gray-400 ml-1">
+                                                        Your Name <span className="text-orange-500">*</span>
                                                     </label>
                                                     <input
                                                         type="text"
@@ -128,12 +135,13 @@ export default function ContactPage() {
                                                         value={formData.name}
                                                         onChange={handleChange}
                                                         required
-                                                        className="w-full px-4 py-3 bg-[#0a0a0b] border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                                        placeholder="John Doe"
+                                                        className="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 focus:bg-white/10 transition-all outline-none"
                                                     />
                                                 </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                                                        Email Address *
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-medium text-gray-400 ml-1">
+                                                        Email Address <span className="text-orange-500">*</span>
                                                     </label>
                                                     <input
                                                         type="email"
@@ -141,34 +149,17 @@ export default function ContactPage() {
                                                         value={formData.email}
                                                         onChange={handleChange}
                                                         required
-                                                        className="w-full px-4 py-3 bg-[#0a0a0b] border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                                        placeholder="john@example.com"
+                                                        className="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 focus:bg-white/10 transition-all outline-none"
                                                     />
                                                 </div>
                                             </div>
 
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-400 mb-2">
-                                                    Subject *
-                                                </label>
-                                                <select
-                                                    name="subject"
-                                                    value={formData.subject}
-                                                    onChange={handleChange}
-                                                    required
-                                                    className="w-full px-4 py-3 bg-[#0a0a0b] border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                                >
-                                                    <option value="">Select a subject</option>
-                                                    <option value="booking">Booking Inquiry</option>
-                                                    <option value="artist">Artist Registration</option>
-                                                    <option value="support">Support</option>
-                                                    <option value="feedback">Feedback</option>
-                                                    <option value="other">Other</option>
-                                                </select>
-                                            </div>
 
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-400 mb-2">
-                                                    Message *
+
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-400 ml-1">
+                                                    Message <span className="text-orange-500">*</span>
                                                 </label>
                                                 <textarea
                                                     name="message"
@@ -176,16 +167,17 @@ export default function ContactPage() {
                                                     onChange={handleChange}
                                                     required
                                                     rows={5}
-                                                    className="w-full px-4 py-3 bg-[#0a0a0b] border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                                                    placeholder="Tell us about your event..."
+                                                    className="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 focus:bg-white/10 transition-all outline-none resize-none"
                                                 />
                                             </div>
 
                                             <button
                                                 type="submit"
-                                                className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-medium rounded-full hover:shadow-lg hover:shadow-pink-500/30 transition-all flex items-center justify-center gap-2"
+                                                className="w-full px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-orange-500/20 transition-all flex items-center justify-center gap-2 group"
                                             >
-                                                <Send className="w-5 h-5" />
-                                                Send Message
+                                                <span>Send Message</span>
+                                                <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                             </button>
                                         </form>
                                     </>
@@ -195,6 +187,90 @@ export default function ContactPage() {
                     </div>
                 </div>
             </section>
+
+            {/* Map Section */}
+            <section className="py-16 border-t border-gray-800/50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="relative bg-[#1a1a1a] rounded-2xl border border-gray-800 overflow-hidden h-[500px] shadow-2xl shadow-black/50">
+                        {/* Custom Place Card Overlay */}
+                        <div className="absolute top-4 left-4 z-10 bg-white rounded-lg shadow-lg p-4 max-w-[320px] hidden sm:block">
+                            <div className="flex justify-between items-start gap-4">
+                                <div>
+                                    <h3 className="font-bold text-gray-900 text-base">Artist Factory</h3>
+                                    <p className="text-xs text-gray-600 mt-1">
+                                        2nd Floor, 67 CCA 1, Phase 6 DHA<br />
+                                        Lahore, Pakistan
+                                    </p>
+                                    <div className="flex items-center gap-1 mt-2">
+                                        <span className="text-orange-500 font-bold text-sm">5.0</span>
+                                        <div className="flex text-orange-400">
+                                            {[1, 2, 3, 4, 5].map((i) => (
+                                                <Star key={i} className="w-3 h-3 fill-current" />
+                                            ))}
+                                        </div>
+                                        <span className="text-blue-500 text-xs hover:underline cursor-pointer ml-1">10 reviews</span>
+                                    </div>
+                                </div>
+                                <a
+                                    href="https://www.google.com/maps/dir//2nd+Floor,+67+CCA+1,+Phase+6,+DHA,+Lahore"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex flex-col items-center gap-1 group/dir"
+                                >
+                                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center group-hover/dir:bg-blue-600 transition-colors">
+                                        <Navigation className="w-4 h-4 text-white fill-white" />
+                                    </div>
+                                    <span className="text-[10px] text-blue-500 font-medium">Directions</span>
+                                </a>
+                            </div>
+                            <a
+                                href="https://www.google.com/maps?q=67+CCA+1,+Phase+6,+DHA,+Lahore"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 text-xs mt-3 block hover:underline"
+                            >
+                                View larger map
+                            </a>
+                        </div>
+
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3402.5!2d74.450!3d31.467!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDI4JzAyLjMiTiA3NMKwMjcnMDAuMCJF!5e0!3m2!1sen!2s!4v1600000000000!5m2!1sen!2s&q=67+CCA+1,+Phase+6,+DHA,+Lahore"
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            className="w-full h-full"
+                            title="The Artist Factory Location"
+                        />
+                    </div>
+                </div>
+            </section>
+
+            {/* FAQ Section */}
+            <FAQSection
+                title="Common Questions?"
+                subtitle="Find answers to frequently asked questions about contacting us and our services"
+                faqs={[
+                    {
+                        question: "How quickly do you respond to inquiries?",
+                        answer: "We typically respond within 24 hours during business days. For urgent matters, please call us directly."
+                    },
+                    {
+                        question: "Can I visit your office?",
+                        answer: "Yes! Our office is open Monday to Saturday, 10 AM to 6 PM. We recommend scheduling an appointment for a personalized consultation."
+                    },
+                    {
+                        question: "What information should I include in my inquiry?",
+                        answer: "Please include your event type, date, location, budget range, and any specific artist preferences. The more details you provide, the better we can assist you."
+                    },
+                    {
+                        question: "Do you offer phone consultations?",
+                        answer: "Absolutely! You can call us during business hours or schedule a callback at your convenience."
+                    }
+                ]}
+            />
         </div>
     );
 }

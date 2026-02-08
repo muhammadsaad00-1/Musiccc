@@ -6,6 +6,7 @@ import ArtistCard from "@/components/artists/ArtistCard";
 import { mockCategories } from "@/lib/mockData"; // Keep categories for static filter options
 import { Search, SlidersHorizontal, Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import FAQSection from "@/components/ui/FAQSection";
 
 // Transform backend performer to frontend artist format
 function transformPerformerToArtist(performer: any): any {
@@ -241,6 +242,26 @@ function SearchContent() {
           )}
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQSection
+        title="Search Help?"
+        subtitle="Tips and answers for finding the perfect artist"
+        faqs={[
+          {
+            question: "How do I find artists in my city?",
+            answer: "Use the location filter to select your city. Our artists are available across Pakistan's major cities including Karachi, Lahore, Islamabad, and more."
+          },
+          {
+            question: "Can I filter by price range?",
+            answer: "Yes! Use the category and location filters. We're continuously improving our filtering options to help you find artists within your budget."
+          },
+          {
+            question: "Why are some artists not showing up?",
+            answer: "Artists may not appear if they don't match your filters or if they're currently unavailable. Try adjusting your search criteria or contact us for personalized recommendations."
+          }
+        ]}
+      />
     </div>
   );
 }

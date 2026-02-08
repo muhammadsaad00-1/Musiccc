@@ -3,10 +3,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { ArrowLeft, ArrowRight, Loader2, Calendar, Users, CheckCircle, MapPin, Music, ChevronDown } from 'lucide-react';
+import { useState, useEffect, use } from 'react';
 import ArtistCard from '@/components/artists/ArtistCard';
-import { eventTypeDetails, mockArtists, mockCategories } from '@/lib/mockData';
+import FAQSection from '@/components/ui/FAQSection';
 
 interface EventTypePageProps {
     params: Promise<{ type: string }>;
@@ -22,84 +22,179 @@ interface BackendEvent {
     performers: any[];
 }
 
+// Hero background images for each event type
+const eventHeroImages: Record<string, string[]> = {
+    wedding: [
+        "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&q=80"
+    ],
+    mehendi: [
+        "https://images.unsplash.com/photo-1583089892943-e02e5b017b6a?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80"
+    ],
+    concert: [
+        "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?auto=format&fit=crop&q=80"
+    ],
+    corporate: [
+        "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80"
+    ],
+    birthday: [
+        "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&q=80"
+    ],
+    milad: [
+        "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80"
+    ],
+    default: [
+        "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?auto=format&fit=crop&q=80"
+    ]
+};
+
+// Event type configurations
+const eventConfigs: Record<string, { name: string; description: string; icon: string }> = {
+    wedding: {
+        name: "Wedding",
+        description: "Create magical moments with world-class entertainment for your special day",
+        icon: "💍"
+    },
+    mehendi: {
+        name: "Mehendi",
+        description: "Traditional celebrations deserve extraordinary performances and vibrant music",
+        icon: "🌙"
+    },
+    concert: {
+        name: "Concert",
+        description: "Electrifying live performances that create unforgettable musical experiences",
+        icon: "🎭"
+    },
+    corporate: {
+        name: "Corporate Event",
+        description: "Professional entertainment solutions for conferences, galas, and corporate celebrations",
+        icon: "🏢"
+    },
+    birthday: {
+        name: "Birthday Party",
+        description: "Make every birthday celebration special with talented performers",
+        icon: "🎂"
+    },
+    "private-party": {
+        name: "Private Party",
+        description: "Exclusive entertainment for intimate gatherings and celebrations",
+        icon: "🎉"
+    },
+    milad: {
+        name: "Milad & Religious",
+        description: "Soulful naats, qawwalis, and spiritual performances for blessed occasions",
+        icon: "🕌"
+    },
+};
+
 export default function EventTypePage({ params }: EventTypePageProps) {
-    const [type, setType] = useState<string>('');
+    const { type } = use(params);
     const [event, setEvent] = useState<any>(null);
     const [relevantArtists, setRelevantArtists] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [heroImageIndex, setHeroImageIndex] = useState(0);
+
+    // Auto-advance hero carousel
+    useEffect(() => {
+        const images = eventHeroImages[type] || eventHeroImages.default;
+        const interval = setInterval(() => {
+            setHeroImageIndex((current) => (current + 1) % images.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [type]);
 
     useEffect(() => {
-        const initPage = async () => {
-            const resolvedParams = await params;
-            setType(resolvedParams.type);
+        const fetchEventData = async () => {
+            setLoading(true);
 
-            // First try to find in mock data
-            const mockEvent = eventTypeDetails.find((e) => e.slug === resolvedParams.type);
+            // Check if it's a known event type
+            const eventConfig = eventConfigs[type];
 
-            if (mockEvent) {
-                setEvent(mockEvent);
-
-                // Get artists from popular categories for this event type
-                const relevantCategoryIds = mockCategories
-                    .filter((cat) => mockEvent.popularCategories.includes(cat.name))
-                    .map((cat) => cat.id);
-
-                const filteredArtists = mockArtists.filter((artist) =>
-                    relevantCategoryIds.includes(artist.category_id)
-                );
-                setRelevantArtists(filteredArtists);
-                setLoading(false);
-            } else {
+            try {
                 // Try to fetch from backend
-                try {
-                    const response = await fetch('http://localhost:8000/events');
-                    if (response.ok) {
-                        const backendEvents: BackendEvent[] = await response.json();
-                        const createSlug = (name: string) => {
-                            return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-                        };
+                const response = await fetch('http://localhost:8000/events');
+                if (response.ok) {
+                    const backendEvents: BackendEvent[] = await response.json();
+                    const createSlug = (name: string) => {
+                        return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                    };
 
-                        const backendEvent = backendEvents.find(
-                            (e) => createSlug(e.name) === resolvedParams.type
-                        );
+                    const backendEvent = backendEvents.find(
+                        (e) => createSlug(e.name) === type
+                    );
 
-                        if (backendEvent) {
-                            setEvent({
-                                ...backendEvent,
-                                slug: resolvedParams.type,
-                                image: backendEvent.header_image_url,
-                            });
+                    if (backendEvent) {
+                        setEvent({
+                            ...backendEvent,
+                            slug: type,
+                            name: backendEvent.name,
+                            description: backendEvent.description,
+                            image: backendEvent.header_image_url,
+                        });
 
-                            // Use performers from backend event and transform them to match ArtistCard structure
-                            if (backendEvent.performers && backendEvent.performers.length > 0) {
-                                const transformedPerformers = backendEvent.performers.map((performer: any) => ({
-                                    ...performer,
-                                    // Map backend fields to frontend expected fields
-                                    image_url: performer.profile_image_url || performer.image_url,
-                                    slug: performer.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-                                    location: performer.locations && performer.locations.length > 0 ? performer.locations[0] : 'Pakistan',
-                                    short_bio: performer.description,
-                                    price_range: performer.price ? `PKR ${performer.price.toLocaleString()}+` : 'Contact for pricing',
-                                    category_id: performer.category,
-                                    bio: performer.description
-                                }));
-                                setRelevantArtists(transformedPerformers);
-                            }
-                        } else {
-                            notFound();
+                        // Transform performers
+                        if (backendEvent.performers && backendEvent.performers.length > 0) {
+                            const transformedPerformers = backendEvent.performers.map((performer: any) => ({
+                                ...performer,
+                                image_url: performer.profile_image_url || performer.image_url,
+                                slug: performer.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+                                location: performer.locations && performer.locations.length > 0 ? performer.locations[0] : 'Pakistan',
+                                short_bio: performer.description,
+                                price_range: performer.price ? `PKR ${performer.price.toLocaleString()}+` : 'Contact for pricing',
+                                category_id: performer.category,
+                                bio: performer.description
+                            }));
+                            setRelevantArtists(transformedPerformers);
                         }
+                    } else if (eventConfig) {
+                        // Use config for known event types
+                        setEvent({
+                            name: eventConfig.name,
+                            description: eventConfig.description,
+                            icon: eventConfig.icon,
+                            slug: type,
+                        });
+                    } else {
+                        notFound();
                     }
-                } catch (error) {
-                    console.error('Failed to fetch event:', error);
-                    notFound();
-                } finally {
-                    setLoading(false);
+                } else if (eventConfig) {
+                    setEvent({
+                        name: eventConfig.name,
+                        description: eventConfig.description,
+                        icon: eventConfig.icon,
+                        slug: type,
+                    });
                 }
+            } catch (error) {
+                console.error('Failed to fetch event:', error);
+                if (eventConfig) {
+                    setEvent({
+                        name: eventConfig.name,
+                        description: eventConfig.description,
+                        icon: eventConfig.icon,
+                        slug: type,
+                    });
+                }
+            } finally {
+                setLoading(false);
             }
         };
 
-        initPage();
-    }, [params]);
+        fetchEventData();
+    }, [type]);
 
     if (loading) {
         return (
@@ -113,61 +208,98 @@ export default function EventTypePage({ params }: EventTypePageProps) {
         notFound();
     }
 
+    const eventConfig = eventConfigs[type];
+    const heroImages = eventHeroImages[type] || eventHeroImages.default;
+
     return (
         <div className="min-h-screen bg-[#0a0a0b]">
-            {/* Hero */}
-            <section className="relative h-[50vh] min-h-[400px]">
-                <Image
-                    src={event.image}
-                    alt={event.name}
-                    fill
-                    className="object-cover"
-                    priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/70 to-transparent" />
+            {/* Hero with Background Image Carousel */}
+            <section className="relative min-h-[450px] lg:min-h-[500px] flex items-center overflow-hidden">
+                {/* Background Image Carousel */}
+                <div className="absolute inset-0">
+                    <Image
+                        key={heroImageIndex}
+                        src={heroImages[heroImageIndex]}
+                        alt={`${event.name} background`}
+                        fill
+                        className="object-cover transition-opacity duration-1000"
+                        priority
+                    />
+                    {/* Dark overlay for readability */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-[#0a0a0b]" />
+                    {/* Colored gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-900/20 via-transparent to-purple-900/20" />
+                </div>
 
-                <div className="absolute inset-0 flex items-end">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full">
-                        <Link
-                            href="/events"
-                            className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
-                        >
+                {/* Gradient orbs */}
+                <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-10 left-10 w-72 h-72 bg-orange-500/20 rounded-full blur-[100px]" />
+                    <div className="absolute bottom-10 right-10 w-96 h-96 bg-pink-600/15 rounded-full blur-[120px]" />
+                </div>
+
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16">
+                    <Link
+                        href="/events"
+                        className="inline-flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-8 group"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/20 transition-all">
                             <ArrowLeft className="w-4 h-4" />
-                            All Events
-                        </Link>
-                        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-                            {event.name} Entertainment
+                        </div>
+                        <span className="text-sm font-medium">All Events</span>
+                    </Link>
+
+                    <div className="text-center max-w-4xl mx-auto">
+                        {/* Event badge */}
+                        <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500/20 to-pink-500/20 backdrop-blur-sm rounded-full text-orange-300 text-base font-semibold mb-8 border border-orange-500/30">
+                            <span className="text-xl">{eventConfig?.icon || '🎉'}</span>
+                            <span>{event.name} Entertainment</span>
+                        </div>
+
+                        <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black mb-6 drop-shadow-2xl leading-tight">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-white">Book for</span>{' '}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 animate-gradient bg-size-200">
+                                {event.name}
+                            </span>
+                            <span className="block text-2xl sm:text-3xl lg:text-4xl font-medium mt-4">
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-200 via-purple-200 to-pink-200">
+                                    Make It Unforgettable
+                                </span>
+                            </span>
                         </h1>
-                        <p className="text-xl text-gray-300 max-w-2xl">
+
+                        <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-6">
                             {event.description}
                         </p>
+
+                        <div className="flex items-center justify-center gap-4 text-sm flex-wrap">
+                            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                                <Users className="w-4 h-4 text-orange-400" />
+                                <span className="text-white">{relevantArtists.length} Artists</span>
+                            </div>
+                            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                                <CheckCircle className="w-4 h-4 text-green-400" />
+                                <span className="text-white">Verified Professionals</span>
+                            </div>
+                            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                                <Calendar className="w-4 h-4 text-purple-400" />
+                                <span className="text-white">Instant Booking</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </section>
 
-            {/* Popular Categories for this Event */}
-            <section className="py-12 border-b border-gray-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <h2 className="text-lg text-gray-400 mb-6">Popular for {event.name}</h2>
-                    <div className="flex flex-wrap gap-3">
-                        {event.popularCategories?.map((category: string) => {
-                            const cat = mockCategories.find((c) => c.name === category);
-                            return (
-                                <Link
-                                    key={category}
-                                    href={`/artists/${cat?.slug || ''}`}
-                                    className="px-6 py-3 bg-[#1a1a1a] text-white rounded-full border border-gray-800 hover:border-orange-500 hover:bg-gradient-to-r hover:from-orange-500/10 hover:to-pink-600/10 transition-all"
-                                >
-                                    {category}
-                                </Link>
-                            );
-                        })}
-                        {!event.popularCategories && event.performers && (
-                            <span className="px-6 py-3 bg-[#1a1a1a] text-gray-400 rounded-full border border-gray-800">
-                                {event.performers.length} Featured Artists
-                            </span>
-                        )}
-                    </div>
+                {/* Carousel indicators */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                    {heroImages.map((_, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => setHeroImageIndex(idx)}
+                            className={`w-2 h-2 rounded-full transition-all ${idx === heroImageIndex
+                                    ? 'bg-orange-500 w-6'
+                                    : 'bg-white/30 hover:bg-white/50'
+                                }`}
+                        />
+                    ))}
                 </div>
             </section>
 
@@ -176,17 +308,26 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Recommended Artists</h2>
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500/10 to-pink-600/10 rounded-full text-orange-400 text-sm font-medium mb-4 border border-orange-500/20">
+                                <Music className="w-4 h-4" />
+                                <span>Featured Artists</span>
+                            </div>
+                            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                                Perfect for Your{' '}
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">
+                                    {event.name}
+                                </span>
+                            </h2>
                             <p className="text-gray-400">
                                 {relevantArtists.length > 0
-                                    ? `Perfect performers for your ${event.name.toLowerCase()}`
-                                    : 'No artists available yet'}
+                                    ? `Handpicked performers to make your ${event.name.toLowerCase()} extraordinary`
+                                    : 'Post your requirements and we\'ll find the perfect match'}
                             </p>
                         </div>
                         {relevantArtists.length > 0 && (
                             <Link
                                 href="/search"
-                                className="text-orange-400 hover:text-orange-300 font-medium flex items-center gap-1"
+                                className="hidden sm:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full font-medium hover:shadow-lg hover:shadow-pink-500/30 transition-all"
                             >
                                 View All <ArrowRight className="w-4 h-4" />
                             </Link>
@@ -200,19 +341,96 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-12">
-                            <p className="text-gray-500 mb-6">No artists found for this event type yet.</p>
+                        <div className="text-center py-16 bg-gradient-to-b from-[#1a1a1a]/50 to-[#151515]/50 rounded-3xl border border-gray-800/50">
+                            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center">
+                                <Music className="w-10 h-10 text-orange-400" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-white mb-2">No Artists Listed Yet</h3>
+                            <p className="text-gray-500 mb-8 max-w-md mx-auto">
+                                We're working on adding amazing artists for {event.name} events.
+                                Post your requirements and we'll personally match you with the best talent.
+                            </p>
                             <Link
                                 href="/post-requirement"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full hover:shadow-lg hover:shadow-pink-500/30 transition-all"
+                                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg hover:shadow-pink-500/30 transition-all"
                             >
                                 Post Your Requirement
-                                <ArrowRight className="w-4 h-4" />
+                                <ArrowRight className="w-5 h-5" />
                             </Link>
                         </div>
                     )}
                 </div>
             </section>
+
+            {/* Looking for Something Else? CTA Section */}
+            <section className="py-16 lg:py-20 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-900/5 to-purple-900/10" />
+                <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-[150px]" />
+                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-[150px]" />
+
+                <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <div className="bg-gradient-to-b from-[#1a1a1a]/80 to-[#151515]/80 backdrop-blur-xl rounded-3xl border border-gray-800/50 p-8 lg:p-12 shadow-2xl shadow-orange-500/5">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500/20 to-pink-600/20 rounded-full text-orange-400 text-sm font-medium mb-6 border border-orange-500/30">
+                            <span className="text-lg">🎯</span>
+                            <span>Can't Find What You're Looking For?</span>
+                        </div>
+
+                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                            Looking for{' '}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500">
+                                Something Specific?
+                            </span>
+                        </h2>
+
+                        <p className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto">
+                            Tell us your requirements and we'll find the perfect entertainment for your {event.name.toLowerCase()}.
+                        </p>
+
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link
+                                href="/contact"
+                                className="px-8 py-4 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-1 transition-all"
+                            >
+                                Contact Us Now
+                            </Link>
+                            <Link
+                                href="/post-requirement"
+                                className="px-8 py-4 bg-[#1a1a1a] border border-gray-700 text-white font-bold rounded-xl hover:bg-[#252525] hover:border-orange-500/30 transition-all"
+                            >
+                                Post Your Requirement
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* FAQs Section */}
+            <FAQSection
+                title="Event Questions?"
+                subtitle={`Everything you need to know about booking entertainment for ${event.name} events`}
+                faqs={[
+                    {
+                        question: `What types of artists are best for a ${event.name.toLowerCase()}?`,
+                        answer: `For ${event.name.toLowerCase()} events, we recommend singers, musicians, and performers who specialize in this type of celebration. Contact us for personalized recommendations based on your specific requirements.`
+                    },
+                    {
+                        question: "How far in advance should I book?",
+                        answer: "We recommend booking at least 2-4 weeks before your event. For popular artists or peak wedding season, booking 1-2 months in advance is ideal."
+                    },
+                    {
+                        question: "Can artists travel to my event location?",
+                        answer: "Yes! Most artists are willing to travel across Pakistan. Travel arrangements and any additional costs will be discussed during the booking process."
+                    },
+                    {
+                        question: "What if I need multiple artists?",
+                        answer: "We can help you book multiple artists for your event. Contact us with your requirements and we'll create a custom package for you."
+                    },
+                    {
+                        question: "How do payments work?",
+                        answer: "Typically, a booking advance is required to confirm, with the remaining amount paid on the event day. Specific terms vary by artist."
+                    }
+                ]}
+            />
         </div>
     );
 }

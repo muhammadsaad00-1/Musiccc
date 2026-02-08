@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { Menu, X, Search, ChevronDown, Zap, Mic2, Music, Home, MapPin, Star, Calendar, Info, Phone } from 'lucide-react';
 
@@ -9,10 +10,7 @@ const artistCategories = [
     { name: 'Singers', slug: 'singers', icon: '🎤', hot: true },
     { name: 'Qawwals', slug: 'qawwals', icon: '🎵', hot: true },
     { name: 'Live Bands', slug: 'live-bands', icon: '🎸', hot: false },
-    { name: 'Sufi Artists', slug: 'sufi-artists', icon: '✨', hot: true },
-    { name: 'Folk Singers', slug: 'folk-singers', icon: '🎶', hot: false },
-    { name: 'Classical Musicians', slug: 'classical-musicians', icon: '🎻', hot: false },
-    { name: 'Ghazal Artists', slug: 'ghazal-artists', icon: '💫', hot: false },
+    { name: 'Bhangra Artists', slug: 'bhangra-artists', icon: '💃', hot: true },
     { name: 'DJs', slug: 'djs', icon: '🎧', hot: false },
 ];
 
@@ -46,11 +44,15 @@ export default function Header() {
                 <div className="flex items-center justify-between h-16 lg:h-20">
                     {/* Logo */}
                     <Link href="/" className="flex items-center space-x-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-pink-600 rounded-xl flex items-center justify-center">
-                            <Mic2 className="w-5 h-5 text-white" />
-                        </div>
+                        <Image
+                            src="/logo-taf.png"
+                            alt="The Artist Factory"
+                            width={64}
+                            height={64}
+                            className="w-16 h-16 object-contain"
+                        />
                         <div className="hidden sm:block">
-                            <span className="text-xl font-bold text-white">ArtistFactory</span>
+                            <span className="text-xl font-bold text-white">The Artist Factory</span>
                             <span className="block text-[10px] text-gray-500 -mt-1">Book Artists in Pakistan</span>
                         </div>
                     </Link>
@@ -94,7 +96,7 @@ export default function Header() {
                                                     {artistCategories.map((category) => (
                                                         <Link
                                                             key={category.slug}
-                                                            href={`/artists?category=${category.slug}`}
+                                                            href={`/artists/${category.slug}`}
                                                             className="flex items-center gap-2 text-gray-400 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 transition-all duration-200"
                                                         >
                                                             <span>{category.icon}</span>
@@ -135,7 +137,7 @@ export default function Header() {
                                                     {cities.map((city) => (
                                                         <Link
                                                             key={city.slug}
-                                                            href={`/search?city=${city.slug}`}
+                                                            href={`/artists?location=${encodeURIComponent(city.name)}`}
                                                             className="block text-sm text-gray-400 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 transition-all duration-200 font-medium"
                                                         >
                                                             {city.name}
@@ -231,7 +233,7 @@ export default function Header() {
                                 {artistCategories.map((category) => (
                                     <Link
                                         key={category.slug}
-                                        href={`/artists?category=${category.slug}`}
+                                        href={`/artists/${category.slug}`}
                                         className="flex items-center gap-2 text-gray-300 hover:text-white py-1.5 text-sm"
                                         onClick={() => setIsMenuOpen(false)}
                                     >

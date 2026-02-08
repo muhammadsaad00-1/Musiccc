@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Star, MapPin, Quote, ArrowRight, Loader2, CheckCircle, User, ArrowLeft } from 'lucide-react';
+import FAQSection from '@/components/ui/FAQSection';
 
 export default function TestimonialsPage() {
     const [name, setName] = useState('');
@@ -285,6 +286,26 @@ export default function TestimonialsPage() {
                     </div>
                 </div>
             </section>
+
+            {/* FAQ Section */}
+            <FAQSection
+                title="Review Questions?"
+                subtitle="Common questions about reviews and testimonials"
+                faqs={[
+                    {
+                        question: "Are these reviews verified?",
+                        answer: "Yes! All reviews are from real customers who booked artists through our platform. We verify each review for authenticity."
+                    },
+                    {
+                        question: "Can I leave a review without booking?",
+                        answer: "Reviews are typically from customers who have used our services, but we welcome feedback from anyone who has interacted with our platform."
+                    },
+                    {
+                        question: "How do I edit or delete my review?",
+                        answer: "Contact our support team with your review details and we'll assist you with any modifications or deletions."
+                    }
+                ]}
+            />
 
             {/* CTA */}
             <section className="py-16">

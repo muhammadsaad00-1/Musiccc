@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Users, Award, Calendar, Heart, ArrowLeft } from 'lucide-react';
 import ReviewsCarousel from '@/components/home/ReviewsCarousel';
 import FeatureSection from '@/components/home/FeatureSection';
+import FAQSection from '@/components/ui/FAQSection';
 
 const stats = [
     { icon: <Users className="w-6 h-6" />, value: '500+', label: 'Verified Artists' },
@@ -162,6 +163,12 @@ export default function AboutPage() {
                     <ReviewsCarousel />
                 </div>
             </section>
+
+            {/* FAQ Section */}
+            <FAQSection
+                title="Got Questions?"
+                subtitle="Everything you need to know about Artist Factory and how we work"
+            />
         </div>
     );
 }

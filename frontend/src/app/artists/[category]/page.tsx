@@ -3,9 +3,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import ArtistCard from "@/components/artists/ArtistCard";
 
-import { SlidersHorizontal, Loader2, MapPin, DollarSign, CheckCircle, X, ChevronDown, ArrowLeft } from "lucide-react";
+import { SlidersHorizontal, Loader2, MapPin, DollarSign, CheckCircle, X, ChevronDown, ArrowLeft, Music, Users } from "lucide-react";
 import { Artist } from "@/types";
 import { use } from "react";
 
@@ -13,8 +14,55 @@ interface CategoryPageProps {
   params: Promise<{ category: string }>;
 }
 
+// Hero background images for each category
+const categoryHeroImages: Record<string, string[]> = {
+  singers: [
+    "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1501612780327-45045538702b?auto=format&fit=crop&q=80"
+  ],
+  qawwals: [
+    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80"
+  ],
+  "sufi-artists": [
+    "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80"
+  ],
+  "live-bands": [
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1501612780327-45045538702b?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80"
+  ],
+  "bhangra-artists": [
+    "https://images.unsplash.com/photo-1547153760-18fc86324498?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1504609813442-a8924e83f76e?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?auto=format&fit=crop&q=80"
+  ],
+  musicians: [
+    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1507838153414-b4b713384a76?auto=format&fit=crop&q=80"
+  ],
+  djs: [
+    "https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1574391884720-bbc3740c59d1?auto=format&fit=crop&q=80"
+  ],
+  default: [
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?auto=format&fit=crop&q=80"
+  ]
+};
+
 // Map category slugs to backend category names
+// IMPORTANT: Only map to categories that exist in the backend database
+// Sub-genres like qawwals, sufi-artists should be filtered by tags, not parent category
 const categorySlugToBackendName: Record<string, string> = {
+  // Main categories that exist in backend
   singers: "Singer",
   musicians: "Musician",
   djs: "DJ",
@@ -25,32 +73,28 @@ const categorySlugToBackendName: Record<string, string> = {
   photographers: "Photographer",
   "mehndi-artists": "Mehndi Artist",
   decorators: "Decorator",
-  qawwals: "Singer",
-  "sufi-artists": "Singer",
-  "live-bands": "Musician",
-  "ghazal-artists": "Singer",
-  "folk-singers": "Singer",
-  "classical-musicians": "Musician",
+  // Sub-categories - these need dedicated backend categories OR tag filtering
+  qawwals: "Qawwal",           // Needs to exist as a category in backend
+  "sufi-artists": "Sufi",      // Needs to exist as a category in backend
+  "live-bands": "Live Band",   // Needs to exist as a category in backend
+  "bhangra-artists": "Bhangra", // Needs to exist as a category in backend
 };
 
 // Define all valid category configurations
 const categoryConfigs: Record<string, { name: string; description: string; id: number }> = {
-  singers: { name: "Singers", description: "Professional singers for all types of events", id: 1 },
-  qawwals: { name: "Qawwals", description: "Traditional and modern Qawwali performances", id: 1 },
-  "sufi-artists": { name: "Sufi Artists", description: "Soul-stirring Sufi performances", id: 1 },
-  "ghazal-artists": { name: "Ghazal Artists", description: "Poetry in melody", id: 1 },
-  "folk-singers": { name: "Folk Singers", description: "Punjabi, Sindhi, Pashto and more", id: 1 },
-  musicians: { name: "Musicians", description: "Talented musicians and bands", id: 2 },
-  "live-bands": { name: "Live Bands", description: "Rock, Fusion, Jazz bands", id: 2 },
-  "classical-musicians": { name: "Classical Musicians", description: "Tabla, Sitar, Harmonium masters", id: 2 },
-  djs: { name: "DJs", description: "Top DJs for parties and events", id: 3 },
-  dancers: { name: "Dancers", description: "Classical, contemporary and folk dancers", id: 4 },
-  comedians: { name: "Comedians", description: "Stand-up comedians and entertainers", id: 5 },
-  anchors: { name: "Anchors", description: "Professional event hosts and MCs", id: 6 },
-  "makeup-artists": { name: "Makeup Artists", description: "Bridal and event makeup specialists", id: 7 },
-  photographers: { name: "Photographers", description: "Wedding and event photographers", id: 8 },
-  "mehndi-artists": { name: "Mehndi Artists", description: "Traditional and modern mehndi designs", id: 9 },
-  decorators: { name: "Decorators", description: "Event decoration and styling", id: 10 },
+  singers: { name: "Singers", description: "Discover exceptional vocal talent for weddings, concerts, and corporate events", id: 1 },
+  qawwals: { name: "Qawwals", description: "Experience the divine magic of traditional Qawwali — from soulful Sufi kalam to energetic mehfils", id: 1 },
+  "sufi-artists": { name: "Sufi Artists", description: "Immerse in the spiritual journey with mesmerizing Sufi music that touches the soul", id: 1 },
+  musicians: { name: "Musicians", description: "Talented instrumentalists and versatile musicians for any occasion", id: 2 },
+  "live-bands": { name: "Live Bands", description: "Electrifying performances from Rock, Fusion, Jazz & Pop bands that get the party started", id: 2 },
+  djs: { name: "DJs", description: "Top DJs spinning the latest hits for parties, weddings & nightlife events", id: 3 },
+  "bhangra-artists": { name: "Bhangra Artists", description: "High-energy Bhangra performances that bring Punjabi spirit to your celebrations", id: 4 },
+  comedians: { name: "Comedians", description: "Stand-up comedy acts that bring laughter and entertainment", id: 5 },
+  anchors: { name: "Anchors", description: "Charismatic event hosts and MCs to make your event memorable", id: 6 },
+  "makeup-artists": { name: "Makeup Artists", description: "Expert bridal, party & event makeup specialists", id: 7 },
+  photographers: { name: "Photographers", description: "Capture every moment with professional wedding & event photography", id: 8 },
+  "mehndi-artists": { name: "Mehndi Artists", description: "Intricate traditional & modern mehndi designs for brides and guests", id: 9 },
+  decorators: { name: "Decorators", description: "Transform your venue with stunning event decoration & styling", id: 10 },
 };
 
 // Price range options
@@ -104,7 +148,19 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   const [sortBy, setSortBy] = useState("featured");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  // Hero image carousel state
+  const [heroImageIndex, setHeroImageIndex] = useState(0);
+
   const category = categoryConfigs[categorySlug];
+
+  // Auto-advance hero carousel
+  useEffect(() => {
+    const images = categoryHeroImages[categorySlug] || categoryHeroImages.default;
+    const interval = setInterval(() => {
+      setHeroImageIndex((current) => (current + 1) % images.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [categorySlug]);
 
   // Fetch artists and cities
   useEffect(() => {
@@ -227,33 +283,89 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0b]">
-      {/* Hero */}
-      <section className="relative py-16">
+      {/* Hero with Background Image */}
+      <section className="relative min-h-[400px] lg:min-h-[450px] flex items-center overflow-hidden">
+        {/* Background Image Carousel */}
         <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-orange-500/10 rounded-full blur-[100px]" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-pink-600/10 rounded-full blur-[120px]" />
+          <Image
+            key={heroImageIndex}
+            src={categoryHeroImages[categorySlug]?.[heroImageIndex] || categoryHeroImages.default[heroImageIndex]}
+            alt="Performance background"
+            fill
+            className="object-cover transition-opacity duration-1000"
+            priority
+          />
+          {/* Dark overlay for readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-[#0a0a0b]" />
+          {/* Colored gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-900/20 via-transparent to-purple-900/20" />
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* Gradient orbs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-orange-500/20 rounded-full blur-[100px]" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-pink-600/15 rounded-full blur-[120px]" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+            className="inline-flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-8 group"
           >
-            <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-gray-700 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition-all">
+            <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/20 transition-all">
               <ArrowLeft className="w-4 h-4" />
             </div>
             <span className="text-sm font-medium">Back to Home</span>
           </Link>
-          <div className="text-center">
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-              Book {category.name}
+
+          <div className="text-center max-w-4xl mx-auto">
+            {/* Category badge */}
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500/20 to-pink-500/20 backdrop-blur-sm rounded-full text-orange-300 text-base font-semibold mb-8 border border-orange-500/30">
+              <Music className="w-5 h-5" />
+              <span>Professional {category.name}</span>
+            </div>
+
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black mb-6 drop-shadow-2xl leading-tight">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-white">Book</span>{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 animate-gradient bg-size-200">
+                {category.name}
+              </span>
+              <span className="block text-2xl sm:text-3xl lg:text-4xl font-medium mt-4">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-200 via-purple-200 to-pink-200">
+                  for Your Unforgettable Event
+                </span>
+              </span>
             </h1>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+
+            <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-6">
               {category.description}
             </p>
-            <p className="text-gray-500 mt-4">
-              {loading ? "Loading..." : `${filteredArtists.length} artists available`}
-            </p>
+
+            <div className="flex items-center justify-center gap-4 text-sm">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                <Users className="w-4 h-4 text-orange-400" />
+                <span className="text-white">{loading ? "..." : filteredArtists.length} Artists</span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-white">Verified Professionals</span>
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* Carousel indicators */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+          {(categoryHeroImages[categorySlug] || categoryHeroImages.default).map((_: string, idx: number) => (
+            <button
+              key={idx}
+              onClick={() => setHeroImageIndex(idx)}
+              className={`w-2 h-2 rounded-full transition-all ${idx === heroImageIndex
+                ? 'bg-orange-500 w-6'
+                : 'bg-white/30 hover:bg-white/50'
+                }`}
+            />
+          ))}
         </div>
       </section>
 
@@ -610,6 +722,130 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Looking for Something Else? CTA Section */}
+      <section className="py-16 lg:py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-900/5 to-purple-900/10" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-[150px]" />
+
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="bg-gradient-to-b from-[#1a1a1a]/80 to-[#151515]/80 backdrop-blur-xl rounded-3xl border border-gray-800/50 p-8 lg:p-12 shadow-2xl shadow-orange-500/5">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500/20 to-pink-600/20 rounded-full text-orange-400 text-sm font-medium mb-6 border border-orange-500/30">
+              <span className="text-lg">🎯</span>
+              <span>Can't Find What You're Looking For?</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              Looking for{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500">
+                Something Specific?
+              </span>
+            </h2>
+
+            <p className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto">
+              Our team can help you find the perfect artist for your event.
+              Tell us your requirements and we'll match you with the best talent.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/contact"
+                className="px-8 py-4 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-1 transition-all"
+              >
+                Contact Us Now
+              </Link>
+              <Link
+                href="/post-requirement"
+                className="px-8 py-4 bg-[#1a1a1a] border border-gray-700 text-white font-bold rounded-xl hover:bg-[#252525] hover:border-orange-500/30 transition-all"
+              >
+                Post Your Requirement
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQs Section */}
+      <section className="py-16 lg:py-24 bg-[#0f0f10] relative">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-20 right-10 w-72 h-72 bg-purple-600/10 rounded-full blur-[100px]" />
+          <div className="absolute bottom-20 left-10 w-80 h-80 bg-orange-500/10 rounded-full blur-[120px]" />
+        </div>
+
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-600/20 rounded-full text-purple-400 text-sm font-medium mb-4 border border-purple-500/30">
+              <span className="text-lg">❓</span>
+              <span>Frequently Asked Questions</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              Got Questions?{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
+                We've Got Answers
+              </span>
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Everything you need to know about booking {category?.name || 'artists'} for your events
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {[
+              {
+                question: `How do I book a ${category?.name?.toLowerCase()?.slice(0, -1) || 'performer'} for my event?`,
+                answer: `Simply browse through our verified ${category?.name?.toLowerCase() || 'artists'}, select the one you like, and click on 'Book Now' or 'Send Inquiry'. You can also post your requirements and we'll match you with the perfect artist.`
+              },
+              {
+                question: "What is the typical booking process?",
+                answer: "1. Browse and select an artist. 2. Send an inquiry with your event details. 3. Receive a quote and confirm details. 4. Make payment to confirm booking. 5. Enjoy your event! We handle all the coordination."
+              },
+              {
+                question: `How much do ${category?.name?.toLowerCase() || 'artists'} typically charge?`,
+                answer: "Prices vary based on the artist's popularity, event duration, location, and specific requirements. Use our price filter to find artists within your budget. Many artists offer customized packages."
+              },
+              {
+                question: "Are all artists verified?",
+                answer: "Yes! Every artist on our platform goes through a verification process. We check their background, past performances, and client reviews to ensure quality and professionalism."
+              },
+              {
+                question: "Can I request a custom performance?",
+                answer: "Absolutely! Most artists are flexible and can customize their performance based on your event theme, song requests, or specific requirements. Discuss this with the artist during the booking process."
+              },
+              {
+                question: "What if I need to cancel or reschedule?",
+                answer: "We understand plans can change. Our cancellation policy varies by artist, but most offer flexibility if you notify them in advance. Check the specific terms during booking or contact our support team."
+              }
+            ].map((faq, index) => (
+              <details
+                key={index}
+                className="group bg-gradient-to-r from-[#1a1a1a] to-[#151515] rounded-2xl border border-gray-800/50 overflow-hidden hover:border-purple-500/30 transition-all"
+              >
+                <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                  <span className="font-semibold text-white group-hover:text-purple-400 transition-colors pr-4">
+                    {faq.question}
+                  </span>
+                  <ChevronDown className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform flex-shrink-0" />
+                </summary>
+                <div className="px-6 pb-6 text-gray-400 leading-relaxed border-t border-gray-800/50 pt-4">
+                  {faq.answer}
+                </div>
+              </details>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <p className="text-gray-500 mb-4">Still have questions?</p>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 font-medium transition-colors"
+            >
+              Contact our support team
+              <span className="text-lg">→</span>
+            </Link>
           </div>
         </div>
       </section>
