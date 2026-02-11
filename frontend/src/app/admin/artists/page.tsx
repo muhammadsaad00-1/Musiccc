@@ -26,11 +26,9 @@ export default function ManageArtistsPage() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    category: "Singer",
-    price: "",
+    category: [] as string[],
     instagram_url: "",
     youtube_url: "",
-    locations: "",
     genres: "",
     videos: "",
     popular_songs: "",
@@ -38,15 +36,27 @@ export default function ManageArtistsPage() {
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [headerImage, setHeaderImage] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
     fetchArtists();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/categories");
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+    }
+  };
 
   const fetchArtists = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/performers");
+      const response = await fetch("http://127.0.0.1:8000/performers");
       const data = await response.json();
       setArtists(data);
     } catch (error) {
@@ -65,7 +75,7 @@ export default function ManageArtistsPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/admin/performers/${id}`,
+        `http://127.0.0.1:8000/admin/performers/${id}`,
         {
           method: "DELETE",
         },
@@ -92,20 +102,11 @@ export default function ManageArtistsPage() {
       // Add text fields
       formDataToSend.append("name", formData.name);
       formDataToSend.append("description", formData.description);
-      formDataToSend.append("category", formData.category);
-      if (formData.price) formDataToSend.append("price", formData.price);
-      if (formData.instagram_url)
-        formDataToSend.append("instagram_url", formData.instagram_url);
+      formDataToSend.append("category", JSON.stringify(formData.category));
       if (formData.youtube_url)
         formDataToSend.append("youtube_url", formData.youtube_url);
 
       // Add arrays as JSON strings
-      const locations = formData.locations
-        .split(",")
-        .map((l) => l.trim())
-        .filter(Boolean);
-      formDataToSend.append("locations", JSON.stringify(locations));
-
       const genres = formData.genres
         .split(",")
         .map((g) => g.trim())
@@ -132,8 +133,8 @@ export default function ManageArtistsPage() {
       );
 
       const url = showEditModal
-        ? `http://localhost:8000/admin/performers/${selectedArtist.id}`
-        : "http://localhost:8000/admin/performers";
+        ? `http://127.0.0.1:8000/admin/performers/${selectedArtist.id}`
+        : "http://127.0.0.1:8000/admin/performers";
 
       const method = showEditModal ? "PUT" : "POST";
 
@@ -162,11 +163,9 @@ export default function ManageArtistsPage() {
     setFormData({
       name: "",
       description: "",
-      category: "Singer",
-      price: "",
+      category: [],
       instagram_url: "",
       youtube_url: "",
-      locations: "",
       genres: "",
       videos: "",
       popular_songs: "",
@@ -182,11 +181,9 @@ export default function ManageArtistsPage() {
     setFormData({
       name: artist.name || "",
       description: artist.description || "",
-      category: artist.category || "Singer",
-      price: artist.price?.toString() || "",
+      category: Array.isArray(artist.category) ? artist.category : (artist.category ? [artist.category] : []),
       instagram_url: artist.instagram_url || "",
       youtube_url: artist.youtube_url || "",
-      locations: artist.locations?.join(", ") || "",
       genres: artist.genres?.join(", ") || "",
       videos: artist.videos?.join(", ") || "",
       popular_songs: artist.popular_songs?.join(", ") || "",
@@ -247,12 +244,7 @@ export default function ManageArtistsPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Category
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Location
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Price Range
-                    </th>
+
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
@@ -284,17 +276,16 @@ export default function ManageArtistsPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                          {artist.category}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex flex-wrap gap-1">
+                            {(Array.isArray(artist.category) ? artist.category : [artist.category]).map((cat: string) => (
+                              <span key={cat} className="px-2 py-0.5 bg-orange-500/10 text-orange-400 text-xs rounded-full border border-orange-500/20">
+                                {cat}
+                              </span>
+                            ))}
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                          {artist.locations?.[0] || "-"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                          {artist.price
-                            ? `PKR ${artist.price.toLocaleString()}`
-                            : "-"}
-                        </td>
+
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="px-2 py-1 text-xs font-medium bg-green-500/20 text-green-400 rounded-full">
                             Active
@@ -333,9 +324,9 @@ export default function ManageArtistsPage() {
 
         {/* Add/Edit Modal */}
         {(showAddModal || showEditModal) && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-[#1a1a1a] rounded-2xl border border-gray-800 max-w-3xl w-full my-8">
-              <div className="flex items-center justify-between p-6 border-b border-gray-800">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-[#1a1a1a] rounded-2xl border border-gray-800 max-w-4xl w-full max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between p-6 border-b border-gray-800 shrink-0">
                 <h2 className="text-xl font-bold text-white">
                   {showEditModal ? "Edit Artist" : "Add New Artist"}
                 </h2>
@@ -351,255 +342,283 @@ export default function ManageArtistsPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Name <span className="text-red-400">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                    />
+              <div className="overflow-y-auto p-6 space-y-8 custom-scrollbar">
+                <form id="artist-form" onSubmit={handleSubmit} className="space-y-8">
+
+                  {/* Section: Basic Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white border-b border-gray-800 pb-2">Basic Information</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                          Name <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.name}
+                          onChange={(e) =>
+                            setFormData({ ...formData, name: e.target.value })
+                          }
+                          className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+                          placeholder="Artist Name"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                          Categories <span className="text-red-400">*</span>
+                        </label>
+                        <div className="bg-[#0a0a0b] border border-gray-700 rounded-lg p-3 max-h-48 overflow-y-auto custom-scrollbar">
+                          <div className="grid grid-cols-2 gap-2">
+                            {categories.map((cat) => (
+                              <label
+                                key={cat.id}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${formData.category.includes(cat.name)
+                                  ? 'bg-orange-500/20 border border-orange-500/40'
+                                  : 'bg-[#1a1a1b] border border-gray-800 hover:border-gray-600'
+                                  }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={formData.category.includes(cat.name)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setFormData({ ...formData, category: [...formData.category, cat.name] });
+                                    } else {
+                                      setFormData({ ...formData, category: formData.category.filter((c) => c !== cat.name) });
+                                    }
+                                  }}
+                                  className="w-4 h-4 rounded border-gray-600 text-orange-500 focus:ring-orange-500 bg-[#0a0a0b]"
+                                />
+                                <span className="text-sm text-white">{cat.name}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        {formData.category.length === 0 && (
+                          <p className="text-xs text-red-400 mt-1">Select at least one category</p>
+                        )}
+                      </div>
+
+                      {/* Price and Locations removed as per requirements */}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                        Description
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={formData.description}
+                        onChange={(e) =>
+                          setFormData({ ...formData, description: e.target.value })
+                        }
+                        className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+                        placeholder="Bio or details about the artist..."
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Category <span className="text-red-400">*</span>
-                    </label>
-                    <select
-                      required
-                      value={formData.category}
-                      onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
-                      }
-                      className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                    >
-                      <option>Singer</option>
-                      <option>Musician</option>
-                      <option>DJ</option>
-                      <option>Dancer</option>
-                      <option>Comedian</option>
-                      <option>Anchor</option>
-                      <option>Makeup Artist</option>
-                      <option>Photographer</option>
-                      <option>Mehndi Artist</option>
-                      <option>Decorator</option>
-                    </select>
+                  {/* Section: Socials & Media */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white border-b border-gray-800 pb-2">Socials & Media</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                          Instagram URL
+                        </label>
+                        <input
+                          type="url"
+                          value={formData.instagram_url}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              instagram_url: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+                          placeholder="https://instagram.com/..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                          YouTube Channel URL
+                        </label>
+                        <input
+                          type="url"
+                          value={formData.youtube_url}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              youtube_url: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+                          placeholder="https://youtube.com/..."
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                        YouTube Video URLs (comma-separated)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="https://youtube.com/watch?v=..., ..."
+                        value={formData.videos}
+                        onChange={(e) =>
+                          setFormData({ ...formData, videos: e.target.value })
+                        }
+                        className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Price (PKR)
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.price}
-                      onChange={(e) =>
-                        setFormData({ ...formData, price: e.target.value })
-                      }
-                      className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                    />
+                  {/* Section: Tags */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white border-b border-gray-800 pb-2">Tags</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                          Genres (comma-separated)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Pop, Rock, Jazz"
+                          value={formData.genres}
+                          onChange={(e) =>
+                            setFormData({ ...formData, genres: e.target.value })
+                          }
+                          className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                          Popular Songs (comma-separated)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Song 1, Song 2"
+                          value={formData.popular_songs}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              popular_songs: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Locations (comma-separated)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Karachi, Lahore, Islamabad"
-                      value={formData.locations}
-                      onChange={(e) =>
-                        setFormData({ ...formData, locations: e.target.value })
-                      }
-                      className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                    />
+
+                  {/* Section: Images */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white border-b border-gray-800 pb-2">Images</h3>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                          Profile Image{" "}
+                          {!showEditModal && (
+                            <span className="text-red-400">*</span>
+                          )}
+                        </label>
+                        <div className="flex items-center justify-center w-full">
+                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed rounded-lg cursor-pointer bg-[#0a0a0b] hover:bg-gray-800 hover:border-orange-500 transition-all group">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <Upload className="w-8 h-8 mb-2 text-gray-500 group-hover:text-orange-500" />
+                              <p className="text-xs text-gray-500 group-hover:text-gray-400">{profileImage ? profileImage.name : "Upload Profile"}</p>
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              required={!showEditModal}
+                              className="hidden"
+                              onChange={(e) => setProfileImage(e.target.files?.[0] || null)}
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                          Header Image
+                        </label>
+                        <div className="flex items-center justify-center w-full">
+                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed rounded-lg cursor-pointer bg-[#0a0a0b] hover:bg-gray-800 hover:border-orange-500 transition-all group">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <Upload className="w-8 h-8 mb-2 text-gray-500 group-hover:text-orange-500" />
+                              <p className="text-xs text-gray-500 group-hover:text-gray-400">{headerImage ? headerImage.name : "Upload Header"}</p>
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => setHeaderImage(e.target.files?.[0] || null)}
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                          Gallery Images
+                        </label>
+                        <div className="flex items-center justify-center w-full">
+                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed rounded-lg cursor-pointer bg-[#0a0a0b] hover:bg-gray-800 hover:border-orange-500 transition-all group">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <Upload className="w-8 h-8 mb-2 text-gray-500 group-hover:text-orange-500" />
+                              <p className="text-xs text-gray-500 group-hover:text-gray-400">{galleryImages.length > 0 ? `${galleryImages.length} files` : "Upload Gallery"}</p>
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="hidden"
+                              onChange={(e) => setGalleryImages(Array.from(e.target.files || []))}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </form>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Instagram URL
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.instagram_url}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          instagram_url: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      YouTube URL
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.youtube_url}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          youtube_url: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Genres (comma-separated)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Pop, Rock, Jazz"
-                    value={formData.genres}
-                    onChange={(e) =>
-                      setFormData({ ...formData, genres: e.target.value })
-                    }
-                    className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Popular Songs (comma-separated)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Song 1, Song 2, Song 3"
-                    value={formData.popular_songs}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        popular_songs: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    YouTube Video URLs (comma-separated)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://youtube.com/watch?v=..., ..."
-                    value={formData.videos}
-                    onChange={(e) =>
-                      setFormData({ ...formData, videos: e.target.value })
-                    }
-                    className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Profile Image{" "}
-                      {!showEditModal && (
-                        <span className="text-red-400">*</span>
-                      )}
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      required={!showEditModal}
-                      onChange={(e) =>
-                        setProfileImage(e.target.files?.[0] || null)
-                      }
-                      className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Header Image
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setHeaderImage(e.target.files?.[0] || null)
-                      }
-                      className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Gallery Images
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) =>
-                        setGalleryImages(Array.from(e.target.files || []))
-                      }
-                      className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-800">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowAddModal(false);
-                      setShowEditModal(false);
-                      resetForm();
-                    }}
-                    className="px-6 py-2.5 bg-gray-800 text-gray-300 font-medium rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-pink-500/30 transition-all disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : showEditModal ? (
-                      "Update Artist"
-                    ) : (
-                      "Add Artist"
-                    )}
-                  </button>
-                </div>
-              </form>
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-800 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setShowEditModal(false);
+                    resetForm();
+                  }}
+                  className="px-6 py-2.5 bg-gray-800 text-gray-300 font-medium rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  form="artist-form"
+                  disabled={submitting}
+                  className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-pink-500/30 transition-all disabled:opacity-50 flex items-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : showEditModal ? (
+                    "Update Artist"
+                  ) : (
+                    "Add Artist"
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}

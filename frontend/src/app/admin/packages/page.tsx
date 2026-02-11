@@ -55,7 +55,7 @@ export default function AdminPackagesPage() {
 
     const fetchPackages = async () => {
         try {
-            const response = await fetch('http://localhost:8000/packages');
+            const response = await fetch('http://127.0.0.1:8000/packages');
             if (response.ok) {
                 const data = await response.json();
                 setPackages(data);
@@ -69,7 +69,7 @@ export default function AdminPackagesPage() {
 
     const fetchPerformers = async () => {
         try {
-            const response = await fetch('http://localhost:8000/performers');
+            const response = await fetch('http://127.0.0.1:8000/performers');
             if (response.ok) {
                 const data = await response.json();
                 setPerformers(data);
@@ -175,8 +175,8 @@ export default function AdminPackagesPage() {
             }
 
             const url = editingPackage
-                ? `http://localhost:8000/admin/packages/${editingPackage.id}`
-                : 'http://localhost:8000/admin/packages';
+                ? `http://127.0.0.1:8000/admin/packages/${editingPackage.id}`
+                : 'http://127.0.0.1:8000/admin/packages';
 
             const method = editingPackage ? 'PUT' : 'POST';
 
@@ -200,7 +200,7 @@ export default function AdminPackagesPage() {
         if (!confirm('Are you sure you want to delete this package?')) return;
 
         try {
-            const response = await fetch(`http://localhost:8000/admin/packages/${id}`, {
+            const response = await fetch(`http://127.0.0.1:8000/admin/packages/${id}`, {
                 method: 'DELETE',
             });
 
@@ -294,11 +294,10 @@ export default function AdminPackagesPage() {
                                         </td>
                                         <td className="px-6 py-4 text-gray-300">{pkg.duration || 'N/A'}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 text-sm rounded-full ${
-                                                pkg.is_active
-                                                    ? 'bg-green-500/10 text-green-400'
-                                                    : 'bg-gray-500/10 text-gray-400'
-                                            }`}>
+                                            <span className={`px-3 py-1 text-sm rounded-full ${pkg.is_active
+                                                ? 'bg-green-500/10 text-green-400'
+                                                : 'bg-gray-500/10 text-gray-400'
+                                                }`}>
                                                 {pkg.is_active ? 'Active' : 'Inactive'}
                                             </span>
                                         </td>

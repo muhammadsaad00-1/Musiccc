@@ -3,8 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import ArtistCard from "@/components/artists/ArtistCard";
-import { mockCategories } from "@/lib/mockData"; // Keep categories for static filter options
-import { Search, SlidersHorizontal, Loader2, ArrowLeft } from "lucide-react";
+import { Search, Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import FAQSection from "@/components/ui/FAQSection";
 
@@ -16,13 +15,10 @@ function transformPerformerToArtist(performer: any): any {
     id: performer.id,
     name: performer.name,
     slug: slug,
-    category_id: getCategoryIdFromName(performer.category),
+    category_id: performer.category,
     bio: performer.description || "",
     short_bio: performer.description?.substring(0, 100) || "",
-    location: performer.locations?.[0] || "Pakistan",
-    price_range: performer.price
-      ? `PKR ${performer.price.toLocaleString()}`
-      : undefined,
+    location: "Pakistan",
     image_url:
       performer.profile_image_url ||
       "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400",
@@ -35,34 +31,15 @@ function transformPerformerToArtist(performer: any): any {
   };
 }
 
-function getCategoryIdFromName(categoryName: string): number {
-  const mapping: Record<string, number> = {
-    Singer: 1,
-    Musician: 2,
-    DJ: 3,
-    Dancer: 4,
-    Comedian: 5,
-    Anchor: 6,
-    "Makeup Artist": 7,
-    Photographer: 8,
-    Photography: 8,
-    "Mehndi Artist": 9,
-    Decorator: 10,
-  };
-  return mapping[categoryName] || 1;
-}
-
 function SearchContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
-  const initialLocation = searchParams.get("location") || "";
 
   const [query, setQuery] = useState(initialQuery);
-  const [location, setLocation] = useState(initialLocation);
   const [category, setCategory] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [allPerformers, setAllPerformers] = useState<any[]>([]);
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch all performers from backend
@@ -70,7 +47,7 @@ function SearchContent() {
     async function fetchPerformers() {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:8000/performers");
+        const response = await fetch("http://127.0.0.1:8000/performers");
         if (response.ok) {
           const performers = await response.json();
           const transformedPerformers = performers.map(
@@ -91,23 +68,21 @@ function SearchContent() {
     fetchPerformers();
   }, []);
 
-  // Fetch available cities from backend
+  // Fetch categories from backend
   useEffect(() => {
-    async function fetchCities() {
+    async function fetchCategories() {
       try {
-        const response = await fetch("http://localhost:8000/performers/cities");
+        const response = await fetch("http://127.0.0.1:8000/categories");
         if (response.ok) {
           const data = await response.json();
-          if (data.cities && data.cities.length > 0) {
-            setAvailableCities(data.cities);
-          }
+          setCategories(data || []);
         }
       } catch (error) {
-        console.error("Error fetching cities:", error);
+        console.error("Error fetching categories:", error);
       }
     }
 
-    fetchCities();
+    fetchCategories();
   }, []);
 
   // Filter performers based on search criteria
@@ -122,21 +97,17 @@ function SearchContent() {
       );
     }
 
-    if (location) {
-      filtered = filtered.filter(
-        (artist) => artist.location.toLowerCase() === location.toLowerCase(),
-      );
-    }
-
     if (category) {
-      const cat = mockCategories.find((c) => c.slug === category);
+      const cat = categories.find((c) => c.slug === category || c.name === category);
       if (cat) {
-        filtered = filtered.filter((artist) => artist.category_id === cat.id);
+        filtered = filtered.filter((artist) => {
+          return String(artist.category_id) === cat.name;
+        });
       }
     }
 
     setResults(filtered);
-  }, [query, location, category, allPerformers]);
+  }, [query, category, allPerformers, categories]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0b]">
@@ -165,20 +136,6 @@ function SearchContent() {
               />
             </div>
 
-            {/* Location */}
-            <select
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="px-4 py-3 bg-[#0a0a0b] border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            >
-              <option value="">All Cities</option>
-              {availableCities.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
-
             {/* Category */}
             <select
               value={category}
@@ -186,7 +143,7 @@ function SearchContent() {
               className="px-4 py-3 bg-[#0a0a0b] border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
               <option value="">All Categories</option>
-              {mockCategories.map((cat) => (
+              {categories.map((cat) => (
                 <option key={cat.id} value={cat.slug}>
                   {cat.name}
                 </option>
@@ -211,14 +168,10 @@ function SearchContent() {
                     {results.length}
                   </span>{" "}
                   artists
-                  {query && <span> for "{query}"</span>}
+                  {query && <span> for &quot;{query}&quot;</span>}
                 </>
               )}
             </p>
-            <button className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:bg-[#1a1a1a] rounded-lg lg:hidden">
-              <SlidersHorizontal className="w-5 h-5" />
-              Filters
-            </button>
           </div>
 
           {/* Grid */}
@@ -227,7 +180,7 @@ function SearchContent() {
               <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
             </div>
           ) : results.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {results.map((artist) => (
                 <ArtistCard key={artist.id} artist={artist} />
               ))}
@@ -236,7 +189,7 @@ function SearchContent() {
             <div className="text-center py-16 bg-[#1a1a1a] rounded-xl border border-gray-800">
               <p className="text-gray-400 text-lg mb-2">No artists found</p>
               <p className="text-gray-600">
-                Try adjusting your search or filters
+                Try adjusting your search or category filter
               </p>
             </div>
           )}
@@ -249,16 +202,16 @@ function SearchContent() {
         subtitle="Tips and answers for finding the perfect artist"
         faqs={[
           {
-            question: "How do I find artists in my city?",
-            answer: "Use the location filter to select your city. Our artists are available across Pakistan's major cities including Karachi, Lahore, Islamabad, and more."
+            question: "How do I find the right artist?",
+            answer: "Use the search bar to search by name, or filter by category to narrow down results. Click on any artist to view their full profile."
           },
           {
-            question: "Can I filter by price range?",
-            answer: "Yes! Use the category and location filters. We're continuously improving our filtering options to help you find artists within your budget."
+            question: "How do I contact an artist?",
+            answer: "Visit an artist's profile page and click the WhatsApp contact button to reach out directly with your event details."
           },
           {
             question: "Why are some artists not showing up?",
-            answer: "Artists may not appear if they don't match your filters or if they're currently unavailable. Try adjusting your search criteria or contact us for personalized recommendations."
+            answer: "Artists may not appear if they don't match your search or category filter. Try broadening your search criteria."
           }
         ]}
       />

@@ -74,8 +74,8 @@ export default function InquiriesPage() {
     try {
       const url =
         filter === "all"
-          ? "http://localhost:8000/api/requirements"
-          : `http://localhost:8000/api/requirements?status=${filter}`;
+          ? "http://127.0.0.1:8000/api/requirements"
+          : `http://127.0.0.1:8000/api/requirements?status=${filter}`;
       const response = await fetch(url);
       const data = await response.json();
       setRequirements(data);
@@ -97,7 +97,7 @@ export default function InquiriesPage() {
       formData.append("status", newStatus);
 
       const response = await fetch(
-        `http://localhost:8000/api/requirements/${id}/status`,
+        `http://127.0.0.1:8000/api/requirements/${id}/status`,
         {
           method: "PUT",
           body: formData,
@@ -195,11 +195,10 @@ export default function InquiriesPage() {
               <button
                 key={status}
                 onClick={() => setFilter(status)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  filter === status
-                    ? "bg-gradient-to-r from-orange-500 to-pink-600 text-white shadow-lg shadow-orange-500/20"
-                    : "bg-[#1a1a1a] text-gray-400 hover:text-white border border-gray-800"
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === status
+                  ? "bg-gradient-to-r from-orange-500 to-pink-600 text-white shadow-lg shadow-orange-500/20"
+                  : "bg-[#1a1a1a] text-gray-400 hover:text-white border border-gray-800"
+                  }`}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
                 {status !== "all" && (
@@ -526,11 +525,10 @@ export default function InquiriesPage() {
                           updateStatus(selectedRequirement.id, status)
                         }
                         disabled={isActive || isUpdating}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
-                          isActive
-                            ? `${config.color} cursor-default`
-                            : "border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
-                        } disabled:opacity-50`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${isActive
+                          ? `${config.color} cursor-default`
+                          : "border-gray-700 text-gray-400 hover:text-white hover:border-gray-600"
+                          } disabled:opacity-50`}
                       >
                         {isUpdating ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

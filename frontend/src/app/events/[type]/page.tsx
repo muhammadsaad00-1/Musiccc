@@ -104,6 +104,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
     const { type } = use(params);
     const [event, setEvent] = useState<any>(null);
     const [relevantArtists, setRelevantArtists] = useState<any[]>([]);
+    const [relevantCategories, setRelevantCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [heroImageIndex, setHeroImageIndex] = useState(0);
 
@@ -125,7 +126,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
 
             try {
                 // Try to fetch from backend
-                const response = await fetch('http://localhost:8000/events');
+                const response = await fetch('http://127.0.0.1:8000/events');
                 if (response.ok) {
                     const backendEvents: BackendEvent[] = await response.json();
                     const createSlug = (name: string) => {
@@ -167,6 +168,9 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                             icon: eventConfig.icon,
                             slug: type,
                         });
+
+                        // Fetch relevant artists based on event type
+                        await fetchRelevantArtistsForEvent(type);
                     } else {
                         notFound();
                     }
@@ -177,6 +181,8 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                         icon: eventConfig.icon,
                         slug: type,
                     });
+                    // Fetch relevant artists
+                    await fetchRelevantArtistsForEvent(type);
                 }
             } catch (error) {
                 console.error('Failed to fetch event:', error);
@@ -187,9 +193,79 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                         icon: eventConfig.icon,
                         slug: type,
                     });
+                    // Fetch relevant artists
+                    await fetchRelevantArtistsForEvent(type);
                 }
             } finally {
                 setLoading(false);
+            }
+        };
+
+        // Function to fetch relevant artists and categories for event type
+        const fetchRelevantArtistsForEvent = async (eventType: string) => {
+            try {
+                // Map event types to relevant category keywords (used for fuzzy matching)
+                const eventCategoryMap: Record<string, string[]> = {
+                    'wedding': ['singer', 'dj', 'musician', 'dancer', 'photographer', 'band', 'live band', 'bhangra', 'qawwal'],
+                    'mehendi': ['singer', 'dancer', 'dj', 'musician', 'bhangra', 'band', 'qawwal'],
+                    'concert': ['singer', 'musician', 'dj', 'band', 'live band', 'qawwal'],
+                    'corporate': ['singer', 'dj', 'musician', 'anchor', 'band', 'qawwal'],
+                    'birthday': ['singer', 'dj', 'comedian', 'dancer', 'musician', 'bhangra', 'qawwal'],
+                    'private-party': ['singer', 'dj', 'musician', 'band', 'bhangra', 'qawwal'],
+                    'milad': ['singer', 'qawwal', 'musician', 'naat'],
+                };
+
+                const relevantKeywords = eventCategoryMap[eventType] || ['singer', 'dj', 'musician'];
+
+                // Helper: check if a category name matches any keyword (fuzzy)
+                const matchesKeywords = (categoryName: string) => {
+                    const lower = categoryName.toLowerCase();
+                    return relevantKeywords.some(keyword =>
+                        lower.includes(keyword) || keyword.includes(lower)
+                    );
+                };
+
+                // Fetch categories from backend
+                const categoriesRes = await fetch('http://127.0.0.1:8000/categories');
+                if (categoriesRes.ok) {
+                    const allCategories = await categoriesRes.json();
+                    // Filter categories that match event type keywords
+                    const filteredCategories = allCategories.filter((cat: any) =>
+                        matchesKeywords(cat.name)
+                    );
+                    setRelevantCategories(filteredCategories);
+                }
+
+                // Fetch all performers
+                const performersRes = await fetch('http://127.0.0.1:8000/performers');
+                if (performersRes.ok) {
+                    const allPerformers = await performersRes.json();
+
+                    // Filter performers by relevant categories (fuzzy match, category is now an array)
+                    const filtered = allPerformers
+                        .filter((p: any) => {
+                            const cats = Array.isArray(p.category) ? p.category : [p.category || ''];
+                            return cats.some((c: string) => matchesKeywords(c));
+                        })
+                        .slice(0, 12) // Limit to 12 artists
+                        .map((performer: any) => ({
+                            id: performer.id,
+                            name: performer.name,
+                            image_url: performer.profile_image_url || performer.image_url,
+                            slug: performer.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+                            location: performer.locations && performer.locations.length > 0 ? performer.locations[0] : 'Pakistan',
+                            short_bio: performer.description?.substring(0, 80),
+                            price_range: performer.price ? `PKR ${performer.price.toLocaleString()}+` : 'Contact for pricing',
+                            category_id: performer.category,
+                            bio: performer.description,
+                            is_verified: true,
+                            is_featured: false,
+                        }));
+
+                    setRelevantArtists(filtered);
+                }
+            } catch (error) {
+                console.error('Error fetching relevant artists:', error);
             }
         };
 
@@ -295,22 +371,23 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                             key={idx}
                             onClick={() => setHeroImageIndex(idx)}
                             className={`w-2 h-2 rounded-full transition-all ${idx === heroImageIndex
-                                    ? 'bg-orange-500 w-6'
-                                    : 'bg-white/30 hover:bg-white/50'
+                                ? 'bg-orange-500 w-6'
+                                : 'bg-white/30 hover:bg-white/50'
                                 }`}
                         />
                     ))}
                 </div>
             </section>
 
-            {/* Recommended Artists */}
+            {/* Artists Grouped by Category */}
             <section className="py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between mb-8">
+                    {/* Section Header */}
+                    <div className="flex items-center justify-between mb-10">
                         <div>
                             <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500/10 to-pink-600/10 rounded-full text-orange-400 text-sm font-medium mb-4 border border-orange-500/20">
                                 <Music className="w-4 h-4" />
-                                <span>Featured Artists</span>
+                                <span>Artists for {event.name}</span>
                             </div>
                             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">
                                 Perfect for Your{' '}
@@ -326,7 +403,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                         </div>
                         {relevantArtists.length > 0 && (
                             <Link
-                                href="/search"
+                                href="/artists"
                                 className="hidden sm:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full font-medium hover:shadow-lg hover:shadow-pink-500/30 transition-all"
                             >
                                 View All <ArrowRight className="w-4 h-4" />
@@ -334,8 +411,87 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                         )}
                     </div>
 
-                    {relevantArtists.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {relevantCategories.length > 0 ? (
+                        <div className="space-y-16">
+                            {relevantCategories.map((category) => {
+                                // Find artists matching this category (category_id is now an array)
+                                const catName = category.name.toLowerCase();
+                                const catSlug = (category.slug || '').toLowerCase();
+                                const categoryArtists = relevantArtists.filter(
+                                    (artist) => {
+                                        const cats = Array.isArray(artist.category_id)
+                                            ? artist.category_id
+                                            : [artist.category_id || ''];
+                                        return cats.some((c: string) => {
+                                            const artCat = c.toLowerCase();
+                                            return artCat === catName ||
+                                                artCat === catSlug ||
+                                                catName.includes(artCat) ||
+                                                artCat.includes(catName);
+                                        });
+                                    }
+                                );
+
+                                return (
+                                    <div key={category.id}>
+                                        {/* Category Header */}
+                                        <div className="flex items-center justify-between mb-6">
+                                            <div className="flex items-center gap-4">
+                                                {category.image_url && (
+                                                    <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-gray-700 flex-shrink-0">
+                                                        <Image
+                                                            src={category.image_url}
+                                                            alt={category.name}
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <h3 className="text-2xl font-bold text-white">
+                                                        {category.name}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-500">
+                                                        {categoryArtists.length} {categoryArtists.length === 1 ? 'artist' : 'artists'} available
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Link
+                                                href={`/artists/${category.slug}`}
+                                                className="flex items-center gap-1.5 text-orange-400 hover:text-orange-300 text-sm font-medium transition-colors"
+                                            >
+                                                View all {category.name}
+                                                <ArrowRight className="w-4 h-4" />
+                                            </Link>
+                                        </div>
+
+                                        {/* Category Artists */}
+                                        {categoryArtists.length > 0 ? (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                {categoryArtists.map((artist) => (
+                                                    <ArtistCard key={artist.id} artist={artist} />
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="bg-[#1a1a1a] rounded-2xl border border-gray-800/50 p-8 text-center">
+                                                <p className="text-gray-500 text-sm">
+                                                    No {category.name.toLowerCase()} listed for this event yet.{' '}
+                                                    <Link href={`/artists/${category.slug}`} className="text-orange-400 hover:underline">
+                                                        Browse all {category.name}
+                                                    </Link>
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Divider */}
+                                        <div className="mt-12 h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent" />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : relevantArtists.length > 0 ? (
+                        /* Fallback: show all artists without category grouping */
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {relevantArtists.map((artist) => (
                                 <ArtistCard key={artist.id} artist={artist} />
                             ))}

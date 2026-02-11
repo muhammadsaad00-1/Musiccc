@@ -41,7 +41,7 @@ export default function ManageEventsPage() {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/events");
+      const response = await fetch("http://127.0.0.1:8000/events");
       const data = await response.json();
       setEvents(data);
     } catch (error) {
@@ -53,7 +53,7 @@ export default function ManageEventsPage() {
 
   const fetchPerformers = async () => {
     try {
-      const response = await fetch("http://localhost:8000/performers");
+      const response = await fetch("http://127.0.0.1:8000/performers");
       const data = await response.json();
       setPerformers(data);
     } catch (error) {
@@ -70,7 +70,7 @@ export default function ManageEventsPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/admin/events/${id}`,
+        `http://127.0.0.1:8000/admin/events/${id}`,
         {
           method: "DELETE",
         },
@@ -116,8 +116,8 @@ export default function ManageEventsPage() {
       }
 
       const url = showEditModal
-        ? `http://localhost:8000/admin/events/${selectedEvent.id}`
-        : "http://localhost:8000/admin/events";
+        ? `http://127.0.0.1:8000/admin/events/${selectedEvent.id}`
+        : "http://127.0.0.1:8000/admin/events";
 
       const method = showEditModal ? "PUT" : "POST";
 

@@ -38,6 +38,7 @@ export default function AdminDashboard() {
   const [recentRequests, setRecentRequests] = useState<any[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [artistCount, setArtistCount] = useState(0);
+  const [categoryCount, setCategoryCount] = useState(0);
   const [recentArtists, setRecentArtists] = useState<any[]>([]);
   const [adminUsername, setAdminUsername] = useState("");
 
@@ -54,7 +55,7 @@ export default function AdminDashboard() {
 
       // Verify token with backend
       try {
-        const response = await fetch("http://localhost:8000/api/admin/verify", {
+        const response = await fetch("http://127.0.0.1:8000/api/admin/verify", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -85,7 +86,7 @@ export default function AdminDashboard() {
 
     const fetchStats = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/requirements");
+        const response = await fetch("http://127.0.0.1:8000/api/requirements");
         const data = await response.json();
 
         const stats = {
@@ -106,7 +107,7 @@ export default function AdminDashboard() {
 
     const fetchArtists = async () => {
       try {
-        const response = await fetch("http://localhost:8000/performers");
+        const response = await fetch("http://127.0.0.1:8000/performers");
         const data = await response.json();
         setArtistCount(data.length);
         setRecentArtists(data.slice(0, 5));
@@ -117,8 +118,20 @@ export default function AdminDashboard() {
       }
     };
 
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/categories");
+        const data = await response.json();
+        setCategoryCount(data.length);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+        setCategoryCount(0);
+      }
+    };
+
     fetchStats();
     fetchArtists();
+    fetchCategories();
   }, [router]);
 
   const handleLogout = async () => {
@@ -126,7 +139,7 @@ export default function AdminDashboard() {
 
     try {
       // Call backend logout endpoint
-      await fetch("http://localhost:8000/api/admin/logout", {
+      await fetch("http://127.0.0.1:8000/api/admin/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -155,7 +168,7 @@ export default function AdminDashboard() {
     {
       icon: <FolderOpen className="w-6 h-6" />,
       label: "Categories",
-      value: "10", // Static count for category types
+      value: categoryCount.toString(), // Dynamic count
       color: "from-blue-500/20 to-cyan-500/20",
       iconColor: "text-blue-400",
     },
@@ -280,6 +293,24 @@ export default function AdminDashboard() {
             </h3>
             <p className="text-gray-500">
               Create and manage event packages
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/blogs"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-6 hover:border-gray-700 transition-colors group"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-pink-600/20 text-purple-400 rounded-xl flex items-center justify-center">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <ArrowUpRight className="w-5 h-5 text-gray-600 group-hover:text-purple-400 transition-colors" />
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-1">
+              Manage Blog
+            </h3>
+            <p className="text-gray-500">
+              Create and manage blog posts
             </p>
           </Link>
 
@@ -417,12 +448,12 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 text-xs font-medium rounded-full ${req.status === "pending"
-                              ? "bg-yellow-500/20 text-yellow-400"
-                              : req.status === "contacted"
-                                ? "bg-blue-500/20 text-blue-400"
-                                : req.status === "booked"
-                                  ? "bg-green-500/20 text-green-400"
-                                  : "bg-gray-700 text-gray-400"
+                            ? "bg-yellow-500/20 text-yellow-400"
+                            : req.status === "contacted"
+                              ? "bg-blue-500/20 text-blue-400"
+                              : req.status === "booked"
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-gray-700 text-gray-400"
                             }`}
                         >
                           {req.status.charAt(0).toUpperCase() +

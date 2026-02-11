@@ -40,6 +40,7 @@ interface Category {
     slug: string;
     description?: string;
     artist_count: number;
+    image_url?: string;
 }
 
 export default function CategoryGrid() {
@@ -49,7 +50,7 @@ export default function CategoryGrid() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch('http://localhost:8000/categories');
+                const response = await fetch('http://127.0.0.1:8000/categories');
                 if (response.ok) {
                     const data = await response.json();
                     setCategories(data.categories || data || []);
@@ -86,28 +87,7 @@ export default function CategoryGrid() {
     }
 
     if (categories.length === 0) {
-        // Fallback to static categories if API fails
-        return (
-            <section className="py-16 lg:py-24 bg-[#0a0a0b]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                            Find Your Perfect
-                            <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent"> Musical Artist</span>
-                        </h2>
-                        <p className="text-lg text-gray-400">Browse our artist categories</p>
-                    </div>
-                    <div className="text-center">
-                        <Link
-                            href="/search"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-full"
-                        >
-                            Browse All Artists
-                        </Link>
-                    </div>
-                </div>
-            </section>
-        );
+        return null; // Don't show anything if no categories
     }
 
     return (
@@ -134,46 +114,63 @@ export default function CategoryGrid() {
                         <Link
                             key={category.id}
                             href={`/artists/${category.slug || category.name.toLowerCase()}`}
-                            className="group relative bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 hover:border-orange-500/50 transition-all duration-300 overflow-hidden"
+                            className="group relative bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 hover:border-orange-500/50 transition-all duration-300 overflow-hidden min-h-[280px] flex flex-col justify-end"
                         >
+                            {/* Background Image */}
+                            {category.image_url ? (
+                                <>
+                                    <div className="absolute inset-0 z-0">
+                                        <img
+                                            src={category.image_url}
+                                            alt={category.name}
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-60 group-hover:opacity-40"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="absolute inset-0 bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] z-0" />
+                            )}
+
                             {/* HOT Badge */}
                             {isHot(category.name) && (
-                                <div className="absolute top-3 right-3 px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1">
+                                <div className="absolute top-3 right-3 z-20 px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1">
                                     <Zap className="w-3 h-3" />
                                     HOT
                                 </div>
                             )}
 
-                            {/* Hover Gradient Background */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
                             {/* Content */}
-                            <div className="relative z-10">
-                                {/* Icon */}
-                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center text-orange-400 mb-4 group-hover:from-orange-500 group-hover:to-pink-600 group-hover:text-white transition-all duration-300">
-                                    {getIcon(category.name)}
-                                </div>
+                            <div className="relative z-10 p-2">
+                                {/* Icon fallback if no image, or smaller icon if image exists */}
+                                {!category.image_url && (
+                                    <div className="mb-4 text-orange-400 opacity-80 group-hover:opacity-100 transition-opacity">
+                                        {getIcon(category.name)}
+                                    </div>
+                                )}
 
                                 {/* Name */}
-                                <h3 className="font-bold text-lg text-white group-hover:text-orange-400 transition-colors mb-1">
+                                <h3 className="font-bold text-xl text-white group-hover:text-orange-400 transition-colors mb-2">
                                     {category.name}
                                 </h3>
 
                                 {/* Description */}
                                 {category.description && (
-                                    <p className="text-xs text-gray-500 mb-2 line-clamp-1">
+                                    <p className="text-xs text-gray-300 mb-3 line-clamp-2 opacity-80 group-hover:opacity-100 transition-opacity">
                                         {category.description}
                                     </p>
                                 )}
 
                                 {/* Count */}
-                                <p className="text-sm text-gray-400">
-                                    {category.artist_count}+ Artists
-                                </p>
+                                <div className="flex items-center gap-2 text-xs font-medium text-gray-400 group-hover:text-white transition-colors">
+                                    <Users className="w-3 h-3" />
+                                    <span>{category.artist_count}+ Artists</span>
+                                </div>
                             </div>
                         </Link>
                     ))}
                 </div>
+
 
                 {/* View All Link */}
                 <div className="text-center mt-10">

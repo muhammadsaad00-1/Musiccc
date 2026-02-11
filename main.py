@@ -409,11 +409,9 @@ async def create_performer(
     request: Request,
     name: str = Form(...),
     description: str = Form(None),
-    category: str = Form(...),  # Singer, Comedian, DJ, Photography
-    price: float = Form(None),
+    category: str = Form(...),  # JSON string of list, e.g. '["Singers","Bhangra Artists"]'
     instagram_url: str = Form(None),
     youtube_url: str = Form(None),
-    locations: str = Form(None),  # JSON string of list
     genres: str = Form(None),  # JSON string of list
     videos: str = Form(None),  # JSON string of list of YouTube URLs
     popular_songs: str = Form(None),  # JSON string of list of popular songs
@@ -424,7 +422,12 @@ async def create_performer(
     import re
     
     # Parse JSON strings to lists
-    locations_list = json.loads(locations) if locations else []
+    # Category can be a JSON array string or a plain category name
+    try:
+        category_list = json.loads(category) if category.startswith('[') else [category]
+    except (json.JSONDecodeError, AttributeError):
+        category_list = [category] if category else []
+    
     genres_list = json.loads(genres) if genres else []
     videos_list = json.loads(videos) if videos else []
     popular_songs_list = json.loads(popular_songs) if popular_songs else []
@@ -433,11 +436,9 @@ async def create_performer(
     insert_response = supabase.table("performers").insert({
         "name": name,
         "description": description,
-        "category": category,
-        "price": price,
+        "category": category_list,
         "instagram_url": instagram_url,
         "youtube_url": youtube_url,
-        "locations": locations_list,
         "genres": genres_list,
         "videos": videos_list,
         "popular_songs": popular_songs_list
@@ -504,9 +505,9 @@ async def create_performer(
 
 @app.get("/performers")
 @limiter.limit("100/minute")
-def get_performers(request: Request, category: str = None, city: str = None):
+def get_performers(request: Request, category: str = None):
     # Generate cache key
-    cache_key = get_cache_key("performers", category=category, city=city)
+    cache_key = get_cache_key("performers", category=category)
     
     # Check cache
     if cache_key in cache:
@@ -515,12 +516,8 @@ def get_performers(request: Request, category: str = None, city: str = None):
     try:
         query = supabase.table("performers").select("*")
         if category:
-            query = query.eq("category", category)
+            query = query.contains("category", [category])
         response = query.execute()
-        
-        # Filter by city if provided (since locations is an array)
-        if city and response.data:
-            response.data = [p for p in response.data if city in (p.get("locations") or [])]
         
         # Store in cache
         cache[cache_key] = response.data
@@ -534,47 +531,8 @@ def get_performers(request: Request, category: str = None, city: str = None):
 @limiter.limit("100/minute")
 def get_all_cities(request: Request):
     """Get all unique cities/locations where performers are available"""
-    cache_key = "cities_all"
-    
-    # Check cache
-    if cache_key in cache:
-        return cache[cache_key]
-    
-    try:
-        response = supabase.table("performers").select("locations").execute()
-        cities = set()
-        for performer in response.data:
-            if performer.get("locations"):
-                cities.update(performer["locations"])
-        
-        result = {"cities": sorted(list(cities))}
-        cache[cache_key] = result
-        
-        return result
-    except Exception as e:
-        raise
+    return {"cities": []}
 
-
-@app.get("/performers/by-location/{location}")
-@limiter.limit("100/minute")
-def get_performers_by_location(request: Request, location: str):
-    """Get all performers available in a specific location/city"""
-    cache_key = get_cache_key("performers_location", location=location)
-    
-    # Check cache
-    if cache_key in cache:
-        return cache[cache_key]
-    
-    try:
-        response = supabase.table("performers").select("*").execute()
-        # Filter performers that have this location in their locations array
-        filtered_performers = [p for p in response.data if location in (p.get("locations") or [])]
-        
-        cache[cache_key] = filtered_performers
-        
-        return filtered_performers
-    except Exception as e:
-        raise
 
 
 @app.get("/performers/by-name/{name}")
@@ -683,6 +641,8 @@ async def get_artist_youtube_data(artist_name: str, max_results: int = 5):
         }
 
 
+
+
 @app.put("/admin/performers/{id}")
 @limiter.limit("20/minute")
 async def update_performer(
@@ -691,10 +651,8 @@ async def update_performer(
     name: str = Form(None),
     description: str = Form(None),
     category: str = Form(None),
-    price: float = Form(None),
     instagram_url: str = Form(None),
     youtube_url: str = Form(None),
-    locations: str = Form(None),
     genres: str = Form(None),
     videos: str = Form(None),
     popular_songs: str = Form(None),
@@ -710,15 +668,13 @@ async def update_performer(
     if description:
         update_data["description"] = description
     if category:
-        update_data["category"] = category
-    if price is not None:
-        update_data["price"] = price
-    if instagram_url:
-        update_data["instagram_url"] = instagram_url
+        try:
+            # Parse JSON string if it's a list, otherwise simplify
+            update_data["category"] = json.loads(category) if category.startswith('[') else [category]
+        except (json.JSONDecodeError, AttributeError):
+            update_data["category"] = [category]
     if youtube_url:
         update_data["youtube_url"] = youtube_url
-    if locations:
-        update_data["locations"] = json.loads(locations)
     if genres:
         update_data["genres"] = json.loads(genres)
     if videos:
@@ -1011,8 +967,392 @@ def delete_event(request: Request, event_id: str):
 
 
 # ============================================
-# PACKAGES ENDPOINTS
+# CATEGORY ENDPOINTS
 # ============================================
+
+@app.get("/categories")
+@limiter.limit("100/minute")
+def get_categories(request: Request):
+    """
+    Get all categories with artist counts.
+    """
+    cache_key = "categories_all"
+    
+    # Check cache
+    if cache_key in cache:
+        return cache[cache_key]
+    
+    try:
+        # Get all categories
+        response = supabase.table("categories").select("*").execute()
+        categories = response.data
+        
+        # Calculate artist counts for each category
+        # This might be expensive if we have many categories, 
+        # but for now it's fine as categories are usually few (< 20)
+        for category in categories:
+            # Count performers in this category
+            # Note: storing category name in performers table is not ideal normalization,
+            # but that's how the current schema seems to work based on create_performer
+            count_response = supabase.table("performers").select("id", count="exact").contains("category", [category["name"]]).execute()
+            category["artist_count"] = count_response.count
+            
+        cache[cache_key] = categories
+        return categories
+    except Exception as e:
+        print(f"Error fetching categories: {e}")
+        return []
+
+@app.post("/admin/categories")
+@limiter.limit("10/minute")
+async def create_category(
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(None),
+    image: UploadFile = File(None)
+):
+    import re
+    
+    try:
+        slug = re.sub(r'[^a-zA-Z0-9-]', '-', name.lower())
+        
+        category_data = {
+            "name": name,
+            "slug": slug,
+            "description": description
+        }
+        
+        # Insert category first
+        response = supabase.table("categories").insert(category_data).execute()
+        
+        if not response.data:
+            return {"success": False, "message": "Failed to create category"}
+            
+        category_id = response.data[0]["id"]
+        
+        # Handle image upload if provided
+        if image:
+            try:
+                file_bytes = await image.read()
+                file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
+                file_path = f"category_{category_id}.{file_extension}"
+                
+                ensure_bucket_exists("categories")
+                
+                supabase.storage.from_("categories").upload(file_path, file_bytes, {"upsert": "true"})
+                image_url = supabase.storage.from_("categories").get_public_url(file_path)
+                
+                # Update category with image url
+                supabase.table("categories").update({"image_url": image_url}).eq("id", category_id).execute()
+                
+            except Exception as upload_error:
+                print(f"Category image upload error: {upload_error}")
+                # Continue even if image upload fails
+        
+        # Invalidate cache
+        if "categories_all" in cache:
+            del cache["categories_all"]
+            
+        return {"success": True, "message": "Category created", "data": response.data[0]}
+        
+    except Exception as e:
+        print(f"Error creating category: {e}")
+        raise
+
+@app.put("/admin/categories/{id}")
+@limiter.limit("10/minute")
+async def update_category(
+    request: Request,
+    id: str,
+    name: str = Form(None),
+    description: str = Form(None),
+    image: UploadFile = File(None)
+):
+    import re
+    
+    try:
+        update_data = {}
+        if name:
+            update_data["name"] = name
+            update_data["slug"] = re.sub(r'[^a-zA-Z0-9-]', '-', name.lower())
+        if description:
+            update_data["description"] = description
+            
+        if update_data:
+            supabase.table("categories").update(update_data).eq("id", id).execute()
+            
+        if image:
+            try:
+                file_bytes = await image.read()
+                file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
+                file_path = f"category_{id}.{file_extension}"
+                
+                ensure_bucket_exists("categories")
+                
+                supabase.storage.from_("categories").upload(file_path, file_bytes, {"upsert": "true"})
+                image_url = supabase.storage.from_("categories").get_public_url(file_path)
+                
+                supabase.table("categories").update({"image_url": image_url}).eq("id", id).execute()
+            except Exception as upload_error:
+                print(f"Category image upload error: {upload_error}")
+        
+        # Invalidate cache
+        if "categories_all" in cache:
+            del cache["categories_all"]
+            
+        return {"success": True, "message": "Category updated"}
+        
+    except Exception as e:
+        print(f"Error updating category: {e}")
+        raise
+
+@app.delete("/admin/categories/{id}")
+@limiter.limit("10/minute")
+def delete_category(request: Request, id: str):
+    try:
+        supabase.table("categories").delete().eq("id", id).execute()
+        
+        # Invalidate cache
+        if "categories_all" in cache:
+            del cache["categories_all"]
+            
+        return {"success": True, "message": "Category deleted"}
+    except Exception as e:
+        print(f"Error deleting category: {e}")
+        raise
+
+
+# ============================================
+# BLOG ENDPOINTS
+# ============================================
+
+@app.get("/blogs")
+@limiter.limit("100/minute")
+def get_blogs(request: Request, limit: int = 50, category: str = None):
+    """
+    Get all blog posts with optional filtering by category.
+    Returns published posts sorted by date (newest first).
+    """
+    cache_key = f"blogs_{limit}_{category}"
+    
+    # Check cache
+    if cache_key in cache:
+        return cache[cache_key]
+    
+    try:
+        query = supabase.table("blogs").select("*")
+        
+        # Filter by category if provided
+        if category:
+            query = query.eq("category", category)
+        
+        # Only get published posts, ordered by date
+        query = query.eq("is_published", True).order("created_at", desc=True).limit(limit)
+        
+        response = query.execute()
+        blogs = response.data
+        
+        cache[cache_key] = blogs
+        return blogs
+    except Exception as e:
+        print(f"Error fetching blogs: {e}")
+        return []
+
+@app.get("/blogs/{id}")
+@limiter.limit("100/minute")
+def get_blog(request: Request, id: str):
+    """
+    Get a single blog post by ID or slug.
+    """
+    try:
+        # Try to get by ID first
+        response = supabase.table("blogs").select("*").eq("id", id).eq("is_published", True).execute()
+        
+        if response.data and len(response.data) > 0:
+            return response.data[0]
+        
+        # If not found by ID, try by slug
+        response = supabase.table("blogs").select("*").eq("slug", id).eq("is_published", True).execute()
+        
+        if response.data and len(response.data) > 0:
+            return response.data[0]
+        
+        return {"error": "Blog post not found"}
+    except Exception as e:
+        print(f"Error fetching blog: {e}")
+        return {"error": str(e)}
+
+@app.post("/admin/blogs")
+@limiter.limit("10/minute")
+async def create_blog(
+    request: Request,
+    title: str = Form(...),
+    slug: str = Form(None),
+    excerpt: str = Form(None),
+    content: str = Form(...),
+    category: str = Form(None),
+    author: str = Form("Artist Factory Team"),
+    image: UploadFile = File(None),
+    is_published: bool = Form(False)
+):
+    """
+    Create a new blog post.
+    """
+    import re
+    from datetime import datetime
+    
+    try:
+        # Generate slug from title if not provided
+        if not slug:
+            slug = re.sub(r'[^a-zA-Z0-9-]', '-', title.lower()).strip('-')
+            # Remove multiple consecutive dashes
+            slug = re.sub(r'-+', '-', slug)
+        
+        # Check if slug already exists
+        existing = supabase.table("blogs").select("id").eq("slug", slug).execute()
+        if existing.data and len(existing.data) > 0:
+            slug = f"{slug}-{datetime.now().strftime('%Y%m%d')}"
+        
+        blog_data = {
+            "title": title,
+            "slug": slug,
+            "excerpt": excerpt or title[:150],
+            "content": content,
+            "category": category or "General",
+            "author": author,
+            "is_published": is_published,
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat()
+        }
+        
+        # Insert blog first
+        response = supabase.table("blogs").insert(blog_data).execute()
+        
+        if not response.data:
+            return {"success": False, "message": "Failed to create blog post"}
+        
+        blog_id = response.data[0]["id"]
+        
+        # Handle image upload if provided
+        if image:
+            try:
+                file_bytes = await image.read()
+                file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
+                file_path = f"blog_{blog_id}.{file_extension}"
+                
+                ensure_bucket_exists("blogs")
+                
+                supabase.storage.from_("blogs").upload(file_path, file_bytes, {"upsert": "true"})
+                image_url = supabase.storage.from_("blogs").get_public_url(file_path)
+                
+                # Update blog with image URL
+                supabase.table("blogs").update({"image_url": image_url}).eq("id", blog_id).execute()
+                
+            except Exception as upload_error:
+                print(f"Blog image upload error: {upload_error}")
+                # Continue even if image upload fails
+        
+        # Invalidate cache
+        cache_keys_to_remove = [k for k in cache.keys() if k.startswith('blogs_')]
+        for key in cache_keys_to_remove:
+            cache.pop(key, None)
+        
+        return {"success": True, "message": "Blog post created", "data": response.data[0]}
+        
+    except Exception as e:
+        print(f"Error creating blog: {e}")
+        raise
+
+@app.put("/admin/blogs/{id}")
+@limiter.limit("10/minute")
+async def update_blog(
+    request: Request,
+    id: str,
+    title: str = Form(None),
+    slug: str = Form(None),
+    excerpt: str = Form(None),
+    content: str = Form(None),
+    category: str = Form(None),
+    author: str = Form(None),
+    image: UploadFile = File(None),
+    is_published: bool = Form(None)
+):
+    """
+    Update an existing blog post.
+    """
+    from datetime import datetime
+    import re
+    
+    try:
+        update_data = {}
+        if title:
+            update_data["title"] = title
+        if slug:
+            # Clean slug
+            slug = re.sub(r'[^a-zA-Z0-9-]', '-', slug.lower()).strip('-')
+            slug = re.sub(r'-+', '-', slug)
+            update_data["slug"] = slug
+        if excerpt:
+            update_data["excerpt"] = excerpt
+        if content:
+            update_data["content"] = content
+        if category:
+            update_data["category"] = category
+        if author:
+            update_data["author"] = author
+        if is_published is not None:
+            update_data["is_published"] = is_published
+        
+        update_data["updated_at"] = datetime.now().isoformat()
+        
+        if update_data:
+            supabase.table("blogs").update(update_data).eq("id", id).execute()
+        
+        if image:
+            try:
+                file_bytes = await image.read()
+                file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
+                file_path = f"blog_{id}.{file_extension}"
+                
+                ensure_bucket_exists("blogs")
+                
+                supabase.storage.from_("blogs").upload(file_path, file_bytes, {"upsert": "true"})
+                image_url = supabase.storage.from_("blogs").get_public_url(file_path)
+                
+                supabase.table("blogs").update({"image_url": image_url}).eq("id", id).execute()
+            except Exception as upload_error:
+                print(f"Blog image upload error: {upload_error}")
+        
+        # Invalidate cache
+        cache_keys_to_remove = [k for k in cache.keys() if k.startswith('blogs_')]
+        for key in cache_keys_to_remove:
+            cache.pop(key, None)
+        
+        return {"success": True, "message": "Blog post updated"}
+        
+    except Exception as e:
+        print(f"Error updating blog: {e}")
+        raise
+
+@app.delete("/admin/blogs/{id}")
+@limiter.limit("10/minute")
+def delete_blog(request: Request, id: str):
+    """
+    Delete a blog post.
+    """
+    try:
+        supabase.table("blogs").delete().eq("id", id).execute()
+        
+        # Invalidate cache
+        cache_keys_to_remove = [k for k in cache.keys() if k.startswith('blogs_')]
+        for key in cache_keys_to_remove:
+            cache.pop(key, None)
+        
+        return {"success": True, "message": "Blog post deleted"}
+    except Exception as e:
+        print(f"Error deleting blog: {e}")
+        raise
+
 
 @app.post("/admin/packages")
 @limiter.limit("10/minute")

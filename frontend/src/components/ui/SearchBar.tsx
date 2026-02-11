@@ -1,27 +1,44 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, MapPin } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Music } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SearchBarProps {
     size?: 'default' | 'large';
-    showLocation?: boolean;
+    showCategory?: boolean;
     className?: string;
     autoFocus?: boolean;
     onSearch?: () => void;
 }
 
-export default function SearchBar({ size = 'default', showLocation = true, className = '', autoFocus = false, onSearch }: SearchBarProps) {
+export default function SearchBar({ size = 'default', showCategory = true, className = '', autoFocus = false, onSearch }: SearchBarProps) {
     const router = useRouter();
     const [query, setQuery] = useState('');
-    const [location, setLocation] = useState('');
+    const [category, setCategory] = useState('');
+    const [categories, setCategories] = useState<{ id: number; name: string; slug: string }[]>([]);
+
+    // Fetch categories from backend
+    useEffect(() => {
+        async function fetchCategories() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/categories');
+                if (response.ok) {
+                    const data = await response.json();
+                    setCategories(data || []);
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        }
+        fetchCategories();
+    }, []);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         const params = new URLSearchParams();
         if (query) params.append('q', query);
-        if (location) params.append('location', location);
+        if (category) params.append('category', category);
 
         if (onSearch) onSearch();
         router.push(`/search?${params.toString()}`);
@@ -54,22 +71,29 @@ export default function SearchBar({ size = 'default', showLocation = true, class
                 />
             </div>
 
-            {/* Location Input */}
-            {showLocation && (
+            {/* Category Dropdown */}
+            {showCategory && (
                 <>
                     <div className="w-px h-8 bg-gray-700" />
-                    <div className="flex items-center px-4">
-                        <MapPin className={`text-gray-500 flex-shrink-0 ${isLarge ? 'w-6 h-6' : 'w-5 h-5'}`} />
-                        <input
-                            type="text"
-                            placeholder="City"
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
+                    <div className="flex items-center px-3">
+                        <Music className={`text-gray-500 flex-shrink-0 ${isLarge ? 'w-6 h-6' : 'w-5 h-5'}`} />
+                        <select
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
                             className={`
-                w-24 sm:w-32 bg-transparent border-none outline-none placeholder-gray-500 text-white
-                ${isLarge ? 'px-3 py-3 text-lg' : 'px-2 py-2'}
+                bg-transparent border-none outline-none text-white cursor-pointer appearance-none
+                ${isLarge ? 'px-3 py-3 text-lg' : 'px-2 py-2 text-sm'}
+                ${!category ? 'text-gray-500' : 'text-white'}
               `}
-                        />
+                            style={{ minWidth: '120px' }}
+                        >
+                            <option value="" className="bg-[#1a1a1a] text-gray-500">Category</option>
+                            {categories.map((cat) => (
+                                <option key={cat.id} value={cat.slug || cat.name} className="bg-[#1a1a1a] text-white">
+                                    {cat.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </>
             )}

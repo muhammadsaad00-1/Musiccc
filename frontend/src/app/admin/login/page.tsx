@@ -31,7 +31,7 @@ export default function AdminLogin() {
 
     try {
       // Call backend authentication endpoint
-      const response = await fetch("http://localhost:8000/api/admin/login", {
+      const response = await fetch("http://127.0.0.1:8000/api/admin/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

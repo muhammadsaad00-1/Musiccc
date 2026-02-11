@@ -28,7 +28,7 @@ export default function FeaturedArtists() {
     useEffect(() => {
         const fetchFeaturedArtists = async () => {
             try {
-                const response = await fetch('http://localhost:8000/performers?featured=true&limit=6');
+                const response = await fetch('http://127.0.0.1:8000/performers?featured=true&limit=6');
                 if (response.ok) {
                     const data = await response.json();
                     // Transform data if needed

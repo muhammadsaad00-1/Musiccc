@@ -12,19 +12,44 @@ export default function ComparePage() {
     const [showSelector, setShowSelector] = useState(false);
     const [allArtists, setAllArtists] = useState<Artist[]>([]);
     const [loading, setLoading] = useState(true);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [categoryMap, setCategoryMap] = useState<Record<number, string>>({});
 
-    // Category mapping for display
-    const categoryMap: Record<number, string> = {
-        1: "Singer", 2: "Musician", 3: "DJ", 4: "Dancer", 5: "Comedian",
-        6: "Anchor", 7: "Makeup Artist", 8: "Photographer", 9: "Mehndi Artist", 10: "Decorator"
-    };
+    // Fetch categories from backend
+    useEffect(() => {
+        async function fetchCategories() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/categories');
+                if (response.ok) {
+                    const data = await response.json();
+                    setCategories(data);
+                    // Create mapping from category data
+                    const mapping: Record<number, string> = {};
+                    data.forEach((cat: any) => {
+                        // Map by ID if available, or create ID from position
+                        const id = cat.id || data.indexOf(cat) + 1;
+                        mapping[id] = cat.name;
+                    });
+                    setCategoryMap(mapping);
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+                // Fallback to default mapping
+                setCategoryMap({
+                    1: "Singer", 2: "Musician", 3: "DJ", 4: "Dancer", 5: "Comedian",
+                    6: "Anchor", 7: "Makeup Artist", 8: "Photographer", 9: "Mehndi Artist", 10: "Decorator"
+                });
+            }
+        }
+        fetchCategories();
+    }, []);
 
     // Fetch artists from API
     useEffect(() => {
         async function fetchArtists() {
             setLoading(true);
             try {
-                const response = await fetch('http://localhost:8000/performers');
+                const response = await fetch('http://127.0.0.1:8000/performers');
                 if (response.ok) {
                     const performers = await response.json();
                     const transformed = performers.map((p: any) => ({

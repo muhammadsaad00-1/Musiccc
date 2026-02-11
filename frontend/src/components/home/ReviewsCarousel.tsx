@@ -21,8 +21,8 @@ export default function ReviewsCarousel({ artistId, className }: { artistId?: st
         const fetchReviews = async () => {
             try {
                 const url = artistId
-                    ? `http://localhost:8000/api/reviews?artist_id=${artistId}`
-                    : 'http://localhost:8000/api/reviews?limit=20';
+                    ? `http://127.0.0.1:8000/api/reviews?artist_id=${artistId}`
+                    : 'http://127.0.0.1:8000/api/reviews?limit=20';
 
                 const response = await fetch(url);
                 if (response.ok) {

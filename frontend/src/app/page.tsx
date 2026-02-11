@@ -1,3 +1,4 @@
+import CategoryGrid from '@/components/home/CategoryGrid';
 import Hero from '@/components/home/Hero';
 import FeaturedArtists from '@/components/home/FeaturedArtists';
 import ClientsMarquee from '@/components/home/ClientsMarquee';
@@ -10,6 +11,7 @@ export default function Home() {
   return (
     <>
       <Hero />
+      <CategoryGrid />
       <FeaturedArtists />
 
       <ClientsMarquee />

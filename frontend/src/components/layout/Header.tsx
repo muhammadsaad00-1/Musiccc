@@ -2,17 +2,27 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, X, Search, ChevronDown, Zap, Mic2, Music, Home, MapPin, Star, Calendar, Info, Phone } from 'lucide-react';
 
-// Pakistan-focused artist categories
-const artistCategories = [
-    { name: 'Singers', slug: 'singers', icon: '🎤', hot: true },
-    { name: 'Qawwals', slug: 'qawwals', icon: '🎵', hot: true },
-    { name: 'Live Bands', slug: 'live-bands', icon: '🎸', hot: false },
-    { name: 'Bhangra Artists', slug: 'bhangra-artists', icon: '💃', hot: true },
-    { name: 'DJs', slug: 'djs', icon: '🎧', hot: false },
-];
+// Icon mapping for categories
+const categoryIcons: Record<string, string> = {
+    'Singers': '🎤',
+    'Singer': '🎤',
+    'Qawwals': '🎵',
+    'Qawwal': '🎵',
+    'Live Bands': '🎸',
+    'Bhangra Artists': '💃',
+    'DJs': '🎧',
+    'DJ': '🎧',
+    'Musicians': '🎸',
+    'Musician': '🎸',
+    'Comedians': '😄',
+    'Comedian': '😄',
+    'Photographers': '📷',
+    'Photographer': '📷',
+    'Photography': '📷',
+};
 
 // Event types
 const eventTypes = [
@@ -37,6 +47,30 @@ const cities = [
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [artistCategories, setArtistCategories] = useState<any[]>([]);
+
+    // Fetch categories from backend
+    useEffect(() => {
+        async function fetchCategories() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/categories');
+                if (response.ok) {
+                    const categories = await response.json();
+                    // Transform to include icon and hot flag
+                    const transformed = categories.slice(0, 8).map((cat: any) => ({
+                        name: cat.name,
+                        slug: cat.slug,
+                        icon: categoryIcons[cat.name] || '🎵',
+                        hot: cat.artist_count > 10, // Mark as hot if has more than 10 artists
+                    }));
+                    setArtistCategories(transformed);
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        }
+        fetchCategories();
+    }, []);
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0b]/95 backdrop-blur-md border-b border-gray-800/50">

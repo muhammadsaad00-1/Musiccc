@@ -103,7 +103,7 @@ export default function Hero() {
         // Fetch real stats from backend
         const fetchStats = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/stats');
+                const response = await fetch('http://127.0.0.1:8000/api/stats');
                 if (response.ok) {
                     const data = await response.json();
                     setStats({

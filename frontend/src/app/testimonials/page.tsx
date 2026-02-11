@@ -20,7 +20,7 @@ export default function TestimonialsPage() {
     useEffect(() => {
         async function fetchReviews() {
             try {
-                const response = await fetch('http://localhost:8000/api/reviews');
+                const response = await fetch('http://127.0.0.1:8000/api/reviews');
                 if (response.ok) {
                     const data = await response.json();
                     setReviews(data.reviews || data || []);
@@ -56,7 +56,7 @@ export default function TestimonialsPage() {
             formData.append('rating', String(rating));
             formData.append('review', review.trim());
 
-            const response = await fetch('http://localhost:8000/api/reviews', {
+            const response = await fetch('http://127.0.0.1:8000/api/reviews', {
                 method: 'POST',
                 body: formData,
             });

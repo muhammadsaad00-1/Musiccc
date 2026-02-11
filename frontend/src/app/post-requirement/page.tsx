@@ -66,16 +66,14 @@ const ArtistTypeCard = ({
   <button
     type="button"
     onClick={onClick}
-    className={`relative p-4 rounded-2xl border-2 transition-all duration-300 group flex flex-col items-center gap-2 ${
-      selected
-        ? `bg-gradient-to-br ${color} border-transparent shadow-lg scale-105`
-        : "bg-[#0a0a0b]/80 border-gray-800 hover:border-gray-700 hover:bg-[#111]"
-    }`}
+    className={`relative p-4 rounded-2xl border-2 transition-all duration-300 group flex flex-col items-center gap-2 ${selected
+      ? `bg-gradient-to-br ${color} border-transparent shadow-lg scale-105`
+      : "bg-[#0a0a0b]/80 border-gray-800 hover:border-gray-700 hover:bg-[#111]"
+      }`}
   >
     <div
-      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-        selected ? "bg-white/20" : "bg-gradient-to-br from-gray-800 to-gray-900"
-      }`}
+      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${selected ? "bg-white/20" : "bg-gradient-to-br from-gray-800 to-gray-900"
+        }`}
     >
       <Icon
         className={`w-6 h-6 ${selected ? "text-white" : "text-gray-400 group-hover:text-white"}`}
@@ -109,11 +107,10 @@ const BudgetCard = ({
   <button
     type="button"
     onClick={onClick}
-    className={`p-4 rounded-2xl border-2 transition-all duration-300 text-left ${
-      selected
-        ? "bg-gradient-to-br from-orange-500/20 to-pink-500/20 border-orange-500/50 shadow-lg shadow-orange-500/10"
-        : "bg-[#0a0a0b]/80 border-gray-800 hover:border-gray-700"
-    }`}
+    className={`p-4 rounded-2xl border-2 transition-all duration-300 text-left ${selected
+      ? "bg-gradient-to-br from-orange-500/20 to-pink-500/20 border-orange-500/50 shadow-lg shadow-orange-500/10"
+      : "bg-[#0a0a0b]/80 border-gray-800 hover:border-gray-700"
+      }`}
   >
     <div
       className={`text-lg font-bold mb-1 ${selected ? "text-white" : "text-gray-300"}`}
@@ -147,6 +144,7 @@ export default function PostRequirementPage() {
     phone: "",
     message: "",
   });
+  const [categories, setCategories] = useState<any[]>([]);
 
   // Auto-fill effect for step transitions
   const [showStepContent, setShowStepContent] = useState(true);
@@ -160,7 +158,7 @@ export default function PostRequirementPage() {
     // Handle artist pre-fill
     if (artistSlug) {
       setLoadingArtist(true);
-      fetch(`http://localhost:8000/performers/by-name/${encodeURIComponent(artistSlug)}`)
+      fetch(`http://127.0.0.1:8000/performers/by-name/${encodeURIComponent(artistSlug)}`)
         .then((response) => response.json())
         .then((data) => {
           if (!data.error) {
@@ -178,7 +176,7 @@ export default function PostRequirementPage() {
               "Mehndi Artist": "other",
               Decorator: "other",
             };
-            const artistType = categoryMap[data.category] || "other";
+            const artistType = getArtistTypeFromCategory(data.category);
             setFormData((prev) => ({
               ...prev,
               artistType: artistType,
@@ -197,12 +195,12 @@ export default function PostRequirementPage() {
     // Handle package pre-fill
     if (packageId) {
       setLoadingPackage(true);
-      fetch(`http://localhost:8000/packages/${packageId}`)
+      fetch(`http://127.0.0.1:8000/packages/${packageId}`)
         .then((response) => response.json())
         .then((data) => {
           if (!data.error) {
             setSelectedPackage(data);
-            
+
             // Map budget based on pricing
             let budgetRange = "";
             if (data.pricing < 50000) budgetRange = "under-50k";
@@ -232,44 +230,44 @@ export default function PostRequirementPage() {
     setShowStepContent(true);
   }, [step]);
 
-  const artistTypes = [
-    {
-      icon: Music,
-      label: "Singer",
-      value: "singer",
-      color: "from-purple-500 to-pink-600",
-    },
-    {
-      icon: Users,
-      label: "Band",
-      value: "musician",
-      color: "from-blue-500 to-cyan-600",
-    },
-    {
-      icon: Zap,
-      label: "DJ",
-      value: "dj",
-      color: "from-yellow-500 to-orange-600",
-    },
-    {
-      icon: Heart,
-      label: "Dancer",
-      value: "dancer",
-      color: "from-pink-500 to-rose-600",
-    },
-    {
-      icon: Star,
-      label: "Comedian",
-      value: "comedian",
-      color: "from-green-500 to-emerald-600",
-    },
-    {
-      icon: Briefcase,
-      label: "Other",
-      value: "other",
-      color: "from-gray-500 to-gray-600",
-    },
-  ];
+  // Fetch categories from backend
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    }
+    fetchCategories();
+  }, []);
+
+  // Map category names to artist types
+  const getArtistTypeFromCategory = (categoryName: string): string => {
+    const mapping: Record<string, string> = {
+      'Singer': 'singer',
+      'Singers': 'singer',
+      'Musician': 'musician',
+      'Musicians': 'musician',
+      'DJ': 'dj',
+      'DJs': 'dj',
+      'Dancer': 'dancer',
+      'Dancers': 'dancer',
+      'Comedian': 'comedian',
+      'Comedians': 'comedian',
+    };
+    return mapping[categoryName] || 'other';
+  };
+
+  // Get minimum date (today)
+  const getMinDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
 
   const budgetOptions = [
     { range: "Under 50K", label: "Budget-friendly", value: "under-50k" },
@@ -302,7 +300,7 @@ export default function PostRequirementPage() {
         const urlParams = new URLSearchParams(window.location.search);
         const packageId = urlParams.get("package");
         const eventName = urlParams.get("event_name") || "Custom";
-        
+
         if (packageId && selectedPackage) {
           submitData.append("event_name", selectedPackage.name);
           submitData.append("package_id", packageId);
@@ -310,7 +308,7 @@ export default function PostRequirementPage() {
         } else {
           submitData.append("event_name", eventName);
         }
-        
+
         // If artist was selected, append artist information
         if (selectedArtist) {
           submitData.append("artist_name", selectedArtist.name);
@@ -322,7 +320,7 @@ export default function PostRequirementPage() {
       }
 
       const response = await fetch(
-        "http://localhost:8000/api/submit-requirement",
+        "http://127.0.0.1:8000/api/submit-requirement",
         {
           method: "POST",
           body: submitData,
@@ -518,20 +516,18 @@ export default function PostRequirementPage() {
                 className="relative z-10 flex flex-col items-center gap-2"
               >
                 <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-300 ${
-                    s < step
-                      ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30"
-                      : s === step
-                        ? "bg-gradient-to-br from-orange-500 to-pink-600 text-white shadow-xl shadow-pink-500/40 scale-110 ring-4 ring-pink-500/20"
-                        : "bg-[#1a1a1a] text-gray-500 border border-gray-700"
-                  }`}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-300 ${s < step
+                    ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30"
+                    : s === step
+                      ? "bg-gradient-to-br from-orange-500 to-pink-600 text-white shadow-xl shadow-pink-500/40 scale-110 ring-4 ring-pink-500/20"
+                      : "bg-[#1a1a1a] text-gray-500 border border-gray-700"
+                    }`}
                 >
                   {s < step ? <CheckCircle className="w-5 h-5" /> : s}
                 </div>
                 <span
-                  className={`text-xs font-medium transition-colors duration-300 ${
-                    s <= step ? "text-white" : "text-gray-500"
-                  }`}
+                  className={`text-xs font-medium transition-colors duration-300 ${s <= step ? "text-white" : "text-gray-500"
+                    }`}
                 >
                   {stepLabels[s - 1]}
                 </span>
@@ -603,6 +599,7 @@ export default function PostRequirementPage() {
                       type="date"
                       name="eventDate"
                       value={formData.eventDate}
+                      min={getMinDate()}
                       onChange={handleChange}
                       required
                       className="w-full px-5 py-4 bg-[#0a0a0b]/80 border-2 border-gray-800 rounded-2xl text-white focus:ring-0 focus:border-orange-500/50 transition-all duration-300 hover:border-gray-700 cursor-pointer"
@@ -666,7 +663,7 @@ export default function PostRequirementPage() {
                     {selectedArtist ? "Artist Type (Auto-Selected)" : "Choose Artist Type"}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    {selectedArtist 
+                    {selectedArtist
                       ? `Based on ${selectedArtist.name}'s category`
                       : "What kind of performer do you need?"}
                   </p>
@@ -689,21 +686,49 @@ export default function PostRequirementPage() {
                     </div>
                   </div>
                 )}
-                
+
                 <div className="grid grid-cols-3 gap-3">
-                  {artistTypes.map((type) => (
-                    <ArtistTypeCard
-                      key={type.value}
-                      icon={type.icon}
-                      label={type.label}
-                      value={type.value}
-                      color={type.color}
-                      selected={formData.artistType === type.value}
-                      onClick={() =>
-                        setFormData({ ...formData, artistType: type.value })
-                      }
-                    />
-                  ))}
+                  {categories.length > 0 ? (
+                    categories.map((cat) => {
+                      const artistTypeValue = getArtistTypeFromCategory(cat.name);
+                      // Icon mapping for categories
+                      const getIcon = (categoryName: string) => {
+                        if (categoryName.toLowerCase().includes('singer')) return Music;
+                        if (categoryName.toLowerCase().includes('musician') || categoryName.toLowerCase().includes('band')) return Users;
+                        if (categoryName.toLowerCase().includes('dj')) return Zap;
+                        if (categoryName.toLowerCase().includes('dancer')) return Heart;
+                        if (categoryName.toLowerCase().includes('comedian')) return Star;
+                        return Briefcase;
+                      };
+                      // Color mapping
+                      const getColor = (categoryName: string) => {
+                        if (categoryName.toLowerCase().includes('singer')) return "from-purple-500 to-pink-600";
+                        if (categoryName.toLowerCase().includes('musician') || categoryName.toLowerCase().includes('band')) return "from-blue-500 to-cyan-600";
+                        if (categoryName.toLowerCase().includes('dj')) return "from-yellow-500 to-orange-600";
+                        if (categoryName.toLowerCase().includes('dancer')) return "from-pink-500 to-rose-600";
+                        if (categoryName.toLowerCase().includes('comedian')) return "from-green-500 to-emerald-600";
+                        return "from-gray-500 to-gray-600";
+                      };
+                      return (
+                        <ArtistTypeCard
+                          key={cat.id}
+                          icon={getIcon(cat.name)}
+                          label={cat.name}
+                          value={artistTypeValue}
+                          color={getColor(cat.name)}
+                          selected={formData.artistType === artistTypeValue}
+                          onClick={() =>
+                            setFormData({ ...formData, artistType: artistTypeValue })
+                          }
+                        />
+                      );
+                    })
+                  ) : (
+                    // Fallback while loading
+                    <div className="col-span-full text-center py-8 text-gray-400">
+                      Loading categories...
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-4">
@@ -755,11 +780,10 @@ export default function PostRequirementPage() {
                       onClick={() =>
                         setFormData({ ...formData, budget: option.value })
                       }
-                      className={`relative p-4 rounded-2xl border-2 transition-all duration-300 text-center ${
-                        formData.budget === option.value
-                          ? "bg-gradient-to-br from-orange-500/20 to-pink-500/20 border-orange-500/50 shadow-lg shadow-orange-500/10"
-                          : "bg-[#0a0a0b]/80 border-gray-800 hover:border-gray-700"
-                      }`}
+                      className={`relative p-4 rounded-2xl border-2 transition-all duration-300 text-center ${formData.budget === option.value
+                        ? "bg-gradient-to-br from-orange-500/20 to-pink-500/20 border-orange-500/50 shadow-lg shadow-orange-500/10"
+                        : "bg-[#0a0a0b]/80 border-gray-800 hover:border-gray-700"
+                        }`}
                     >
                       <div
                         className={`text-lg font-bold mb-1 ${formData.budget === option.value ? "text-white" : "text-gray-300"}`}

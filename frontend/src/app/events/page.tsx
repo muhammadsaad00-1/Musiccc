@@ -32,7 +32,7 @@ export default function EventsPage() {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch('http://localhost:8000/events');
+                const response = await fetch('http://127.0.0.1:8000/events');
                 if (response.ok) {
                     const data = await response.json();
                     setBackendEvents(data);

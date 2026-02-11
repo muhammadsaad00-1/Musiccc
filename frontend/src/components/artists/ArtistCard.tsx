@@ -1,6 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Clock, CheckCircle } from 'lucide-react';
+import { MapPin, CheckCircle, PhoneOutgoing } from 'lucide-react';
 import { Artist } from '@/types';
 
 interface ArtistCardProps {
@@ -13,12 +15,19 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
     const artistSlug = artist.slug || artist.name?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const location = artist.location || (artist.locations && artist.locations[0]) || 'Pakistan';
     const shortBio = artist.short_bio || artist.description || artist.bio?.substring(0, 80);
-    const priceRange = artist.price_range || (artist.price ? `PKR ${artist.price.toLocaleString()}+` : null);
+
+    const handleWhatsApp = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const message = `Hi, I'm interested in booking ${artist.name} for an event. Could you please share the details?`;
+        const url = `https://wa.me/923206876442?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    };
 
     return (
         <Link
             href={`/artist/${artistSlug}`}
-            className="group bg-[#1a1a1a] rounded-3xl overflow-hidden border border-gray-800 hover:border-gray-700 transition-all duration-300 card-glow"
+            className="group bg-[#1a1a1a] rounded-3xl overflow-hidden border border-gray-800 hover:border-orange-500/40 transition-all duration-300 card-glow hover:shadow-lg hover:shadow-orange-500/5"
         >
             {/* Image Container */}
             <div className="relative aspect-[4/3] overflow-hidden">
@@ -59,21 +68,13 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
                     {shortBio}
                 </p>
 
-                {/* Meta Info */}
-                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400 mb-3">
-                    <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        <span>{location}</span>
-                    </div>
-                    {artist.performance_duration && (
-                        <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            <span>{artist.performance_duration}</span>
-                        </div>
-                    )}
+                {/* Location */}
+                <div className="flex items-center gap-1 text-sm text-gray-400 mb-4">
+                    <MapPin className="w-4 h-4" />
+                    <span>{location}</span>
                 </div>
 
-                {/* Languages */}
+                {/* Languages/Genres */}
                 {artist.languages && artist.languages.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-4">
                         {artist.languages.slice(0, 3).map((lang) => (
@@ -87,16 +88,19 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
                     </div>
                 )}
 
-                {/* Price & CTA */}
-                <div className="flex items-center justify-between pt-3 border-t border-gray-800">
-                    {priceRange && (
-                        <span className="text-sm text-gray-400">
-                            {priceRange}
-                        </span>
-                    )}
-                    <span className="px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-600 text-white text-sm font-medium rounded-full group-hover:shadow-lg group-hover:shadow-pink-500/30 transition-all">
-                        See Price & Book
+                {/* CTA Buttons */}
+                <div className="flex items-center gap-2 pt-3 border-t border-gray-800">
+                    <span className="flex-1 text-center py-2 text-sm font-medium text-gray-300 bg-[#2a2a2a] rounded-full group-hover:bg-orange-500/10 group-hover:text-orange-400 transition-all">
+                        View Profile
                     </span>
+                    <button
+                        onClick={handleWhatsApp}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-full hover:shadow-lg hover:shadow-green-500/30 transition-all"
+                        title="Contact on WhatsApp"
+                    >
+                        <PhoneOutgoing className="w-3.5 h-3.5" />
+                        WhatsApp
+                    </button>
                 </div>
             </div>
         </Link>

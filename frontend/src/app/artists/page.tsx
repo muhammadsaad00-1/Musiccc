@@ -1,14 +1,13 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import ArtistCard from '@/components/artists/ArtistCard';
 import FAQSection from '@/components/ui/FAQSection';
 import {
-    SlidersHorizontal, Loader2, MapPin, DollarSign, CheckCircle, X, ChevronDown,
-    ArrowLeft, Music, Users, Search, Sparkles, Filter
+    Loader2, ArrowLeft, Music, Users, Search, Sparkles
 } from 'lucide-react';
 import { Artist } from '@/types';
 
@@ -17,15 +16,6 @@ const heroImages = [
     "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80",
     "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80",
     "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?auto=format&fit=crop&q=80"
-];
-
-// Price range options
-const priceRanges = [
-    { value: '', label: 'Any Budget', min: 0, max: Infinity },
-    { value: '0-50000', label: 'Under PKR 50,000', min: 0, max: 50000 },
-    { value: '50000-100000', label: 'PKR 50,000 - 100,000', min: 50000, max: 100000 },
-    { value: '100000-300000', label: 'PKR 100,000 - 300,000', min: 100000, max: 300000 },
-    { value: '300000+', label: 'PKR 300,000+', min: 300000, max: Infinity },
 ];
 
 // Transform backend performer to frontend artist
@@ -38,10 +28,7 @@ function transformPerformerToArtist(performer: any): Artist {
         image_url: performer.profile_image_url || performer.image_url || '/placeholder-artist.jpg',
         short_bio: performer.description || 'Professional artist',
         bio: performer.description || 'Professional artist',
-        location: performer.locations && performer.locations.length > 0 ? performer.locations[0] : 'Pakistan',
-        locations: performer.locations || ['Pakistan'],
-        price_range: performer.price ? `PKR ${performer.price.toLocaleString()}+` : 'Contact for pricing',
-        price: performer.price || 0,
+        location: 'Pakistan',
         is_verified: performer.is_verified ?? true,
         is_featured: performer.is_featured ?? false,
         video_url: performer.videos && performer.videos.length > 0 ? performer.videos[0] : null,
@@ -52,27 +39,16 @@ export default function AllArtistsPage() {
     const searchParams = useSearchParams();
     const [artists, setArtists] = useState<Artist[]>([]);
     const [loading, setLoading] = useState(true);
-    const [availableCities, setAvailableCities] = useState<string[]>([]);
     const [availableCategories, setAvailableCategories] = useState<string[]>([]);
     const [heroImageIndex, setHeroImageIndex] = useState(0);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
-    const [locationFilter, setLocationFilter] = useState('');
-    const [priceFilter, setPriceFilter] = useState('');
-    const [verifiedOnly, setVerifiedOnly] = useState(false);
-    const [sortBy, setSortBy] = useState('featured');
-    const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     // Read URL params and set filters
     useEffect(() => {
-        const locationParam = searchParams.get('location');
         const categoryParam = searchParams.get('category');
-
-        if (locationParam) {
-            setLocationFilter(locationParam);
-        }
         if (categoryParam) {
             setCategoryFilter(categoryParam);
         }
@@ -86,30 +62,25 @@ export default function AllArtistsPage() {
         return () => clearInterval(interval);
     }, []);
 
-    // Fetch all artists and cities from API
+    // Fetch all artists and categories from API
     useEffect(() => {
         async function fetchData() {
             setLoading(true);
             try {
                 // Fetch performers
-                const performersRes = await fetch('http://localhost:8000/performers');
+                const performersRes = await fetch('http://127.0.0.1:8000/performers');
                 if (performersRes.ok) {
                     const backendPerformers = await performersRes.json();
                     const transformedArtists = backendPerformers.map((p: any) => transformPerformerToArtist(p));
                     setArtists(transformedArtists);
-
-                    // Extract unique categories from performers
-                    const categories = [...new Set(transformedArtists.map((a: Artist) =>
-                        a.category_id
-                    ).filter(Boolean))] as string[];
-                    setAvailableCategories(categories.sort());
                 }
 
-                // Fetch cities from dedicated endpoint
-                const citiesRes = await fetch('http://localhost:8000/performers/cities');
-                if (citiesRes.ok) {
-                    const data = await citiesRes.json();
-                    setAvailableCities(data.cities || []);
+                // Fetch categories from backend
+                const categoriesRes = await fetch('http://127.0.0.1:8000/categories');
+                if (categoriesRes.ok) {
+                    const categories = await categoriesRes.json();
+                    const categoryNames = categories.map((cat: any) => cat.name).sort();
+                    setAvailableCategories(categoryNames);
                 }
             } catch (err) {
                 console.error('Error fetching data:', err);
@@ -120,8 +91,8 @@ export default function AllArtistsPage() {
         fetchData();
     }, []);
 
-    // Filter and sort artists
-    const filteredArtists = useMemo(() => {
+    // Filter artists
+    const filteredArtists = (() => {
         let result = [...artists];
 
         // Search filter
@@ -129,68 +100,23 @@ export default function AllArtistsPage() {
             const query = searchQuery.toLowerCase();
             result = result.filter(artist =>
                 artist.name.toLowerCase().includes(query) ||
-                artist.short_bio?.toLowerCase().includes(query) ||
-                artist.location?.toLowerCase().includes(query)
+                artist.short_bio?.toLowerCase().includes(query)
             );
         }
 
-        // Category filter - compare string category_id with string categoryFilter
+        // Category filter
         if (categoryFilter) {
             result = result.filter(artist => String(artist.category_id) === categoryFilter);
         }
 
-        // Location filter
-        if (locationFilter) {
-            result = result.filter(artist =>
-                artist.locations?.includes(locationFilter) || artist.location === locationFilter
-            );
-        }
-
-        // Price filter
-        if (priceFilter) {
-            const range = priceRanges.find(r => r.value === priceFilter);
-            if (range) {
-                result = result.filter(artist =>
-                    (artist.price || 0) >= range.min && (artist.price || 0) <= range.max
-                );
-            }
-        }
-
-        // Verified filter
-        if (verifiedOnly) {
-            result = result.filter(artist => artist.is_verified);
-        }
-
-        // Sort
-        switch (sortBy) {
-            case 'price-low':
-                result.sort((a, b) => (a.price || 0) - (b.price || 0));
-                break;
-            case 'price-high':
-                result.sort((a, b) => (b.price || 0) - (a.price || 0));
-                break;
-            case 'name':
-                result.sort((a, b) => a.name.localeCompare(b.name));
-                break;
-            case 'featured':
-            default:
-                result.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0));
-                break;
-        }
-
         return result;
-    }, [artists, searchQuery, categoryFilter, locationFilter, priceFilter, verifiedOnly, sortBy]);
+    })();
 
-    // Count active filters
-    const activeFilterCount = [categoryFilter, locationFilter, priceFilter, verifiedOnly, searchQuery].filter(Boolean).length;
+    const hasFilters = !!(searchQuery || categoryFilter);
 
-    // Clear all filters
     const clearFilters = () => {
         setSearchQuery('');
         setCategoryFilter('');
-        setLocationFilter('');
-        setPriceFilter('');
-        setVerifiedOnly(false);
     };
 
     return (
@@ -257,7 +183,7 @@ export default function AllArtistsPage() {
                                 <span className="text-white">{loading ? '...' : artists.length} Artists</span>
                             </div>
                             <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
-                                <CheckCircle className="w-4 h-4 text-green-400" />
+                                <span className="text-green-400">✓</span>
                                 <span className="text-white">Verified Professionals</span>
                             </div>
                             <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
@@ -283,162 +209,44 @@ export default function AllArtistsPage() {
                 </div>
             </section>
 
-            {/* Search and Filters */}
+            {/* Search and Category Filter */}
             <section className="py-8 border-b border-gray-800/50 sticky top-16 lg:top-20 z-30 bg-[#0a0a0b]/95 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col lg:flex-row gap-4 items-center">
+                    <div className="flex flex-col sm:flex-row gap-4 items-center">
                         {/* Search Bar */}
-                        <div className="relative flex-1 w-full lg:max-w-md">
+                        <div className="relative flex-1 w-full">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                             <input
                                 type="text"
-                                placeholder="Search artists by name, location..."
+                                placeholder="Search artists by name..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-12 pr-4 py-3 bg-[#1a1a1a] border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
                             />
                         </div>
 
-                        {/* Filter Pills - Desktop */}
-                        <div className="hidden lg:flex items-center gap-3 flex-wrap">
-                            {/* Category Filter - Dynamic */}
-                            <select
-                                value={categoryFilter}
-                                onChange={(e) => setCategoryFilter(e.target.value)}
-                                className="px-4 py-2.5 bg-[#1a1a1a] border border-gray-800 rounded-lg text-white text-sm focus:border-orange-500 transition-all cursor-pointer"
-                            >
-                                <option value="">All Categories</option>
-                                {availableCategories.map((cat) => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                            </select>
-
-                            {/* Location Filter */}
-                            <select
-                                value={locationFilter}
-                                onChange={(e) => setLocationFilter(e.target.value)}
-                                className="px-4 py-2.5 bg-[#1a1a1a] border border-gray-800 rounded-lg text-white text-sm focus:border-orange-500 transition-all cursor-pointer"
-                            >
-                                <option value="">All Locations</option>
-                                {availableCities.map((city) => (
-                                    <option key={city} value={city}>{city}</option>
-                                ))}
-                            </select>
-
-                            {/* Price Filter */}
-                            <select
-                                value={priceFilter}
-                                onChange={(e) => setPriceFilter(e.target.value)}
-                                className="px-4 py-2.5 bg-[#1a1a1a] border border-gray-800 rounded-lg text-white text-sm focus:border-orange-500 transition-all cursor-pointer"
-                            >
-                                {priceRanges.map((range) => (
-                                    <option key={range.value} value={range.value}>{range.label}</option>
-                                ))}
-                            </select>
-
-                            {/* Verified Toggle */}
-                            <button
-                                onClick={() => setVerifiedOnly(!verifiedOnly)}
-                                className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${verifiedOnly
-                                    ? 'bg-green-500/20 border border-green-500/50 text-green-400'
-                                    : 'bg-[#1a1a1a] border border-gray-800 text-gray-400 hover:border-gray-700'
-                                    }`}
-                            >
-                                <CheckCircle className="w-4 h-4 inline mr-1" />
-                                Verified Only
-                            </button>
-
-                            {/* Sort */}
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="px-4 py-2.5 bg-[#1a1a1a] border border-gray-800 rounded-lg text-white text-sm focus:border-orange-500 transition-all cursor-pointer"
-                            >
-                                <option value="featured">Featured</option>
-                                <option value="rating">Top Rated</option>
-                                <option value="price-low">Price: Low to High</option>
-                                <option value="price-high">Price: High to Low</option>
-                                <option value="name">Name A-Z</option>
-                            </select>
-
-                            {/* Clear Filters */}
-                            {activeFilterCount > 0 && (
-                                <button
-                                    onClick={clearFilters}
-                                    className="px-4 py-2.5 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm font-medium hover:bg-red-500/20 transition-all"
-                                >
-                                    <X className="w-4 h-4 inline mr-1" />
-                                    Clear ({activeFilterCount})
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Mobile Filter Button */}
-                        <button
-                            onClick={() => setShowMobileFilters(!showMobileFilters)}
-                            className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-gray-800 rounded-lg text-white"
+                        {/* Category Filter */}
+                        <select
+                            value={categoryFilter}
+                            onChange={(e) => setCategoryFilter(e.target.value)}
+                            className="px-4 py-3 bg-[#1a1a1a] border border-gray-800 rounded-xl text-white text-sm focus:border-orange-500 transition-all cursor-pointer"
                         >
-                            <Filter className="w-4 h-4" />
-                            Filters
-                            {activeFilterCount > 0 && (
-                                <span className="px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">{activeFilterCount}</span>
-                            )}
-                        </button>
-                    </div>
+                            <option value="">All Categories</option>
+                            {availableCategories.map((cat) => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
 
-                    {/* Mobile Filters Dropdown */}
-                    {showMobileFilters && (
-                        <div className="lg:hidden mt-4 p-4 bg-[#1a1a1a] rounded-xl border border-gray-800 space-y-4">
-                            <select
-                                value={categoryFilter}
-                                onChange={(e) => setCategoryFilter(e.target.value)}
-                                className="w-full px-4 py-3 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white"
+                        {/* Clear Filters */}
+                        {hasFilters && (
+                            <button
+                                onClick={clearFilters}
+                                className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm font-medium hover:bg-red-500/20 transition-all whitespace-nowrap"
                             >
-                                <option value="">All Categories</option>
-                                {availableCategories.map((cat: string) => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                            </select>
-                            <select
-                                value={locationFilter}
-                                onChange={(e) => setLocationFilter(e.target.value)}
-                                className="w-full px-4 py-3 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white"
-                            >
-                                <option value="">All Locations</option>
-                                {availableCities.map((city) => (
-                                    <option key={city} value={city}>{city}</option>
-                                ))}
-                            </select>
-                            <select
-                                value={priceFilter}
-                                onChange={(e) => setPriceFilter(e.target.value)}
-                                className="w-full px-4 py-3 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white"
-                            >
-                                {priceRanges.map((range) => (
-                                    <option key={range.value} value={range.value}>{range.label}</option>
-                                ))}
-                            </select>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setVerifiedOnly(!verifiedOnly)}
-                                    className={`flex-1 py-3 rounded-lg font-medium transition-all ${verifiedOnly
-                                        ? 'bg-green-500/20 border border-green-500/50 text-green-400'
-                                        : 'bg-[#0a0a0b] border border-gray-700 text-gray-400'
-                                        }`}
-                                >
-                                    Verified Only
-                                </button>
-                                {activeFilterCount > 0 && (
-                                    <button
-                                        onClick={clearFilters}
-                                        className="flex-1 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 font-medium"
-                                    >
-                                        Clear All
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                                Clear Filters
+                            </button>
+                        )}
+                    </div>
                 </div>
             </section>
 
@@ -449,7 +257,6 @@ export default function AllArtistsPage() {
                     <div className="mb-8">
                         <p className="text-gray-400">
                             Showing <span className="text-white font-semibold">{filteredArtists.length}</span> artists
-                            {activeFilterCount > 0 && <span> (filtered)</span>}
                         </p>
                     </div>
 
@@ -470,16 +277,16 @@ export default function AllArtistsPage() {
                             </div>
                             <h3 className="text-xl font-semibold text-white mb-2">No Artists Found</h3>
                             <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                                {activeFilterCount > 0
-                                    ? 'Try adjusting your filters to see more results'
+                                {hasFilters
+                                    ? 'Try adjusting your search or category to see more results'
                                     : 'No artists are currently available. Check back later!'}
                             </p>
-                            {activeFilterCount > 0 && (
+                            {hasFilters && (
                                 <button
                                     onClick={clearFilters}
                                     className="px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full font-medium hover:shadow-lg hover:shadow-pink-500/30 transition-all"
                                 >
-                                    Clear All Filters
+                                    Clear Filters
                                 </button>
                             )}
                         </div>
@@ -494,7 +301,7 @@ export default function AllArtistsPage() {
                 faqs={[
                     {
                         question: "How do I book an artist?",
-                        answer: "Browse our artists, click on their profile to view details, then click 'Send Inquiry' to contact them directly with your event requirements."
+                        answer: "Browse our artists, click on their profile to view details, then click the WhatsApp button to contact them directly with your event requirements."
                     },
                     {
                         question: "Are all artists verified?",
@@ -502,7 +309,7 @@ export default function AllArtistsPage() {
                     },
                     {
                         question: "What if I need help choosing an artist?",
-                        answer: "Contact our team and we'll help you find the perfect artist based on your event type, budget, and preferences."
+                        answer: "Contact our team and we'll help you find the perfect artist based on your event type and preferences."
                     },
                     {
                         question: "Can I see artist reviews?",
