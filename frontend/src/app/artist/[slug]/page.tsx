@@ -673,67 +673,6 @@ export default function ArtistPage({ params }: ArtistPageProps) {
         </div>
       )}
 
-      {/* ============ RELATED ARTISTS ============ */}
-      {relatedArtists.length > 0 && (
-        <section className="py-16 bg-[#0a0a0b] relative z-10 border-t border-gray-900">
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-            <div className="flex items-center gap-3 mb-10">
-              <div className="h-8 w-1 bg-gradient-to-b from-orange-500 to-pink-600 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.5)]"></div>
-              <h2 className="text-3xl font-bold text-white tracking-tight">
-                Related Artists
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedArtists.map((relatedArtist) => (
-                <Link
-                  key={relatedArtist.id}
-                  href={`/artist/${relatedArtist.slug}`}
-                  className="group block relative bg-[#141414] rounded-2xl overflow-hidden border border-gray-800 hover:border-orange-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-1"
-                >
-                  {/* Image Container */}
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <Image
-                      src={relatedArtist.image_url}
-                      alt={relatedArtist.name}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent opacity-80 group-hover:opacity-60 transition-opacity duration-300" />
-
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-overlay" />
-                  </div>
-
-                  {/* Content */}
-                  <div className="absolute bottom-0 left-0 right-0 p-5 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                    <h3 className="text-lg font-bold text-white group-hover:text-orange-400 transition-colors mb-1 truncate">
-                      {relatedArtist.name}
-                    </h3>
-                    <div className="flex flex-wrap gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
-                      {(Array.isArray(relatedArtist.category)
-                        ? relatedArtist.category.slice(0, 2)
-                        : [relatedArtist.category]).map((cat: string, idx: number) => (
-                          <span key={idx} className="text-xs font-medium text-gray-400 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-md border border-white/10">
-                            {cat}
-                          </span>
-                        ))}
-                    </div>
-                    {/* Non-hover category fallback */}
-                    <p className="text-sm text-gray-500 group-hover:hidden transition-all duration-300">
-                      {Array.isArray(relatedArtist.category)
-                        ? relatedArtist.category.slice(0, 2).join(", ")
-                        : relatedArtist.category}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* ============ BOOKING CTA ============ */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-pink-600/10 to-orange-500/10" />
@@ -781,6 +720,57 @@ export default function ArtistPage({ params }: ArtistPageProps) {
           </div>
         </div>
       </section>
+
+      {/* ============ RELATED ARTISTS ============ */}
+      {relatedArtists.length > 0 && (
+        <section className="py-24 bg-[#0a0a0b] relative z-10 border-t border-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+                Discover More Talent
+              </h2>
+              <div className="h-1 w-24 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full mx-auto"></div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-8 md:gap-12">
+              {relatedArtists.map((relatedArtist) => (
+                <Link
+                  key={relatedArtist.id}
+                  href={`/artist/${relatedArtist.slug}`}
+                  className="group flex flex-col items-center"
+                >
+                  {/* Circular Image with Glow */}
+                  <div className="relative w-32 h-32 md:w-40 md:h-40 mb-6 transition-transform duration-500 group-hover:-translate-y-2">
+                    {/* Rotating Border Effect */}
+                    <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 opacity-0 group-hover:opacity-100 blur transition-opacity duration-500 animate-spin-slow" />
+
+                    <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-[#1a1a1a] group-hover:border-transparent transition-colors duration-300 shadow-2xl">
+                      <Image
+                        src={relatedArtist.image_url}
+                        alt={relatedArtist.name}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Text Info */}
+                  <div className="text-center">
+                    <h3 className="text-lg font-bold text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-orange-400 group-hover:to-pink-500 transition-all duration-300">
+                      {relatedArtist.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1 uppercase tracking-wider font-medium">
+                      {(Array.isArray(relatedArtist.category)
+                        ? relatedArtist.category[0]
+                        : relatedArtist.category)}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Sticky Mobile Booking Bar */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0a0a0b]/95 backdrop-blur-xl border-t border-gray-800/50 md:hidden z-40">
