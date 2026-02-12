@@ -10,6 +10,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from cachetools import TTLCache
 import hashlib
+from email_service import send_requirement_notification, send_contact_message
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -256,7 +257,6 @@ async def submit_requirement(
     Saves to database and sends email notification.
     """
     from datetime import datetime
-    from email_service import send_requirement_notification
     
     try:
         # Prepare data for database
@@ -1696,6 +1696,52 @@ async def submit_review(
                 "message": "Database table 'reviews' needs to be created. See setup instructions."
             }
         raise
+
+
+# ============================================
+# CONTACT FORM ENDPOINT
+# ============================================
+
+@app.post("/api/contact")
+@limiter.limit("5/minute")
+async def submit_contact_form(
+    request: Request,
+    name: str = Form(...),
+    email: str = Form(...),
+    message: str = Form(...)
+):
+    """
+    Submit a contact form message.
+    Sends email notification to Artist Factory.
+    """
+    try:
+        # Prepare contact data for email
+        contact_data = {
+            "name": name,
+            "email": email,
+            "message": message
+        }
+        
+        # Send email notification
+        email_sent = send_contact_message(contact_data)
+        
+        if email_sent:
+            return {
+                "success": True,
+                "message": "Your message has been sent successfully. We'll get back to you soon!"
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Failed to send email. Please try again or contact us directly."
+            }
+            
+    except Exception as e:
+        print(f"Error submitting contact form: {e}")
+        return {
+            "success": False,
+            "message": "An error occurred. Please try again later."
+        }
 
 
 # @app.post("/api/submit-requirement")

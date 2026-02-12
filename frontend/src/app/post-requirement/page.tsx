@@ -24,11 +24,24 @@ import {
   Briefcase,
   Users,
   Heart,
+  Music2,
+  Music3,
+  Music4,
+  FileMusic,
+  User2,
 } from "lucide-react";
 import { eventTypes, cities } from "@/lib/mockData";
 
 // Floating particles component for background
 const FloatingParticles = () => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {[...Array(20)].map((_, i) => (
@@ -163,23 +176,11 @@ export default function PostRequirementPage() {
         .then((data) => {
           if (!data.error) {
             setSelectedArtist(data);
-            // Map category to artistType
-            const categoryMap: Record<string, string> = {
-              Singer: "singer",
-              Musician: "musician",
-              DJ: "dj",
-              Dancer: "dancer",
-              Comedian: "comedian",
-              Anchor: "other",
-              "Makeup Artist": "other",
-              Photographer: "other",
-              "Mehndi Artist": "other",
-              Decorator: "other",
-            };
-            const artistType = getArtistTypeFromCategory(data.category);
+            // Use the category name directly as artistType
+            const categoryName = Array.isArray(data.category) ? data.category[0] : data.category;
             setFormData((prev) => ({
               ...prev,
-              artistType: artistType,
+              artistType: categoryName,
               message: `Interested in booking ${data.name} for my event.`,
             }));
           }
@@ -245,23 +246,6 @@ export default function PostRequirementPage() {
     }
     fetchCategories();
   }, []);
-
-  // Map category names to artist types
-  const getArtistTypeFromCategory = (categoryName: string): string => {
-    const mapping: Record<string, string> = {
-      'Singer': 'singer',
-      'Singers': 'singer',
-      'Musician': 'musician',
-      'Musicians': 'musician',
-      'DJ': 'dj',
-      'DJs': 'dj',
-      'Dancer': 'dancer',
-      'Dancers': 'dancer',
-      'Comedian': 'comedian',
-      'Comedians': 'comedian',
-    };
-    return mapping[categoryName] || 'other';
-  };
 
   // Get minimum date (today)
   const getMinDate = () => {
@@ -611,26 +595,28 @@ export default function PostRequirementPage() {
                       <MapPin className="w-4 h-4 text-orange-400" />
                       City <span className="text-pink-400">*</span>
                     </label>
-                    <select
-                      name="eventLocation"
-                      value={formData.eventLocation}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-5 py-4 bg-[#0a0a0b]/80 border-2 border-gray-800 rounded-2xl text-white focus:ring-0 focus:border-orange-500/50 transition-all duration-300 hover:border-gray-700 cursor-pointer appearance-none"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f97316'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "right 1rem center",
-                        backgroundSize: "1.5rem",
-                      }}
-                    >
-                      <option value="">Select city</option>
-                      {cities.map((city) => (
-                        <option key={city} value={city}>
-                          {city}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        name="eventLocation"
+                        value={formData.eventLocation}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-5 py-4 bg-[#0a0a0b]/80 border-2 border-gray-800 rounded-2xl text-white focus:ring-0 focus:border-orange-500/50 transition-all duration-300 hover:border-gray-700 cursor-pointer appearance-none max-h-[300px]"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f97316'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                          backgroundRepeat: "no-repeat",
+                          backgroundPosition: "right 1rem center",
+                          backgroundSize: "1.5rem",
+                        }}
+                      >
+                        <option value="">Select city</option>
+                        {cities.map((city) => (
+                          <option key={city} value={city}>
+                            {city}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -690,7 +676,8 @@ export default function PostRequirementPage() {
                 <div className="grid grid-cols-3 gap-3">
                   {categories.length > 0 ? (
                     categories.map((cat) => {
-                      const artistTypeValue = getArtistTypeFromCategory(cat.name);
+                      // Use category name directly as the value
+                      const artistTypeValue = cat.name;
                       // Icon mapping for categories
                       const getIcon = (categoryName: string) => {
                         if (categoryName.toLowerCase().includes('singer')) return Music;
@@ -698,6 +685,8 @@ export default function PostRequirementPage() {
                         if (categoryName.toLowerCase().includes('dj')) return Zap;
                         if (categoryName.toLowerCase().includes('dancer')) return Heart;
                         if (categoryName.toLowerCase().includes('comedian')) return Star;
+                        if (categoryName.toLowerCase().includes('qawwal')) return Music2;
+                        if (categoryName.toLowerCase().includes('bhangra')) return User2;
                         return Briefcase;
                       };
                       // Color mapping
@@ -707,6 +696,8 @@ export default function PostRequirementPage() {
                         if (categoryName.toLowerCase().includes('dj')) return "from-yellow-500 to-orange-600";
                         if (categoryName.toLowerCase().includes('dancer')) return "from-pink-500 to-rose-600";
                         if (categoryName.toLowerCase().includes('comedian')) return "from-green-500 to-emerald-600";
+                        if (categoryName.toLowerCase().includes('qawwal')) return "from-indigo-500 to-violet-600";
+                        if (categoryName.toLowerCase().includes('bhangra')) return "from-red-500 to-yellow-600";
                         return "from-gray-500 to-gray-600";
                       };
                       return (
@@ -1024,6 +1015,47 @@ export default function PostRequirementPage() {
         }
         .animate-float {
           animation: float linear infinite;
+        }
+        
+        /* Custom dropdown scrollbar */
+        select {
+          scrollbar-width: thin;
+          scrollbar-color: #f97316 #1a1a1a;
+        }
+        
+        select::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        select::-webkit-scrollbar-track {
+          background: #1a1a1a;
+          border-radius: 10px;
+        }
+        
+        select::-webkit-scrollbar-thumb {
+          background: linear-gradient(to bottom, #f97316, #ec4899);
+          border-radius: 10px;
+        }
+        
+        select::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(to bottom, #ea580c, #db2777);
+        }
+        
+        /* Dropdown options styling */
+        select option {
+          background-color: #0a0a0b;
+          color: #ffffff;
+          padding: 12px;
+          border-bottom: 1px solid #1a1a1a;
+        }
+        
+        select option:hover {
+          background-color: #1a1a1a;
+        }
+        
+        select option:checked {
+          background: linear-gradient(to right, #f97316, #ec4899);
+          color: white;
         }
       `}</style>
     </div>

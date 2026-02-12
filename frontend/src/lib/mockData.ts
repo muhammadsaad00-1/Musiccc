@@ -12,7 +12,7 @@ export const eventTypes = [
     'Anniversary',
 ];
 
-// Cities
+// Cities - Popular Pakistani Cities
 export const cities = [
     'Lahore',
     'Karachi',
@@ -22,6 +22,28 @@ export const cities = [
     'Multan',
     'Peshawar',
     'Quetta',
+    'Sialkot',
+    'Gujranwala',
+    'Hyderabad',
+    'Bahawalpur',
+    'Sargodha',
+    'Sukkur',
+    'Larkana',
+    'Sheikhupura',
+    'Rahim Yar Khan',
+    'Jhang',
+    'Dera Ghazi Khan',
+    'Gujrat',
+    'Sahiwal',
+    'Wah Cantt',
+    'Mardan',
+    'Kasur',
+    'Okara',
+    'Mingora',
+    'Nawabshah',
+    'Chiniot',
+    'Kamoke',
+    'Mandi Bahauddin',
 ];
 
 // Price ranges

@@ -42,6 +42,12 @@ const cities = [
     { name: 'Rawalpindi', slug: 'rawalpindi' },
     { name: 'Faisalabad', slug: 'faisalabad' },
     { name: 'Multan', slug: 'multan' },
+    { name: 'Peshawar', slug: 'peshawar' },
+    { name: 'Quetta', slug: 'quetta' },
+    { name: 'Sialkot', slug: 'sialkot' },
+    { name: 'Gujranwala', slug: 'gujranwala' },
+    { name: 'Hyderabad', slug: 'hyderabad' },
+    { name: 'Bahawalpur', slug: 'bahawalpur' },
 ];
 
 export default function Header() {

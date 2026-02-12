@@ -16,13 +16,7 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
     const location = artist.location || (artist.locations && artist.locations[0]) || 'Pakistan';
     const shortBio = artist.short_bio || artist.description || artist.bio?.substring(0, 80);
 
-    const handleWhatsApp = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const message = `Hi, I'm interested in booking ${artist.name} for an event. Could you please share the details?`;
-        const url = `https://wa.me/923206876442?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
-    };
+
 
     return (
         <Link
@@ -93,14 +87,17 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
                     <span className="flex-1 text-center py-2 text-sm font-medium text-gray-300 bg-[#2a2a2a] rounded-full group-hover:bg-orange-500/10 group-hover:text-orange-400 transition-all">
                         View Profile
                     </span>
-                    <button
-                        onClick={handleWhatsApp}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-full hover:shadow-lg hover:shadow-green-500/30 transition-all"
+                    <a
+                        onClick={(e) => e.stopPropagation()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        href={`https://wa.me/923206876442?text=${encodeURIComponent(`Hi, I'm interested in booking ${artist.name} for an event. Could you please share the details?`)}`}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-full hover:shadow-lg hover:shadow-green-500/30 transition-all z-10"
                         title="Contact on WhatsApp"
                     >
                         <PhoneOutgoing className="w-3.5 h-3.5" />
                         WhatsApp
-                    </button>
+                    </a>
                 </div>
             </div>
         </Link>

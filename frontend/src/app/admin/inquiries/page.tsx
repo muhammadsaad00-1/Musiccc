@@ -20,6 +20,7 @@ import {
   RefreshCw,
   Eye,
   X,
+  MessageCircle,
 } from "lucide-react";
 
 interface Requirement {
@@ -148,6 +149,45 @@ export default function InquiriesPage() {
     return budget.replace("-", " - ").replace("k", "K").toUpperCase();
   };
 
+  const formatPhoneForWhatsApp = (phone: string) => {
+    // Remove all non-numeric characters
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    
+    // If it already starts with 92, return as is
+    if (cleanPhone.startsWith('92')) {
+      return cleanPhone;
+    }
+    
+    // If it starts with 0, replace with 92
+    if (cleanPhone.startsWith('0')) {
+      return '92' + cleanPhone.substring(1);
+    }
+    
+    // Otherwise, add 92 at the beginning
+    return '92' + cleanPhone;
+  };
+
+  const generateWhatsAppMessage = (req: Requirement) => {
+    const eventDate = formatDate(req.event_date);
+    const budget = formatBudget(req.budget);
+    
+    return `Hello ${req.customer_name},
+
+Thank you for your booking inquiry!
+
+*Event Details:*
+• Event Type: ${req.event_type}
+• Date: ${eventDate}
+• Location: ${req.event_location}
+• Artist Type: ${req.artist_type}
+• Budget: ${budget}
+
+We're reviewing your request and will get back to you with availability and pricing details shortly.
+
+How can we assist you further?`;
+
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0b]">
       {/* Header */}
@@ -259,9 +299,6 @@ export default function InquiriesPage() {
                       Customer
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Package
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Event
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -275,6 +312,9 @@ export default function InquiriesPage() {
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Contact
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
@@ -298,11 +338,6 @@ export default function InquiriesPage() {
                               {req.customer_phone}
                             </p>
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-orange-400 font-medium">
-                            {req.event_name || "Custom"}
-                          </span>
                         </td>
                         <td className="px-6 py-4">
                           <div>
@@ -342,9 +377,21 @@ export default function InquiriesPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
+                          <a
+                            href={`https://wa.me/${formatPhoneForWhatsApp(req.customer_phone)}?text=${encodeURIComponent(generateWhatsAppMessage(req))}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
+                            title="Contact on WhatsApp"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            WhatsApp
+                          </a>
+                        </td>
+                        <td className="px-6 py-4">
                           <button
                             onClick={() => setSelectedRequirement(req)}
-                            className="flex items-center gap-1 text-orange-400 hover:text-orange-300 font-medium text-sm"
+                            className="flex items-center gap-1 text-orange-400 hover:text-orange-300 font-medium text-sm transition-colors"
                           >
                             <Eye className="w-4 h-4" />
                             View
@@ -545,6 +592,15 @@ export default function InquiriesPage() {
 
             {/* Modal Footer */}
             <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-800">
+              <a
+                href={`https://wa.me/${formatPhoneForWhatsApp(selectedRequirement.customer_phone)}?text=${encodeURIComponent(generateWhatsAppMessage(selectedRequirement))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-medium rounded-lg transition-all shadow-lg shadow-green-500/20"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Contact on WhatsApp
+              </a>
               <a
                 href={`mailto:${selectedRequirement.customer_email}?subject=Re: Your Booking Request for ${selectedRequirement.event_type}`}
                 className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-blue-500/20 transition-all"

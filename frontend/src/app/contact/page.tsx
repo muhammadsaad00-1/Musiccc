@@ -7,6 +7,8 @@ import FAQSection from '@/components/ui/FAQSection';
 
 export default function ContactPage() {
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -15,12 +17,39 @@ export default function ContactPage() {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        setError(''); // Clear error when user types
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Contact form:', formData);
-        setIsSubmitted(true);
+        setIsSubmitting(true);
+        setError('');
+
+        try {
+            const formDataToSend = new FormData();
+            formDataToSend.append('name', formData.name);
+            formDataToSend.append('email', formData.email);
+            formDataToSend.append('message', formData.message);
+
+            const response = await fetch('http://127.0.0.1:8000/api/contact', {
+                method: 'POST',
+                body: formDataToSend,
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                setIsSubmitted(true);
+                setFormData({ name: '', email: '', message: '' });
+            } else {
+                setError(result.message || 'Failed to send message. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error submitting contact form:', error);
+            setError('Network error. Please check your connection and try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -123,6 +152,13 @@ export default function ContactPage() {
                                                 Have a question or want to book an artist? Fill out the form below and we'll get back to you shortly.
                                             </p>
                                         </div>
+
+                                        {error && (
+                                            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                                                <p className="text-red-400 text-sm">{error}</p>
+                                            </div>
+                                        )}
+
                                         <form onSubmit={handleSubmit} className="space-y-6">
                                             <div className="grid sm:grid-cols-2 gap-6">
                                                 <div className="space-y-2">
@@ -174,10 +210,20 @@ export default function ContactPage() {
 
                                             <button
                                                 type="submit"
-                                                className="w-full px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-orange-500/20 transition-all flex items-center justify-center gap-2 group"
+                                                disabled={isSubmitting}
+                                                className="w-full px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-orange-500/20 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                <span>Send Message</span>
-                                                <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                                {isSubmitting ? (
+                                                    <>
+                                                        <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                        <span>Sending...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span>Send Message</span>
+                                                        <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                                    </>
+                                                )}
                                             </button>
                                         </form>
                                     </>
