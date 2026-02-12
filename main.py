@@ -1164,14 +1164,23 @@ def get_blog(request: Request, id: str):
     """
     Get a single blog post by ID or slug.
     """
+    import re
+    
+    # Check if id follows UUID format
+    is_uuid = False
+    if len(id) == 36:
+        uuid_pattern = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.IGNORECASE)
+        if uuid_pattern.match(id):
+            is_uuid = True
+            
     try:
-        # Try to get by ID first
-        response = supabase.table("blogs").select("*").eq("id", id).eq("is_published", True).execute()
+        if is_uuid:
+            # Try to get by ID
+            response = supabase.table("blogs").select("*").eq("id", id).eq("is_published", True).execute()
+            if response.data and len(response.data) > 0:
+                return response.data[0]
         
-        if response.data and len(response.data) > 0:
-            return response.data[0]
-        
-        # If not found by ID, try by slug
+        # Try by slug
         response = supabase.table("blogs").select("*").eq("slug", id).eq("is_published", True).execute()
         
         if response.data and len(response.data) > 0:

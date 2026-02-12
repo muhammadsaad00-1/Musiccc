@@ -57,6 +57,7 @@ export default function Footer() {
 
     const companyLinks = [
         { name: "About Us", href: "/about" },
+        { name: "Blog", href: "/blog" },
         { name: "Contact Us", href: "/contact" },
         { name: "Terms & Conditions", href: "/terms" },
         { name: "Privacy Policy", href: "/privacy" },
@@ -155,6 +156,7 @@ export default function Footer() {
                                 ))}
                             </ul>
                         </div>
+
 
                         {/* Events Column */}
                         <div>

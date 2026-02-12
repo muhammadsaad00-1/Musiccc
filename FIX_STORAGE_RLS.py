@@ -13,7 +13,7 @@ SOLUTION - Choose ONE of these options:
 """
 1. Go to: https://supabase.com/dashboard/project/ubskhylblogbuhzxhadk/storage/buckets
 
-2. For each bucket (performers, events, packages):
+2. For each bucket (performers, events, packages, blogs):
    - Click on the bucket name
    - Click "Edit bucket" (or the 3 dots menu)
    - Enable "Public bucket" toggle
@@ -50,6 +50,11 @@ ON storage.objects FOR ALL
 TO service_role
 USING (bucket_id = 'packages');
 
+CREATE POLICY "Allow service_role full access to blogs"
+ON storage.objects FOR ALL
+TO service_role
+USING (bucket_id = 'blogs');
+
 -- Allow public read access (so images can be displayed)
 CREATE POLICY "Public read access to performers"
 ON storage.objects FOR SELECT
@@ -65,6 +70,11 @@ CREATE POLICY "Public read access to packages"
 ON storage.objects FOR SELECT
 TO public
 USING (bucket_id = 'packages');
+
+CREATE POLICY "Public read access to blogs"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'blogs');
 """
 
 print("="*60)
@@ -72,7 +82,7 @@ print("SUPABASE STORAGE FIX")
 print("="*60)
 print("\n📋 RECOMMENDED: Use Option 1 (Make buckets public)\n")
 print("1. Go to: https://supabase.com/dashboard/project/ubskhylblogbuhzxhadk/storage/buckets")
-print("\n2. For each bucket (performers, events, packages):")
+print("\n2. For each bucket (performers, events, packages, blogs):")
 print("   • Click the bucket name")
 print("   • Click 'Edit bucket'")
 print("   • Toggle 'Public bucket' to ON")

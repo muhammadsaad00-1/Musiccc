@@ -42,12 +42,6 @@ const cities = [
     { name: 'Rawalpindi', slug: 'rawalpindi' },
     { name: 'Faisalabad', slug: 'faisalabad' },
     { name: 'Multan', slug: 'multan' },
-    { name: 'Peshawar', slug: 'peshawar' },
-    { name: 'Quetta', slug: 'quetta' },
-    { name: 'Sialkot', slug: 'sialkot' },
-    { name: 'Gujranwala', slug: 'gujranwala' },
-    { name: 'Hyderabad', slug: 'hyderabad' },
-    { name: 'Bahawalpur', slug: 'bahawalpur' },
 ];
 
 export default function Header() {
@@ -149,6 +143,7 @@ export default function Header() {
                                                 </div>
                                             </div>
 
+
                                             {/* Events Column */}
                                             <div>
                                                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -223,6 +218,14 @@ export default function Header() {
                         >
                             Contact Us
                         </Link>
+
+                        {/* Blog */}
+                        <Link
+                            href="/blog"
+                            className="text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 font-medium transition-all duration-300"
+                        >
+                            Blog
+                        </Link>
                     </nav>
 
                     {/* Right Section */}
@@ -232,12 +235,6 @@ export default function Header() {
                             className="p-2 text-gray-400 hover:text-white transition-colors"
                         >
                             <Search className="w-5 h-5" />
-                        </Link>
-                        <Link
-                            href="/post-requirement"
-                            className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-full hover:shadow-lg hover:shadow-pink-500/30 transition-all text-sm"
-                        >
-                            Book Now
                         </Link>
                     </div>
 
@@ -307,6 +304,26 @@ export default function Header() {
                             </div>
                         </div>
 
+                        {/* Events */}
+                        <div className="pb-4 border-b border-gray-800">
+                            <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <Calendar className="w-3 h-3" /> Events
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {eventTypes.map((event) => (
+                                    <Link
+                                        key={event.slug}
+                                        href={`/events/${event.slug}`}
+                                        className="flex items-center gap-2 text-gray-300 hover:text-white py-1.5 text-sm"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        <span>{event.icon}</span>
+                                        {event.name}
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Quick Links */}
                         <Link href="/post-requirement" className="flex items-center gap-2 py-2 text-yellow-400 font-medium" onClick={() => setIsMenuOpen(false)}>
                             <Zap className="w-4 h-4" />
@@ -318,6 +335,9 @@ export default function Header() {
                         <Link href="/contact" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
                             📞 Contact Us
                         </Link>
+                        <Link href="/blog" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
+                            📰 Blog
+                        </Link>
 
                         {/* CTA */}
                         <Link
@@ -325,7 +345,7 @@ export default function Header() {
                             className="block w-full text-center px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
                             onClick={() => setIsMenuOpen(false)}
                         >
-                            Book Now
+                            Express Booking
                         </Link>
                     </div>
                 </div>

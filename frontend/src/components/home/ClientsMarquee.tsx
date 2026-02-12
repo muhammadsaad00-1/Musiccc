@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowRight, ChevronRight, Disc } from 'lucide-react';
 
 // Simple SVG logos for event/music industry companies
@@ -75,8 +75,9 @@ export default function ClientsMarquee() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [rotation, setRotation] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (isAnimating) return;
 
     setIsAnimating(true);
@@ -90,7 +91,18 @@ export default function ClientsMarquee() {
     setTimeout(() => {
       setIsAnimating(false);
     }, 500);
-  };
+  }, [isAnimating]);
+
+  // Auto-rotation effect
+  useEffect(() => {
+    if (isPaused) return;
+
+    const interval = setInterval(() => {
+      handleNext();
+    }, 5000); // Rotate every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [handleNext, isPaused]);
 
   const currentBrand = brands[currentIndex];
 
@@ -120,7 +132,11 @@ export default function ClientsMarquee() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-orange-500/10 to-pink-500/10 rounded-full blur-[100px] pointer-events-none" />
 
           {/* The Disc Container */}
-          <div className="relative z-10 group">
+          <div
+            className="relative z-10 group"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
             {/* Outer Ring / Record Grooves */}
             <div
               className="w-80 h-80 md:w-[500px] md:h-[500px] rounded-full bg-[#111] border-8 border-[#222] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)] flex items-center justify-center transition-transform duration-500 ease-in-out"

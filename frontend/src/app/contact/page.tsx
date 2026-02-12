@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Mail, Phone, MapPin, Send, CheckCircle, ArrowLeft, Star, Navigation } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle, ArrowLeft, Star, Navigation, MessageCircle, ArrowRight } from 'lucide-react';
 import FAQSection from '@/components/ui/FAQSection';
 
 export default function ContactPage() {
@@ -105,12 +105,38 @@ export default function ContactPage() {
                                         <Phone className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-white mb-1">Call Us</h3>
-                                        <p className="text-gray-500">+92 300 123 4567</p>
-                                        <p className="text-gray-500">+92 42 1234 5678</p>
+                                        <h3 className="font-semibold text-white mb-2">Call Us</h3>
+                                        <p className="text-gray-500 mb-4">+92 320 687 6442</p>
+                                        <a
+                                            href="https://wa.me/923206876442"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-500 rounded-xl text-sm font-medium hover:bg-green-500/20 transition-all border border-green-500/20"
+                                        >
+                                            <MessageCircle className="w-4 h-4" />
+                                            WhatsApp Chat
+                                        </a>
                                     </div>
                                 </div>
                             </div>
+
+                            <a
+                                href="https://wa.me/923206876442"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 flex items-start gap-4 group hover:border-green-500/50 hover:bg-green-500/5 transition-all"
+                            >
+                                <div className="w-12 h-12 bg-green-500/20 text-green-500 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                                    <MessageCircle className="w-6 h-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-semibold text-white mb-1">WhatsApp Us</h3>
+                                    <p className="text-gray-500 text-sm mb-2">Instant support & booking</p>
+                                    <span className="text-green-500 text-sm font-medium inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                                        Chat with us <ArrowRight className="w-4 h-4" />
+                                    </span>
+                                </div>
+                            </a>
 
                             <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800">
                                 <div className="flex items-start gap-4">
@@ -128,6 +154,8 @@ export default function ContactPage() {
                                     </div>
                                 </div>
                             </div>
+
+
 
                         </div>
 

@@ -116,10 +116,13 @@ export default function FAQPage() {
                                 <ArrowRight className="w-5 h-5" />
                             </Link>
                             <a
-                                href="tel:+923001234567"
-                                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#2a2a2a] text-white font-semibold rounded-full hover:bg-[#3a3a3a] transition-colors"
+                                href="https://wa.me/923206876442"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#ccff00] text-black font-bold rounded-full hover:bg-[#b3e600] transition-all hover:scale-105 shadow-[0_0_20px_rgba(204,255,0,0.3)]"
                             >
-                                Call: +92 300 123 4567
+                                <MessageCircle className="w-5 h-5" />
+                                WhatsApp Us
                             </a>
                         </div>
                     </div>

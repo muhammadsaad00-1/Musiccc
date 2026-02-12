@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Plus,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 export default function ManageArtistsPage() {
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [artists, setArtists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,12 @@ export default function ManageArtistsPage() {
   useEffect(() => {
     fetchArtists();
     fetchCategories();
-  }, []);
+
+    // Check for add action in URL
+    if (searchParams.get("action") === "add") {
+      setShowAddModal(true);
+    }
+  }, [searchParams]);
 
   const fetchCategories = async () => {
     try {

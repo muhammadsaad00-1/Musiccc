@@ -273,8 +273,8 @@ export default function AdminDashboard() {
               </div>
               <div className="flex items-center gap-3">
                 <Link
-                  href="/admin/artists/new"
-                  className="flex items-center gap-2 px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors shadow-lg shadow-white/10"
+                  href="/admin/artists?action=add"
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-orange-500/20 transition-all border border-orange-400/20"
                 >
                   <Users className="w-5 h-5" />
                   Add New Artist
@@ -300,6 +300,7 @@ export default function AdminDashboard() {
             {requirementStats.pending > 0 && (
               <div className="absolute top-2 right-2 w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
             )}
+            <ArrowUpRight className="absolute top-3 right-3 w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
             <div className="w-10 h-10 bg-yellow-500/10 text-yellow-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-yellow-500/20 transition-colors">
               <MessageSquare className="w-5 h-5" />
             </div>
@@ -309,8 +310,9 @@ export default function AdminDashboard() {
 
           <Link
             href="/admin/events"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group relative"
           >
+            <ArrowUpRight className="absolute top-3 right-3 w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
             <div className="w-10 h-10 bg-green-500/10 text-green-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-500/20 transition-colors">
               <Calendar className="w-5 h-5" />
             </div>
@@ -320,8 +322,9 @@ export default function AdminDashboard() {
 
           <Link
             href="/admin/categories"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group relative"
           >
+            <ArrowUpRight className="absolute top-3 right-3 w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
             <div className="w-10 h-10 bg-blue-500/10 text-blue-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-500/20 transition-colors">
               <FolderOpen className="w-5 h-5" />
             </div>
@@ -331,8 +334,9 @@ export default function AdminDashboard() {
 
           <Link
             href="/admin/blogs"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group relative"
           >
+            <ArrowUpRight className="absolute top-3 right-3 w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
             <div className="w-10 h-10 bg-purple-500/10 text-purple-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-500/20 transition-colors">
               <MessageSquare className="w-5 h-5" />
             </div>
@@ -342,8 +346,9 @@ export default function AdminDashboard() {
 
           <Link
             href="/admin/packages"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group relative"
           >
+            <ArrowUpRight className="absolute top-3 right-3 w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
             <div className="w-10 h-10 bg-violet-500/10 text-violet-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-violet-500/20 transition-colors">
               <Package className="w-5 h-5" />
             </div>
@@ -352,8 +357,84 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        {/* Recent Inquiries */}
+        {/* Recent Artists */}
         <div className="bg-[#1a1a1a] rounded-xl border border-gray-800 overflow-hidden mb-8">
+          <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Users className="w-5 h-5 text-orange-400" />
+              Recent Artists
+            </h2>
+            <Link
+              href="/admin/artists"
+              className="text-orange-400 hover:text-orange-300 text-sm font-medium"
+            >
+              View All
+            </Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#0f0f10]">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Artist
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Category
+                  </th>
+
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800">
+                {recentArtists.map((artist) => {
+                  return (
+                    <tr key={artist.id} className="hover:bg-[#2a2a2a]">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <img
+                            src={artist.profile_image_url || artist.image_url}
+                            alt={artist.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-white">
+                              {artist.name}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                        {artist.category}
+                      </td>
+
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 py-1 text-xs font-medium bg-green-500/20 text-green-400 rounded-full">
+                          Active
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <Link
+                          href="/admin/artists"
+                          className="text-orange-400 hover:text-orange-300 font-medium"
+                        >
+                          Manage
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Recent Inquiries */}
+        <div className="bg-[#1a1a1a] rounded-xl border border-gray-800 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-orange-400" />
@@ -444,79 +525,6 @@ export default function AdminDashboard() {
               </table>
             </div>
           )}
-        </div>
-
-        {/* Recent Artists */}
-        <div className="bg-[#1a1a1a] rounded-xl border border-gray-800 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">Recent Artists</h2>
-            <Link
-              href="/admin/artists"
-              className="text-orange-400 hover:text-orange-300 text-sm font-medium"
-            >
-              View All
-            </Link>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[#0f0f10]">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Artist
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800">
-                {recentArtists.map((artist) => {
-                  return (
-                    <tr key={artist.id} className="hover:bg-[#2a2a2a]">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <img
-                            src={artist.profile_image_url || artist.image_url}
-                            alt={artist.name}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-white">
-                              {artist.name}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                        {artist.category}
-                      </td>
-
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 py-1 text-xs font-medium bg-green-500/20 text-green-400 rounded-full">
-                          Active
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <Link
-                          href="/admin/artists"
-                          className="text-orange-400 hover:text-orange-300 font-medium"
-                        >
-                          Manage
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
         </div>
       </main>
     </div>

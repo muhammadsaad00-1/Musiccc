@@ -530,4 +530,51 @@ export const faqData = [
             },
         ],
     },
+    {
+        category: 'Artist Selection',
+        questions: [
+            {
+                question: 'Are the artists verified?',
+                answer: 'Yes, every artist on our platform goes through a rigorous verification process. We verify their identity, professional background, and past performance quality to ensure you get only the best.',
+            },
+            {
+                question: 'Can I see reviews from other clients?',
+                answer: 'Absolutely! User reviews and ratings are available on each artist\'s profile page. We encourage honest feedback to maintain high standards.',
+            },
+            {
+                question: 'What if the artist I want is unavailable?',
+                answer: 'If your preferred artist is booked, our coordinators will suggest 3-5 similar artists who match your style and budget requirements.',
+            },
+        ],
+    },
+    {
+        category: 'Travel & Logistics',
+        questions: [
+            {
+                question: 'Do you provide artists for events outside Lahore?',
+                answer: 'Yes! Our artists perform all over Pakistan. While many are based in major cities like Lahore, Karachi, and Islamabad, they are available for travel nationwide.',
+            },
+            {
+                question: 'Who covers travel and accommodation costs?',
+                answer: 'For out-of-city events, the client is typically responsible for travel (airfare or fuel) and standard hotel accommodation. These details are finalized during the booking process.',
+            },
+        ],
+    },
+    {
+        category: 'Polices & Support',
+        questions: [
+            {
+                question: 'Can I reschedule my booking?',
+                answer: 'Rescheduling is possible depending on the artist\'s availability. A small rescheduling fee may apply if done within 14 days of the event.',
+            },
+            {
+                question: 'What happens if an artist cancels?',
+                answer: 'While extremely rare, if an artist cancels due to an emergency, we provide an immediate full refund or arrange a comparable replacement at no extra cost, plus a discount on your next booking.',
+            },
+            {
+                question: 'How do I contact customer support?',
+                answer: 'You can reach us via the Contact page, or message us directly on WhatsApp at +92 320 6876442 for immediate assistance.',
+            },
+        ],
+    },
 ];
