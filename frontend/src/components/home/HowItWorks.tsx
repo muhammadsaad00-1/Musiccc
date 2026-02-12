@@ -1,86 +1,193 @@
-import { Search, Calendar, CheckCircle, Star } from 'lucide-react';
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { Search, Calendar, CheckCircle, Star, ArrowRight } from 'lucide-react';
 
 const steps = [
     {
         icon: <Search className="w-8 h-8" />,
-        title: 'Search & Browse',
-        description: 'Explore our curated selection of verified artists across various categories.',
+        title: 'Search & Discover',
+        description: 'Browse our curated list of verified artists. Filter by genre, location, or budget to find your perfect match.',
     },
     {
         icon: <Calendar className="w-8 h-8" />,
         title: 'Check Availability',
-        description: 'View artist profiles, portfolios, and check their availability for your event date.',
+        description: 'View artist profiles, watch performance videos, and check their calendar for your event date.',
     },
     {
         icon: <CheckCircle className="w-8 h-8" />,
-        title: 'Book & Confirm',
-        description: 'Send a booking request with your event details and receive confirmation.',
+        title: 'Book & Secure',
+        description: 'Send a booking request directly. Once accepted, secure your artist with a safe deposit.',
     },
     {
         icon: <Star className="w-8 h-8" />,
-        title: 'Enjoy Your Event',
-        description: 'Sit back and enjoy as our professional artists make your event memorable.',
+        title: 'Enjoy the Show',
+        description: 'Sit back and relax. Our professional artists will deliver an unforgettable performance for your guests.',
     },
 ];
 
 export default function HowItWorks() {
-    return (
-        <section className="py-16 lg:py-24 bg-[#0f0f10]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Section Header */}
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                        How It Works
-                    </h2>
-                    <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
-                        Booking your perfect artist is just a few steps away. We've simplified the process to make it easy for you to find, book, and enjoy live entertainment for your event.
-                    </p>
+    const [activeStep, setActiveStep] = useState(0);
+    const [isVisible, setIsVisible] = useState(false);
+    const [hasStarted, setHasStarted] = useState(false);
+    const sectionRef = useRef<HTMLElement>(null);
 
+    // Intersection Observer to start animation when section is in view
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !hasStarted) {
+                    setIsVisible(true);
+                    setHasStarted(true);
+                }
+            },
+            { threshold: 0.3 }
+        );
+
+        if (sectionRef.current) {
+            observer.observe(sectionRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasStarted]);
+
+    // Sequential Animation Logic
+    useEffect(() => {
+        if (!isVisible) return;
+
+        const interval = setInterval(() => {
+            setActiveStep((prev) => {
+                if (prev < steps.length - 1) return prev + 1;
+                clearInterval(interval);
+                return prev;
+            });
+        }, 2500); // 2.5 seconds per step for slower, more deliberate pacing
+
+        return () => clearInterval(interval);
+    }, [isVisible]);
+
+    return (
+        <section ref={sectionRef} className="py-24 bg-[#080809] overflow-hidden relative">
+
+            {/* Background Elements */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[10%] left-[5%] w-96 h-96 bg-orange-600/5 rounded-full blur-[100px]" />
+                <div className="absolute bottom-[10%] right-[5%] w-96 h-96 bg-pink-600/5 rounded-full blur-[100px]" />
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                {/* Section Header */}
+                <div className="text-center mb-20">
+                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+                        Your Event, <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600">Perfectly Orchestrated</span>
+                    </h2>
+                    <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                        From discovery to applause, we've streamlined the process to ensure a seamless experience for you and your guests.
+                    </p>
                 </div>
 
-                {/* Steps */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-                    {steps.map((step, index) => (
-                        <div key={index} className="relative">
-                            {/* Connector Line */}
-                            {index < steps.length - 1 && (
-                                <div className="hidden lg:block absolute top-12 left-[60%] w-full h-0.5 bg-gradient-to-r from-gray-700 to-transparent" />
-                            )}
+                {/* Steps Container */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+                    {steps.map((step, index) => {
+                        const isActive = index <= activeStep;
+                        const isCurrent = index === activeStep;
 
-                            {/* Step Card */}
-                            <div className="relative bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 h-full hover:border-orange-500/30 transition-colors duration-300">
-                                {/* Step Number */}
-                                <div className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg shadow-orange-500/20">
-                                    {index + 1}
+                        return (
+                            <div key={index} className="relative group">
+                                {/* Connector Arrow (Desktop) */}
+                                {index < steps.length - 1 && (
+                                    <div className="hidden lg:block absolute top-16 -right-4 w-8 z-20 transform translate-x-1/2">
+                                        <ArrowRight
+                                            className={`w-6 h-6 transition-all duration-1000 ${isActive && index !== activeStep
+                                                    ? 'text-orange-500 opacity-100 translate-x-0'
+                                                    : 'text-gray-800 opacity-30 -translate-x-2'
+                                                }`}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Step Card */}
+                                <div
+                                    className={`relative p-8 rounded-3xl h-full transition-all duration-700 border ${isActive
+                                            ? 'bg-[#121212] border-orange-500/30 shadow-[0_0_30px_-10px_rgba(249,115,22,0.15)]'
+                                            : 'bg-[#0f0f10] border-gray-800/50 opacity-40 grayscale'
+                                        }`}
+                                >
+                                    {/* Drawing Border Effect for Current Step */}
+                                    {isCurrent && (
+                                        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+                                            <svg className="absolute inset-0 w-full h-full">
+                                                <rect
+                                                    x="2" y="2"
+                                                    width="99%" height="98%"
+                                                    rx="22" ry="22"
+                                                    fill="none"
+                                                    stroke="#f97316"
+                                                    strokeWidth="2"
+                                                    strokeDasharray="1000"
+                                                    strokeDashoffset="1000"
+                                                    className="animate-draw-border"
+                                                />
+                                            </svg>
+                                        </div>
+                                    )}
+
+                                    {/* Step Number Badge */}
+                                    <div className={`absolute -top-4 -left-4 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg border-4 border-[#080809] transition-all duration-500 ${isActive
+                                            ? 'bg-gradient-to-r from-orange-500 to-pink-600 text-white scale-100'
+                                            : 'bg-gray-800 text-gray-500 scale-90'
+                                        }`}>
+                                        {index + 1}
+                                    </div>
+
+                                    {/* Icon */}
+                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-700 ${isActive
+                                            ? 'bg-gradient-to-br from-orange-500/20 to-pink-600/20 text-orange-400 rotate-0'
+                                            : 'bg-gray-800/30 text-gray-600 -rotate-12'
+                                        }`}>
+                                        {step.icon}
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className={`transition-all duration-1000 delay-300 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                                        }`}>
+                                        <h3 className={`text-xl font-bold mb-3 ${isActive ? 'text-white' : 'text-gray-500'}`}>
+                                            {step.title}
+                                        </h3>
+                                        <p className="text-gray-400 text-sm leading-relaxed">
+                                            {step.description}
+                                        </p>
+                                    </div>
                                 </div>
-
-                                {/* Icon */}
-                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center text-orange-400 mb-6 group-hover:scale-110 transition-transform duration-300">
-                                    {step.icon}
-                                </div>
-
-                                {/* Content */}
-                                <h3 className="text-xl font-bold text-white mb-3">
-                                    {step.title}
-                                </h3>
-                                <p className="text-gray-400 leading-relaxed text-sm">
-                                    {step.description}
-                                </p>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* CTA Button */}
-                <div className="text-center">
-                    <a
+                <div className={`text-center transition-all duration-1000 delay-[500ms] ${activeStep === steps.length - 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                    }`}>
+                    <Link
                         href="/post-requirement"
-                        className="inline-flex items-center justify-center px-10 py-4 text-lg font-bold text-white transition-all duration-200 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full hover:from-orange-600 hover:to-pink-700 hover:shadow-lg hover:shadow-orange-500/25 transform hover:-translate-y-0.5"
+                        className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-full text-lg shadow-lg hover:shadow-orange-500/40 hover:-translate-y-1 transition-all group"
                     >
-                        Book Artist Now
-                    </a>
+                        <span>Start Your Booking</span>
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                    <p className="mt-4 text-sm text-gray-500">No hidden fees. Secure payments.</p>
                 </div>
             </div>
+
+            <style jsx>{`
+                @keyframes draw-border {
+                    from { stroke-dashoffset: 1000; }
+                    to { stroke-dashoffset: 0; }
+                }
+                .animate-draw-border {
+                    animation: draw-border 2.5s ease-out forwards;
+                }
+            `}</style>
         </section>
     );
 }

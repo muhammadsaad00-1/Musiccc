@@ -1,207 +1,200 @@
 'use client';
 
+import { useState } from 'react';
+import { ArrowRight, ChevronRight, Disc } from 'lucide-react';
+
 // Simple SVG logos for event/music industry companies
 const brands = [
   {
     name: 'Coke Studio',
     logo: (
-      <svg viewBox="0 0 120 40" className="w-28 h-10 fill-current">
-        <text x="10" y="28" className="font-bold text-lg" style={{ fontFamily: 'system-ui' }}>COKE STUDIO</text>
+      <svg viewBox="0 0 120 40" className="w-64 h-24 fill-current">
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-lg" style={{ fontFamily: 'system-ui' }}>COKE STUDIO</text>
       </svg>
     )
   },
   {
     name: 'Nescafe Basement',
     logo: (
-      <svg viewBox="0 0 120 40" className="w-28 h-10 fill-current">
-        <text x="5" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '14px' }}>NESCAFÉ BASEMENT</text>
+      <svg viewBox="0 0 120 40" className="w-64 h-24 fill-current">
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-xs" style={{ fontFamily: 'system-ui' }}>NESCAFÉ BASEMENT</text>
       </svg>
     )
   },
   {
     name: 'HUM TV',
     logo: (
-      <svg viewBox="0 0 80 40" className="w-20 h-10 fill-current">
-        <text x="10" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '18px' }}>HUM TV</text>
+      <svg viewBox="0 0 80 40" className="w-48 h-24 fill-current">
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-lg" style={{ fontFamily: 'system-ui' }}>HUM TV</text>
       </svg>
     )
   },
   {
     name: 'ARY Digital',
     logo: (
-      <svg viewBox="0 0 100 40" className="w-28 h-10 fill-current">
-        <text x="5" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '16px' }}>ARY DIGITAL</text>
+      <svg viewBox="0 0 100 40" className="w-56 h-24 fill-current">
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-base" style={{ fontFamily: 'system-ui' }}>ARY DIGITAL</text>
       </svg>
     )
   },
   {
     name: 'Geo TV',
     logo: (
-      <svg viewBox="0 0 80 40" className="w-20 h-10 fill-current">
-        <text x="15" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '18px' }}>GEO</text>
+      <svg viewBox="0 0 80 40" className="w-40 h-24 fill-current">
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-lg" style={{ fontFamily: 'system-ui' }}>GEO</text>
       </svg>
     )
   },
   {
     name: 'Jazz',
     logo: (
-      <svg viewBox="0 0 80 40" className="w-20 h-10 fill-current">
-        <text x="20" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '18px' }}>JAZZ</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Telenor',
-    logo: (
-      <svg viewBox="0 0 100 40" className="w-24 h-10 fill-current">
-        <text x="10" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '16px' }}>TELENOR</text>
+      <svg viewBox="0 0 80 40" className="w-40 h-24 fill-current">
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-lg" style={{ fontFamily: 'system-ui' }}>JAZZ</text>
       </svg>
     )
   },
   {
     name: 'Pepsi',
     logo: (
-      <svg viewBox="0 0 80 40" className="w-20 h-10 fill-current">
-        <text x="15" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '18px' }}>PEPSI</text>
+      <svg viewBox="0 0 80 40" className="w-40 h-24 fill-current">
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-lg" style={{ fontFamily: 'system-ui' }}>PEPSI</text>
       </svg>
     )
   },
   {
     name: 'Velo Sound Station',
     logo: (
-      <svg viewBox="0 0 120 40" className="w-28 h-10 fill-current">
-        <text x="5" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '12px' }}>VELO SOUND STATION</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Strepsils Stereo',
-    logo: (
-      <svg viewBox="0 0 120 40" className="w-28 h-10 fill-current">
-        <text x="5" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '12px' }}>STREPSILS STEREO</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Cornetto Pop Rock',
-    logo: (
-      <svg viewBox="0 0 120 40" className="w-28 h-10 fill-current">
-        <text x="5" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '12px' }}>CORNETTO POP ROCK</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Bisconni Music',
-    logo: (
-      <svg viewBox="0 0 110 40" className="w-26 h-10 fill-current">
-        <text x="5" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '12px' }}>BISCONNI MUSIC</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Kashmir Beats',
-    logo: (
-      <svg viewBox="0 0 110 40" className="w-26 h-10 fill-current">
-        <text x="5" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '12px' }}>KASHMIR BEATS</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Ufone',
-    logo: (
-      <svg viewBox="0 0 80 40" className="w-20 h-10 fill-current">
-        <text x="15" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '18px' }}>UFONE</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Zong',
-    logo: (
-      <svg viewBox="0 0 80 40" className="w-20 h-10 fill-current">
-        <text x="18" y="28" className="font-bold" style={{ fontFamily: 'system-ui', fontSize: '18px' }}>ZONG</text>
+      <svg viewBox="0 0 120 40" className="w-64 h-24 fill-current">
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-[10px]" style={{ fontFamily: 'system-ui' }}>VELO SOUND STATION</text>
       </svg>
     )
   },
 ];
 
-// Duplicate for seamless loop
-const allBrands = [...brands, ...brands];
-
 export default function ClientsMarquee() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [rotation, setRotation] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleNext = () => {
+    if (isAnimating) return;
+
+    setIsAnimating(true);
+    setRotation(prev => prev + 360);
+
+    // Change logo halfway through rotation when it's moving fast/blurred
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % brands.length);
+    }, 250);
+
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 500);
+  };
+
+  const currentBrand = brands[currentIndex];
+
   return (
-    <section className="py-20 bg-[#0a0a0b] overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center relative">
-        <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-orange-400 inline-block mb-3">
-          Our Clients
-        </h2>
+    <section className="py-24 bg-[#0a0a0b] overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div className="relative inline-block ml-4 align-top rotate-[-6deg]">
-          <span className="font-handwriting text-2xl md:text-3xl text-pink-400 font-medium" style={{ fontFamily: 'cursive' }}>
-            happy clients, Happy us
-          </span>
-          <svg className="absolute -bottom-6 -right-4 w-12 h-12 text-pink-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3">
-            <path d="M10,10 Q50,50 80,80 M80,80 L60,80 M80,80 L80,60" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Marquee Container */}
-      <div className="relative">
-        {/* Gradient Masks */}
-        <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-[#0a0a0b] to-transparent z-10" />
-        <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-[#0a0a0b] to-transparent z-10" />
-
-        {/* First Row - Left to Right */}
-        <div className="flex animate-marquee mb-6">
-          {allBrands.map((brand, index) => (
-            <div
-              key={`row1-${index}`}
-              className="flex-shrink-0 mx-4 px-8 py-5 bg-[#141414] rounded-2xl border border-gray-800 hover:border-orange-500/50 transition-all duration-300 flex items-center justify-center group min-w-[160px]"
-            >
-              <div className="text-gray-500 group-hover:text-orange-400 transition-colors opacity-70 group-hover:opacity-100 scale-90 group-hover:scale-100 duration-300">
-                {brand.logo}
-              </div>
-            </div>
-          ))}
+        {/* Header */}
+        <div className="text-center mb-16 relative">
+          <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-orange-400 inline-block mb-4">
+            Our Clients
+          </h2>
+          <div className="relative inline-block ml-4 align-top rotate-[-6deg]">
+            <span className="font-handwriting text-2xl md:text-3xl text-pink-400 font-medium" style={{ fontFamily: 'cursive' }}>
+              happy clients, Happy us
+            </span>
+            <svg className="absolute -bottom-6 -right-4 w-12 h-12 text-pink-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3">
+              <path d="M10,10 Q50,50 80,80 M80,80 L60,80 M80,80 L80,60" />
+            </svg>
+          </div>
         </div>
 
-        {/* Second Row - Right to Left */}
-        <div className="flex animate-marquee-reverse">
-          {[...allBrands].reverse().map((brand, index) => (
+        {/* The Rotating Disc Display */}
+        <div className="relative flex flex-col items-center justify-center">
+
+          {/* Background Glows */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-orange-500/10 to-pink-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+          {/* The Disc Container */}
+          <div className="relative z-10 group">
+            {/* Outer Ring / Record Grooves */}
             <div
-              key={`row2-${index}`}
-              className="flex-shrink-0 mx-4 px-8 py-5 bg-[#141414] rounded-2xl border border-gray-800 hover:border-pink-500/50 transition-all duration-300 flex items-center justify-center group min-w-[160px]"
+              className="w-80 h-80 md:w-[500px] md:h-[500px] rounded-full bg-[#111] border-8 border-[#222] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)] flex items-center justify-center transition-transform duration-500 ease-in-out"
+              style={{ transform: `rotate(${rotation}deg)` }}
             >
-              <div className="text-gray-500 group-hover:text-pink-400 transition-colors opacity-70 group-hover:opacity-100 scale-90 group-hover:scale-100 duration-300">
-                {brand.logo}
+              {/* Vinyl Texture Lines */}
+              <div className="absolute inset-0 rounded-full border border-white/5 m-4" />
+              <div className="absolute inset-0 rounded-full border border-white/5 m-8" />
+              <div className="absolute inset-0 rounded-full border border-white/5 m-12" />
+              <div className="absolute inset-0 rounded-full border border-white/5 m-16" />
+              <div className="absolute inset-0 rounded-full border border-white/5 m-20" />
+              <div className="absolute inset-0 rounded-full border border-white/5 m-24" />
+
+              {/* Center Label (The Brand Logo) */}
+              {/* Counter-rotate the inner content so logos stay readable? 
+                        Actually user asked for "rotate disc", implying the logo spins too. 
+                        Let's spin the whole thing for the transition effect. */
+              }
+              <div className="w-52 h-52 md:w-[350px] md:h-[350px] rounded-full bg-gradient-to-br from-[#1a1a1a] to-black flex items-center justify-center border-4 border-[#333] shadow-inner relative overflow-hidden">
+
+                {/* Logo Content */}
+                <div
+                  className={`transition-opacity duration-200 ${isAnimating ? 'opacity-50 blur-sm' : 'opacity-100'}`}
+                >
+                  <div className="text-gray-300 group-hover:text-orange-400 transition-colors duration-300 transform scale-100">
+                    {currentBrand.logo}
+                  </div>
+                </div>
+
+                {/* Glossy Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
               </div>
             </div>
-          ))}
+
+            {/* "Play/Next" Button Overlaid or nearby */}
+            <button
+              onClick={handleNext}
+              className="absolute top-1/2 -right-8 md:-right-24 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-[#1a1a1a] border border-gray-700 rounded-full flex items-center justify-center hover:bg-orange-600 hover:border-orange-500 hover:text-white transition-all duration-300 shadow-xl group/btn active:scale-95 z-20"
+              aria-label="Next Client"
+            >
+              <ArrowRight className="w-8 h-8 text-gray-400 group-hover/btn:text-white transition-colors" />
+            </button>
+
+            {/* Decorative Needle (Stylistic) */}
+            <div className="absolute -top-10 -right-10 md:-right-20 w-32 h-64 pointer-events-none origin-top-right rotate-12 transition-transform duration-500 opacity-50 hidden md:block">
+              <div className="w-2 h-40 bg-gray-700 absolute right-4 top-0 rotate-[20deg] origin-top rounded-b-lg shadow-lg" />
+            </div>
+          </div>
+
+          {/* Current Client Name */}
+          <div className="mt-12 text-center h-16">
+            <h3 className="text-2xl font-bold text-white mb-2 tracking-wide animate-fade-in-up key">
+              {currentBrand.name}
+            </h3>
+            <div className="flex justify-center gap-2">
+              {brands.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-orange-500 w-6' : 'bg-gray-700'}`}
+                />
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
 
       <style jsx>{`
-        @keyframes marquee {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
+        @keyframes fade-in-up {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
-        @keyframes marquee-reverse {
-          0% {
-            transform: translateX(-50%);
-          }
-          100% {
-            transform: translateX(0);
-          }
-        }
-        .animate-marquee {
-          animation: marquee 60s linear infinite;
-        }
-        .animate-marquee-reverse {
-          animation: marquee-reverse 60s linear infinite;
+        .animate-fade-in-up {
+            animation: fade-in-up 0.5s ease-out forwards;
         }
       `}</style>
     </section>

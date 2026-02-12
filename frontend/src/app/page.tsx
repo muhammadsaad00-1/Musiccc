@@ -18,7 +18,7 @@ export default function Home() {
       <ClientsMarquee />
 
       {/* Customer Reviews Section */}
-      <section className="py-16 lg:py-24 bg-[#0a0a0b]">
+      {/* <section className="py-16 lg:py-24 bg-[#0a0a0b]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-orange-500/20 to-pink-600/20 rounded-full text-orange-400 text-sm mb-4 border border-orange-500/30">
@@ -33,12 +33,12 @@ export default function Home() {
           </div>
           <ReviewsCarousel />
         </div>
-      </section>
+      </section> */}
 
 
       <HowItWorks />
-      <WhatsAppCTAGrid />
       <CTASection />
+      <WhatsAppCTAGrid />
     </>
   );
 }
