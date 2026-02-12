@@ -237,140 +237,118 @@ export default function AdminDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Grid - More Compact */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {stats.map((stat, index) => (
             <div
               key={index}
-              className={`bg-[#1a1a1a] rounded-xl border ${stat.highlight ? "border-yellow-500/50 animate-pulse" : "border-gray-800"} p-6 transition-all hover:border-gray-700`}
+              className={`bg-[#1a1a1a] rounded-xl border ${stat.highlight ? "border-yellow-500/50 animate-pulse" : "border-gray-800"} p-4 transition-all hover:border-gray-700`}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div
-                  className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} ${stat.iconColor} flex items-center justify-center`}
-                >
+              <div className="flex items-center justify-between mb-2">
+                <div className={`p-2 rounded-lg bg-gradient-to-br ${stat.color} ${stat.iconColor}`}>
                   {stat.icon}
                 </div>
-                <TrendingUp className="w-5 h-5 text-green-400" />
+                <span className="text-2xl font-bold text-white">{stat.value}</span>
               </div>
-              <p className="text-3xl font-bold text-white mb-1">{stat.value}</p>
-              <p className="text-gray-500">{stat.label}</p>
+              <p className="text-sm text-gray-500">{stat.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Link
-            href="/admin/artists"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-6 hover:border-gray-700 transition-colors group"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-pink-600/20 text-orange-400 rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6" />
+        {/* Primary Action - Manage Artists (Hero Card) */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-[#1a1a1a] via-[#1a1a1a] to-[#222] rounded-2xl border border-gray-800 p-8 relative overflow-hidden group hover:border-orange-500/30 transition-all">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
+
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full text-orange-400 text-xs font-medium mb-3">
+                  <Users className="w-3.5 h-3.5" />
+                  Core Management
+                </div>
+                <h2 className="text-3xl font-bold text-white mb-2">Manage Artists</h2>
+                <p className="text-gray-400 max-w-xl">
+                  Add new performers, update profiles, manage verification status, and organize artist categories from one central hub.
+                </p>
               </div>
-              <ArrowUpRight className="w-5 h-5 text-gray-600 group-hover:text-orange-400 transition-colors" />
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/admin/artists/new"
+                  className="flex items-center gap-2 px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors shadow-lg shadow-white/10"
+                >
+                  <Users className="w-5 h-5" />
+                  Add New Artist
+                </Link>
+                <Link
+                  href="/admin/artists"
+                  className="flex items-center gap-2 px-6 py-3 bg-[#2a2a2a] text-white font-semibold rounded-xl hover:bg-[#333] transition-colors border border-gray-700"
+                >
+                  View All Artists
+                  <ArrowUpRight className="w-5 h-5" />
+                </Link>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-white mb-1">
-              Manage Artists
-            </h3>
-            <p className="text-gray-500">
-              Add, edit, or remove artists from the platform
-            </p>
+          </div>
+        </div>
+
+        {/* Secondary Actions Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          <Link
+            href="/admin/inquiries"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group relative overflow-hidden"
+          >
+            {requirementStats.pending > 0 && (
+              <div className="absolute top-2 right-2 w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+            )}
+            <div className="w-10 h-10 bg-yellow-500/10 text-yellow-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-yellow-500/20 transition-colors">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-white mb-1">Inquiries</h3>
+            <p className="text-xs text-gray-500">{requirementStats.total} Total</p>
           </Link>
 
           <Link
             href="/admin/events"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-6 hover:border-gray-700 transition-colors group"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-emerald-600/20 text-green-400 rounded-xl flex items-center justify-center">
-                <Calendar className="w-6 h-6" />
-              </div>
-              <ArrowUpRight className="w-5 h-5 text-gray-600 group-hover:text-green-400 transition-colors" />
+            <div className="w-10 h-10 bg-green-500/10 text-green-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-500/20 transition-colors">
+              <Calendar className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-1">
-              Manage Events
-            </h3>
-            <p className="text-gray-500">
-              Create and manage event packages
-            </p>
-          </Link>
-
-          <Link
-            href="/admin/blogs"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-6 hover:border-gray-700 transition-colors group"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-pink-600/20 text-purple-400 rounded-xl flex items-center justify-center">
-                <MessageSquare className="w-6 h-6" />
-              </div>
-              <ArrowUpRight className="w-5 h-5 text-gray-600 group-hover:text-purple-400 transition-colors" />
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-1">
-              Manage Blog
-            </h3>
-            <p className="text-gray-500">
-              Create and manage blog posts
-            </p>
-          </Link>
-
-          <Link
-            href="/admin/packages"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-6 hover:border-gray-700 transition-colors group"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-violet-600/20 text-purple-400 rounded-xl flex items-center justify-center">
-                <Package className="w-6 h-6" />
-              </div>
-              <ArrowUpRight className="w-5 h-5 text-gray-600 group-hover:text-purple-400 transition-colors" />
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-1">
-              Manage Packages
-            </h3>
-            <p className="text-gray-500">
-              Create bundled event packages with artists
-            </p>
+            <h3 className="font-semibold text-white mb-1">Events</h3>
+            <p className="text-xs text-gray-500">Manage Types</p>
           </Link>
 
           <Link
             href="/admin/categories"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-6 hover:border-gray-700 transition-colors group"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 text-blue-400 rounded-xl flex items-center justify-center">
-                <FolderOpen className="w-6 h-6" />
-              </div>
-              <ArrowUpRight className="w-5 h-5 text-gray-600 group-hover:text-blue-400 transition-colors" />
+            <div className="w-10 h-10 bg-blue-500/10 text-blue-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-500/20 transition-colors">
+              <FolderOpen className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-1">
-              Manage Categories
-            </h3>
-            <p className="text-gray-500">
-              Organize artist categories and subcategories
-            </p>
+            <h3 className="font-semibold text-white mb-1">Categories</h3>
+            <p className="text-xs text-gray-500">{categoryCount} Categories</p>
           </Link>
 
           <Link
-            href="/admin/inquiries"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-6 hover:border-gray-700 transition-colors group relative"
+            href="/admin/blogs"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group"
           >
-            {requirementStats.pending > 0 && (
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-xs font-bold text-black animate-bounce">
-                {requirementStats.pending}
-              </div>
-            )}
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-500/20 to-orange-600/20 text-yellow-400 rounded-xl flex items-center justify-center">
-                <MessageSquare className="w-6 h-6" />
-              </div>
-              <ArrowUpRight className="w-5 h-5 text-gray-600 group-hover:text-yellow-400 transition-colors" />
+            <div className="w-10 h-10 bg-purple-500/10 text-purple-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-500/20 transition-colors">
+              <MessageSquare className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-1">
-              View Inquiries
-            </h3>
-            <p className="text-gray-500">
-              Review and respond to booking requests
-            </p>
+            <h3 className="font-semibold text-white mb-1">Blogs</h3>
+            <p className="text-xs text-gray-500">Posts & Updates</p>
+          </Link>
+
+          <Link
+            href="/admin/packages"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group"
+          >
+            <div className="w-10 h-10 bg-violet-500/10 text-violet-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-violet-500/20 transition-colors">
+              <Package className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-white mb-1">Packages</h3>
+            <p className="text-xs text-gray-500">Bundles</p>
           </Link>
         </div>
 
@@ -489,9 +467,7 @@ export default function AdminDashboard() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Location
-                  </th>
+
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
@@ -521,9 +497,7 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                         {artist.category}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                        {artist.locations?.[0] || artist.location || "-"}
-                      </td>
+
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="px-2 py-1 text-xs font-medium bg-green-500/20 text-green-400 rounded-full">
                           Active

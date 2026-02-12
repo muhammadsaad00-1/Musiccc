@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import {
   Send,
@@ -157,6 +157,9 @@ export default function PostRequirementPage() {
     phone: "",
     message: "",
   });
+  const [citySearch, setCitySearch] = useState("");
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
+  const cityDropdownRef = useRef<HTMLDivElement>(null);
   const [categories, setCategories] = useState<any[]>([]);
 
   // Auto-fill effect for step transitions
@@ -230,6 +233,22 @@ export default function PostRequirementPage() {
   useEffect(() => {
     setShowStepContent(true);
   }, [step]);
+
+  // Close city dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target as Node)) {
+        setIsCityDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filtered cities based on search
+  const filteredCities = cities.filter((city) =>
+    city.toLowerCase().includes(citySearch.toLowerCase())
+  );
 
   // Fetch categories from backend
   useEffect(() => {
@@ -595,27 +614,68 @@ export default function PostRequirementPage() {
                       <MapPin className="w-4 h-4 text-orange-400" />
                       City <span className="text-pink-400">*</span>
                     </label>
-                    <div className="relative">
-                      <select
+                    <div className="relative" ref={cityDropdownRef}>
+                      {/* Hidden input to satisfy form validation */}
+                      <input
+                        type="hidden"
                         name="eventLocation"
                         value={formData.eventLocation}
-                        onChange={handleChange}
                         required
-                        className="w-full px-5 py-4 bg-[#0a0a0b]/80 border-2 border-gray-800 rounded-2xl text-white focus:ring-0 focus:border-orange-500/50 transition-all duration-300 hover:border-gray-700 cursor-pointer appearance-none max-h-[300px]"
+                      />
+                      {/* Searchable input */}
+                      <input
+                        type="text"
+                        value={isCityDropdownOpen ? citySearch : formData.eventLocation}
+                        onChange={(e) => {
+                          setCitySearch(e.target.value);
+                          if (!isCityDropdownOpen) setIsCityDropdownOpen(true);
+                          // If user clears, reset selection
+                          if (e.target.value === "") {
+                            setFormData({ ...formData, eventLocation: "" });
+                          }
+                        }}
+                        onFocus={() => {
+                          setIsCityDropdownOpen(true);
+                          setCitySearch("");
+                        }}
+                        placeholder="Search city..."
+                        className="w-full px-5 py-4 bg-[#0a0a0b]/80 border-2 border-gray-800 rounded-2xl text-white placeholder-gray-600 focus:ring-0 focus:border-orange-500/50 transition-all duration-300 hover:border-gray-700 cursor-pointer"
                         style={{
                           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f97316'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                           backgroundRepeat: "no-repeat",
                           backgroundPosition: "right 1rem center",
                           backgroundSize: "1.5rem",
                         }}
-                      >
-                        <option value="">Select city</option>
-                        {cities.map((city) => (
-                          <option key={city} value={city}>
-                            {city}
-                          </option>
-                        ))}
-                      </select>
+                        autoComplete="off"
+                      />
+                      {/* Dropdown list */}
+                      {isCityDropdownOpen && (
+                        <div className="absolute z-50 mt-2 w-full max-h-60 overflow-y-auto bg-[#0f0f10] border-2 border-gray-800 rounded-2xl shadow-2xl shadow-black/50">
+                          {filteredCities.length > 0 ? (
+                            filteredCities.map((city) => (
+                              <button
+                                key={city}
+                                type="button"
+                                onClick={() => {
+                                  setFormData({ ...formData, eventLocation: city });
+                                  setCitySearch("");
+                                  setIsCityDropdownOpen(false);
+                                }}
+                                className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.eventLocation === city
+                                    ? "bg-gradient-to-r from-orange-500/20 to-pink-500/20 text-orange-400 font-medium"
+                                    : "text-gray-300 hover:bg-[#1a1a1a] hover:text-white"
+                                  } first:rounded-t-2xl last:rounded-b-2xl`}
+                              >
+                                {city}
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-5 py-4 text-sm text-gray-500 text-center">
+                              No cities found
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

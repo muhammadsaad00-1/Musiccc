@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { MapPin, CheckCircle, PhoneOutgoing } from 'lucide-react';
 import { Artist } from '@/types';
@@ -10,18 +10,22 @@ interface ArtistCardProps {
 }
 
 export default function ArtistCard({ artist }: ArtistCardProps) {
+    const router = useRouter();
+
     // Handle both backend and mock data structures
     const imageUrl = artist.image_url || artist.profile_image_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400';
     const artistSlug = artist.slug || artist.name?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const location = artist.location || (artist.locations && artist.locations[0]) || 'Pakistan';
     const shortBio = artist.short_bio || artist.description || artist.bio?.substring(0, 80);
 
-
+    const handleCardClick = () => {
+        router.push(`/artist/${artistSlug}`);
+    };
 
     return (
-        <Link
-            href={`/artist/${artistSlug}`}
-            className="group bg-[#1a1a1a] rounded-3xl overflow-hidden border border-gray-800 hover:border-orange-500/40 transition-all duration-300 card-glow hover:shadow-lg hover:shadow-orange-500/5"
+        <div
+            onClick={handleCardClick}
+            className="group bg-[#1a1a1a] rounded-3xl overflow-hidden border border-gray-800 hover:border-orange-500/40 transition-all duration-300 card-glow hover:shadow-lg hover:shadow-orange-500/5 cursor-pointer"
         >
             {/* Image Container */}
             <div className="relative aspect-[4/3] overflow-hidden">
@@ -92,7 +96,7 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
                         target="_blank"
                         rel="noopener noreferrer"
                         href={`https://wa.me/923206876442?text=${encodeURIComponent(`Hi, I'm interested in booking ${artist.name} for an event. Could you please share the details?`)}`}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-full hover:shadow-lg hover:shadow-green-500/30 transition-all z-10"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-600 text-white text-sm font-medium rounded-full hover:shadow-lg hover:shadow-orange-500/30 transition-all z-10"
                         title="Contact on WhatsApp"
                     >
                         <PhoneOutgoing className="w-3.5 h-3.5" />
@@ -100,6 +104,7 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
                     </a>
                 </div>
             </div>
-        </Link>
+        </div>
     );
 }
+

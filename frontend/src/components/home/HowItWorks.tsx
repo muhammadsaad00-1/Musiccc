@@ -32,13 +32,14 @@ export default function HowItWorks() {
                     <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
                         How It Works
                     </h2>
-                    <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                        Booking your perfect artist is just a few steps away
+                    <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
+                        Booking your perfect artist is just a few steps away. We've simplified the process to make it easy for you to find, book, and enjoy live entertainment for your event.
                     </p>
+
                 </div>
 
                 {/* Steps */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
                     {steps.map((step, index) => (
                         <div key={index} className="relative">
                             {/* Connector Line */}
@@ -47,27 +48,37 @@ export default function HowItWorks() {
                             )}
 
                             {/* Step Card */}
-                            <div className="relative bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800">
+                            <div className="relative bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 h-full hover:border-orange-500/30 transition-colors duration-300">
                                 {/* Step Number */}
-                                <div className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                                <div className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg shadow-orange-500/20">
                                     {index + 1}
                                 </div>
 
                                 {/* Icon */}
-                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center text-orange-400 mb-4">
+                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center text-orange-400 mb-6 group-hover:scale-110 transition-transform duration-300">
                                     {step.icon}
                                 </div>
 
                                 {/* Content */}
-                                <h3 className="text-xl font-semibold text-white mb-2">
+                                <h3 className="text-xl font-bold text-white mb-3">
                                     {step.title}
                                 </h3>
-                                <p className="text-gray-500">
+                                <p className="text-gray-400 leading-relaxed text-sm">
                                     {step.description}
                                 </p>
                             </div>
                         </div>
                     ))}
+                </div>
+
+                {/* CTA Button */}
+                <div className="text-center">
+                    <a
+                        href="/post-requirement"
+                        className="inline-flex items-center justify-center px-10 py-4 text-lg font-bold text-white transition-all duration-200 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full hover:from-orange-600 hover:to-pink-700 hover:shadow-lg hover:shadow-orange-500/25 transform hover:-translate-y-0.5"
+                    >
+                        Book Artist Now
+                    </a>
                 </div>
             </div>
         </section>

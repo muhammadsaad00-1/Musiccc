@@ -152,17 +152,17 @@ export default function InquiriesPage() {
   const formatPhoneForWhatsApp = (phone: string) => {
     // Remove all non-numeric characters
     const cleanPhone = phone.replace(/[^0-9]/g, '');
-    
+
     // If it already starts with 92, return as is
     if (cleanPhone.startsWith('92')) {
       return cleanPhone;
     }
-    
+
     // If it starts with 0, replace with 92
     if (cleanPhone.startsWith('0')) {
       return '92' + cleanPhone.substring(1);
     }
-    
+
     // Otherwise, add 92 at the beginning
     return '92' + cleanPhone;
   };
@@ -170,7 +170,7 @@ export default function InquiriesPage() {
   const generateWhatsAppMessage = (req: Requirement) => {
     const eventDate = formatDate(req.event_date);
     const budget = formatBudget(req.budget);
-    
+
     return `Hello ${req.customer_name},
 
 Thank you for your booking inquiry!
@@ -381,10 +381,10 @@ How can we assist you further?`;
                             href={`https://wa.me/${formatPhoneForWhatsApp(req.customer_phone)}?text=${encodeURIComponent(generateWhatsAppMessage(req))}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0a0a0b] border border-green-500/50 text-green-400 text-xs font-medium rounded-lg transition-all hover:border-green-400 hover:shadow-[0_0_12px_rgba(34,197,94,0.3)] hover:text-green-300"
                             title="Contact on WhatsApp"
                           >
-                            <MessageCircle className="w-4 h-4" />
+                            <MessageCircle className="w-3.5 h-3.5" />
                             WhatsApp
                           </a>
                         </td>
@@ -596,7 +596,7 @@ How can we assist you further?`;
                 href={`https://wa.me/${formatPhoneForWhatsApp(selectedRequirement.customer_phone)}?text=${encodeURIComponent(generateWhatsAppMessage(selectedRequirement))}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-medium rounded-lg transition-all shadow-lg shadow-green-500/20"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#0a0a0b] border border-green-500/50 text-green-400 font-medium rounded-lg transition-all hover:border-green-400 hover:shadow-[0_0_16px_rgba(34,197,94,0.35)] hover:text-green-300"
               >
                 <MessageCircle className="w-4 h-4" />
                 Contact on WhatsApp

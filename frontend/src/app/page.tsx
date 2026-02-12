@@ -4,6 +4,7 @@ import FeaturedArtists from '@/components/home/FeaturedArtists';
 import ClientsMarquee from '@/components/home/ClientsMarquee';
 import ReviewsCarousel from '@/components/home/ReviewsCarousel';
 import HowItWorks from '@/components/home/HowItWorks';
+import WhatsAppCTAGrid from '@/components/home/WhatsAppCTAGrid';
 
 import CTASection from '@/components/home/CTASection';
 
@@ -34,7 +35,9 @@ export default function Home() {
         </div>
       </section>
 
+
       <HowItWorks />
+      <WhatsAppCTAGrid />
       <CTASection />
     </>
   );

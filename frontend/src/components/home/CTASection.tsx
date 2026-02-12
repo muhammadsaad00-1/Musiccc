@@ -29,7 +29,7 @@ export default function CTASection() {
                                 <ArrowRight className="w-5 h-5" />
                             </Link>
                             <Link
-                                href="/search"
+                                href="/artists"
                                 className="inline-flex items-center gap-2 px-8 py-4 bg-black/20 text-white font-semibold rounded-full hover:bg-black/30 transition-colors border border-white/30"
                             >
                                 Browse Artists

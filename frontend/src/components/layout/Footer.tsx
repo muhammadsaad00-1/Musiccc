@@ -1,9 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
-import { Facebook, Instagram, Youtube, Mail, Phone, MapPin, Music, ArrowRight, Star, Heart, Users, Calendar, Linkedin } from 'lucide-react';
+import { Facebook, Instagram, Youtube, Linkedin, Heart } from 'lucide-react';
 
 // Simple TikTok icon component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -12,212 +12,157 @@ const TikTokIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-// Cities for footer
-const cities = [
-    { name: 'Lahore', slug: 'lahore' },
-    { name: 'Karachi', slug: 'karachi' },
-    { name: 'Islamabad', slug: 'islamabad' },
-    { name: 'Rawalpindi', slug: 'rawalpindi' },
-    { name: 'Faisalabad', slug: 'faisalabad' },
-    { name: 'Multan', slug: 'multan' },
-    { name: 'Peshawar', slug: 'peshawar' },
-    { name: 'Quetta', slug: 'quetta' },
-    { name: 'Sialkot', slug: 'sialkot' },
-    { name: 'Gujranwala', slug: 'gujranwala' },
-    { name: 'Hyderabad', slug: 'hyderabad' },
-    { name: 'Bahawalpur', slug: 'bahawalpur' },
-];
-
-// Event types
-const events = [
-    { name: 'Wedding', slug: 'wedding' },
-    { name: 'Mehendi', slug: 'mehendi' },
-    { name: 'Corporate', slug: 'corporate' },
-    { name: 'Concert', slug: 'concert' },
-    { name: 'Private Party', slug: 'private-party' },
-];
-
 export default function Footer() {
     const [categories, setCategories] = useState<any[]>([]);
 
-    // Fetch categories from backend
     useEffect(() => {
-        async function fetchCategories() {
+        const fetchCategories = async () => {
             try {
                 const response = await fetch('http://127.0.0.1:8000/categories');
-                if (response.ok) {
-                    const data = await response.json();
-                    // Limit to first 5 for footer
-                    setCategories(data.slice(0, 5).map((cat: any) => ({
-                        name: cat.name,
-                        slug: cat.slug,
-                    })));
-                }
+                const data = await response.json();
+                setCategories(data);
             } catch (error) {
                 console.error('Error fetching categories:', error);
             }
-        }
+        };
+
         fetchCategories();
     }, []);
 
+    // Helper to slugify text
+    const slugify = (text: string) => {
+        return text
+            .toLowerCase()
+            .replace(/ /g, '-')
+            .replace(/[^\w-]+/g, '');
+    };
+
+    const cities = [
+        "Lahore",
+        "Karachi",
+        "Islamabad",
+        "Faisalabad",
+        "Multan",
+        "Peshawar"
+    ];
+
+    const events = [
+        { name: "Wedding Events", slug: "wedding" },
+        { name: "Mehendi Events", slug: "mehendi" },
+        { name: "Corporate Events", slug: "corporate" },
+        { name: "Private Parties", slug: "private-party" },
+        { name: "Concerts", slug: "concert" },
+        { name: "Milad & Religious", slug: "milad" }
+    ];
+
+    const companyLinks = [
+        { name: "About Us", href: "/about" },
+        { name: "Contact Us", href: "/contact" },
+        { name: "Terms & Conditions", href: "/terms" },
+        { name: "Privacy Policy", href: "/privacy" },
+        { name: "FAQs", href: "/faq" }
+    ];
+
     return (
-        <footer className="relative bg-[#0a0a0b] text-gray-400 overflow-hidden">
-            {/* Gradient background decorations */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px]" />
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/5 rounded-full blur-[150px]" />
+        <footer className="relative bg-[#050508] text-gray-300 overflow-hidden pt-20 pb-10">
+            {/* Decorative Background Elements */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute -top-24 -left-24 w-96 h-96 bg-orange-600/10 rounded-full blur-[100px]" />
+                <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-pink-600/5 rounded-full blur-[120px]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-900/5 rounded-full blur-[150px]" />
             </div>
 
-            {/* CTA Section */}
-            <div className="relative border-t border-gray-800/50">
-                <div className="relative py-12">
-                    <div className="absolute inset-0 bg-gradient-to-br from-orange-600/10 via-[#0a0a0b] to-pink-600/10" />
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-[120px]" />
-
-                    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex flex-col lg:flex-row items-center justify-between gap-8 py-8 px-8 bg-gradient-to-r from-orange-500/10 via-pink-500/5 to-orange-500/10 rounded-3xl border border-orange-500/20 backdrop-blur-sm">
-                            <div className="text-center lg:text-left">
-                                <h3 className="text-2xl lg:text-3xl font-bold text-white mb-2">
-                                    Ready to Create{' '}
-                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">
-                                        Unforgettable Moments?
-                                    </span>
-                                </h3>
-                                <p className="text-gray-400">
-                                    Book verified artists for your next event or tell us your requirements
-                                </p>
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
+                    {/* Brand Column - Spans 4 columns for better balance */}
+                    <div className="lg:col-span-4">
+                        <Link href="/" className="flex items-center gap-3 mb-6">
+                            <Image
+                                src="/logo-taf.png"
+                                alt="The Artist Factory"
+                                width={60}
+                                height={60}
+                                className="w-[60px] h-[60px] object-contain"
+                            />
+                            <div>
+                                <span className="text-2xl font-bold text-white block">The Artist Factory</span>
+                                <span className="text-xs uppercase tracking-widest text-orange-500 font-semibold">
+                                    Pakistan&apos;s Premier Marketplace
+                                </span>
                             </div>
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <Link
-                                    href="/artists"
-                                    className="group flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-1 transition-all"
-                                >
-                                    Browse Artists
-                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                </Link>
-                                <Link
-                                    href="/post-requirement"
-                                    className="px-8 py-4 bg-[#1a1a1a] border border-gray-700 text-white font-bold rounded-xl hover:bg-[#252525] hover:border-orange-500/30 transition-all text-center"
-                                >
-                                    Post Requirement
-                                </Link>
+                        </Link>
+
+                        <h2 className="text-3xl font-bold text-white mb-4 leading-tight">
+                            Your gateway to <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">
+                                unforgettable events
+                            </span>
+                        </h2>
+
+                        <p className="text-gray-400 mb-8 max-w-sm leading-relaxed">
+                            Pakistan&apos;s Largest Marketplace for Professional Artists. We connect you with the best talent for weddings, corporate events, and concerts.
+                        </p>
+
+                        <div className="flex items-center gap-4">
+                            <span className="text-base font-medium text-white">Follow us On</span>
+                            <div className="h-px w-8 bg-gray-700"></div>
+                            <div className="flex gap-3">
+                                <a href="https://www.facebook.com/share/1BkG8r9xrN/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all border border-white/5">
+                                    <Facebook className="w-4 h-4" />
+                                </a>
+                                <a href="https://www.instagram.com/theartistfactoryofficial" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-pink-600 hover:text-white transition-all border border-white/5">
+                                    <Instagram className="w-4 h-4" />
+                                </a>
+                                <a href="https://youtube.com/@theartistfactoryofficial" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-red-600 hover:text-white transition-all border border-white/5">
+                                    <Youtube className="w-4 h-4" />
+                                </a>
+                                <a href="https://www.tiktok.com/@theartistfactory" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-black hover:text-white hover:border-gray-700 border border-transparent transition-all border-white/5">
+                                    <TikTokIcon className="w-4 h-4" />
+                                </a>
+                                <a href="https://www.linkedin.com/company/artistfactoryofficial/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-blue-700 hover:text-white transition-all border border-white/5">
+                                    <Linkedin className="w-4 h-4" />
+                                </a>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Main Footer - 6 Column Grid with colored background */}
-            <div className="relative">
-                {/* Gradient accent top border - Orange/Black theme */}
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
-
-                {/* Subtle colored background - Orange/Black theme */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f] to-[#0a0a0b]" />
-                <div className="absolute top-0 left-0 w-1/3 h-full bg-gradient-to-r from-orange-900/10 to-transparent" />
-                <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-pink-900/10 to-transparent" />
-
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6">
-
-                        {/* Brand - spans 2 cols */}
-                        <div className="col-span-2">
-                            <Link href="/" className="flex items-center gap-3 mb-6 group">
-                                <Image
-                                    src="/logo-taf.png"
-                                    alt="The Artist Factory"
-                                    width={72}
-                                    height={72}
-                                    className="w-[72px] h-[72px] object-contain"
-                                />
-                                <div>
-                                    <span className="text-xl font-bold text-white block">The Artist Factory</span>
-                                    <span className="text-xs text-gray-500">Pakistan's Premier Entertainment</span>
-                                </div>
-                            </Link>
-                            <p className="text-gray-500 mb-6 leading-relaxed text-sm">
-                                Connecting you with Pakistan's finest artists for weddings, corporate events, and celebrations.
-                            </p>
-
-                            {/* Social icons */}
-                            <div className="flex flex-wrap gap-3">
-                                <a href="https://www.facebook.com/share/1BkG8r9xrN/" target="_blank" rel="noopener noreferrer" className="group w-10 h-10 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-gray-800 hover:border-blue-500/50 hover:bg-gradient-to-br hover:from-blue-500/20 hover:to-blue-600/20 transition-all">
-                                    <Facebook className="w-4 h-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
-                                </a>
-                                <a href="https://www.instagram.com/theartistfactoryofficial" target="_blank" rel="noopener noreferrer" className="group w-10 h-10 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-gray-800 hover:border-pink-500/50 hover:bg-gradient-to-br hover:from-pink-500/20 hover:to-purple-500/20 transition-all">
-                                    <Instagram className="w-4 h-4 text-gray-400 group-hover:text-pink-400 transition-colors" />
-                                </a>
-                                <a href="https://youtube.com/@theartistfactoryofficial" target="_blank" rel="noopener noreferrer" className="group w-10 h-10 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-gray-800 hover:border-red-500/50 hover:bg-gradient-to-br hover:from-red-500/20 hover:to-orange-500/20 transition-all">
-                                    <Youtube className="w-4 h-4 text-gray-400 group-hover:text-red-400 transition-colors" />
-                                </a>
-                                <a href="https://www.tiktok.com/@theartistfactory" target="_blank" rel="noopener noreferrer" className="group w-10 h-10 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-gray-800 hover:border-gray-500/50 hover:bg-gradient-to-br hover:from-gray-500/20 hover:to-gray-600/20 transition-all">
-                                    <TikTokIcon className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
-                                </a>
-                                <a href="https://www.linkedin.com/company/artistfactoryofficial/" target="_blank" rel="noopener noreferrer" className="group w-10 h-10 bg-[#1a1a1a] rounded-xl flex items-center justify-center border border-gray-800 hover:border-blue-600/50 hover:bg-gradient-to-br hover:from-blue-600/20 hover:to-blue-700/20 transition-all">
-                                    <Linkedin className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                                </a>
-                            </div>
-                        </div>
-
-                        {/* Artists */}
+                    {/* Links Columns - Spans 8 columns (4 cols total) */}
+                    <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-8 lg:mt-10 lg:pl-12">
+                        {/* Artists Column */}
                         <div>
-                            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                                <Star className="w-4 h-4 text-orange-400" />
-                                Artists
-                            </h3>
-                            <ul className="space-y-2.5">
-                                {categories.map((category) => (
-                                    <li key={category.slug}>
-                                        <Link
-                                            href={`/artists/${category.slug}`}
-                                            className="text-sm text-gray-500 hover:text-orange-400 transition-colors"
-                                        >
+                            <h3 className="text-white font-bold text-lg mb-6">Artists</h3>
+                            <ul className="space-y-4">
+                                {categories.slice(0, 6).map((category, index) => (
+                                    <li key={index}>
+                                        <Link href={`/artists/${category.slug}`} className="text-base text-gray-400 hover:text-orange-400 transition-colors block">
                                             {category.name}
                                         </Link>
                                     </li>
                                 ))}
-                                <li>
-                                    <Link href="/artists" className="text-sm text-orange-400 hover:text-orange-300 font-medium transition-colors">
-                                        View All →
-                                    </Link>
-                                </li>
                             </ul>
                         </div>
 
-                        {/* Cities */}
+                        {/* Cities Column */}
                         <div>
-                            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-pink-400" />
-                                Cities
-                            </h3>
-                            <ul className="space-y-2.5">
-                                {cities.map((city) => (
-                                    <li key={city.slug}>
-                                        <Link
-                                            href={`/artists?location=${encodeURIComponent(city.name)}`}
-                                            className="text-sm text-gray-500 hover:text-pink-400 transition-colors"
-                                        >
-                                            {city.name}
+                            <h3 className="text-white font-bold text-lg mb-6">Cities</h3>
+                            <ul className="space-y-4">
+                                {cities.map((city, index) => (
+                                    <li key={index}>
+                                        <Link href={`/artists?location=${city}`} className="text-base text-gray-400 hover:text-orange-400 transition-colors block">
+                                            Artists in {city}
                                         </Link>
                                     </li>
                                 ))}
                             </ul>
                         </div>
 
-                        {/* Events */}
+                        {/* Events Column */}
                         <div>
-                            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-purple-400" />
-                                Events
-                            </h3>
-                            <ul className="space-y-2.5">
-                                {events.map((event) => (
-                                    <li key={event.slug}>
-                                        <Link
-                                            href={`/events/${event.slug}`}
-                                            className="text-sm text-gray-500 hover:text-purple-400 transition-colors"
-                                        >
+                            <h3 className="text-white font-bold text-lg mb-6">Events</h3>
+                            <ul className="space-y-4">
+                                {events.map((event, index) => (
+                                    <li key={index}>
+                                        <Link href={`/events/${event.slug}`} className="text-base text-gray-400 hover:text-orange-400 transition-colors block">
                                             {event.name}
                                         </Link>
                                     </li>
@@ -225,89 +170,35 @@ export default function Footer() {
                             </ul>
                         </div>
 
-                        {/* Company */}
+                        {/* Company Column */}
                         <div>
-                            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                                <Users className="w-4 h-4 text-cyan-400" />
-                                Company
-                            </h3>
-                            <ul className="space-y-2.5">
-                                <li>
-                                    <Link href="/about" className="text-sm text-gray-500 hover:text-cyan-400 transition-colors">
-                                        About Us
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/contact" className="text-sm text-gray-500 hover:text-cyan-400 transition-colors">
-                                        Contact
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/testimonials" className="text-sm text-gray-500 hover:text-cyan-400 transition-colors">
-                                        Testimonials
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/faq" className="text-sm text-gray-500 hover:text-cyan-400 transition-colors">
-                                        FAQs
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/privacy" className="text-sm text-gray-500 hover:text-cyan-400 transition-colors">
-                                        Privacy
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/terms" className="text-sm text-gray-500 hover:text-cyan-400 transition-colors">
-                                        Terms
-                                    </Link>
-                                </li>
+                            <h3 className="text-white font-bold text-lg mb-6">Company</h3>
+                            <ul className="space-y-4">
+                                {companyLinks.map((link, index) => (
+                                    <li key={index}>
+                                        <Link href={link.href} className="text-base text-gray-400 hover:text-orange-400 transition-colors block">
+                                            {link.name}
+                                        </Link>
+                                    </li>
+                                ))}
                             </ul>
                         </div>
                     </div>
-
-                    {/* Contact Info Bar */}
-                    <div className="mt-12 pt-8 border-t border-gray-800/50">
-                        <div className="flex flex-wrap justify-center gap-6 lg:gap-12 text-sm">
-                            <a href="tel:+923001234567" className="flex items-center gap-2 text-gray-500 hover:text-orange-400 transition-colors">
-                                <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                                    <Phone className="w-4 h-4 text-orange-400" />
-                                </div>
-                                <span>+92 300 123 4567</span>
-                            </a>
-                            <a href="mailto:Theartistfactoryofficial@gmail.com" className="flex items-center gap-2 text-gray-500 hover:text-pink-400 transition-colors">
-                                <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center">
-                                    <Mail className="w-4 h-4 text-pink-400" />
-                                </div>
-                                <span>Theartistfactoryofficial@gmail.com</span>
-                            </a>
-                            <div className="flex items-center gap-2 text-gray-500">
-                                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
-                                    <MapPin className="w-4 h-4 text-purple-400" />
-                                </div>
-                                <span>2nd Floor, 67 CCA 1, Phase 6 DHA, LHR</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-            </div>
 
-            {/* Bottom Bar with gradient line */}
-            <div className="relative border-t border-gray-800/50 bg-[#050508]">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <p className="text-gray-600 text-sm">
-                            © {new Date().getFullYear()} Artist Factory. All rights reserved.
-                        </p>
-                        <div className="flex items-center gap-2 text-gray-600 text-sm">
-                            <span>Made with</span>
-                            <Heart className="w-4 h-4 text-red-500 fill-red-500 animate-pulse" />
-                            <span>in Pakistan</span>
-                        </div>
+                {/* Bottom Bar */}
+                <div className="pt-8 border-t border-gray-800/50 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <p className="text-gray-400 text-base">
+                        © Copyright 2024 - 2026 | The Artist Factory | All Rights Reserved.
+                    </p>
+                    <div className="flex items-center gap-2 text-gray-400 text-base group">
+                        <span>Made with</span>
+                        <Heart className="w-4 h-4 text-red-500 fill-red-500 animate-pulse group-hover:scale-110 transition-transform" />
+                        <span>in Pakistan</span>
                     </div>
                 </div>
             </div>
         </footer>
     );
 }
+

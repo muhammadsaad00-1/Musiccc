@@ -3,6 +3,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import ArtistFAQ from '@/components/artists/ArtistFAQ';
 import { useState, useEffect, use } from "react";
 import {
   CheckCircle,
@@ -291,7 +292,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
         <div className="absolute top-6 left-0 right-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Link
-              href={`/artists/${category?.slug || "singers"}`}
+              href={`/artists?category=${category?.name || "Artists"}`}
               className="inline-flex items-center gap-2 text-white hover:text-orange-400 transition-colors bg-black/40 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/10 hover:border-orange-500/50"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -365,14 +366,14 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                   href={`/post-requirement?artist=${artist.slug}`}
                   className="group px-7 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-full hover:shadow-xl hover:shadow-pink-500/30 transition-all flex items-center gap-2"
                 >
-                  <span>See Price & Book</span>
+                  <span>Request Booking</span>
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <a
                   href={`https://wa.me/923206876442?text=${encodeURIComponent(`Hi, I'm interested in booking ${artist.name}. Please share price details.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-6 py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-full transition-all flex items-center gap-2 shadow-lg shadow-green-500/20"
+                  className="px-6 py-3 bg-[#1a1a1a] border border-orange-500/40 hover:border-orange-500 text-white font-bold rounded-full transition-all flex items-center gap-2 shadow-lg shadow-orange-500/10 hover:shadow-orange-500/20"
                 >
                   <span>Contact for Price</span>
                   <ExternalLink className="w-4 h-4" />
@@ -472,12 +473,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                 )}
               </div>
 
-              <Link
-                href={`/post-requirement?artist=${artist.slug}`}
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-full hover:shadow-xl hover:shadow-pink-500/30 transition-all self-start uppercase tracking-wider text-sm"
-              >
-                See Price & Book
-              </Link>
+
             </div>
           </div>
         </div>
@@ -673,10 +669,12 @@ export default function ArtistPage({ params }: ArtistPageProps) {
         </div>
       )}
 
+
+
       {/* ============ BOOKING CTA ============ */}
       <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-pink-600/10 to-orange-500/10" />
-        <div className="absolute inset-0 overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl animate-pulse" />
           <div
             className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/20 rounded-full blur-3xl animate-pulse"
@@ -721,56 +719,83 @@ export default function ArtistPage({ params }: ArtistPageProps) {
         </div>
       </section>
 
+      {/* ============ GOT QUESTIONS WA SECTION ============ */}
+      <section className="py-12 border-t border-gray-900 bg-[#0a0a0b] relative z-20">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h3 className="text-2xl font-bold text-white mb-3">
+            Got Questions about {artist.name}?
+          </h3>
+          <p className="text-gray-400 mb-6">
+            Need to discuss availability, specific packages, or custom requirements?
+          </p>
+          <a
+            href={`https://wa.me/923206876442?text=${encodeURIComponent(`Hi, I have some questions about booking ${artist.name}.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#0a0a0b] border border-green-500/50 text-green-400 font-medium rounded-full transition-all hover:border-green-400 hover:shadow-[0_0_12px_rgba(34,197,94,0.25)] hover:text-green-300"
+          >
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-1" />
+            Chat with Us on WhatsApp
+          </a>
+        </div>
+      </section>
+
+
+      {/* ============ FAQ SECTION ============ */}
+      <ArtistFAQ artistName={artist.name} />
+
       {/* ============ RELATED ARTISTS ============ */}
-      {relatedArtists.length > 0 && (
-        <section className="py-24 bg-[#0a0a0b] relative z-10 border-t border-gray-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">
-                Discover More Talent
-              </h2>
-              <div className="h-1 w-24 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full mx-auto"></div>
-            </div>
+      {
+        relatedArtists.length > 0 && (
+          <section className="py-24 bg-[#0a0a0b] relative z-10 border-t border-gray-900">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+                  Discover More Talent
+                </h2>
+                <div className="h-1 w-24 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full mx-auto"></div>
+              </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-8 md:gap-12">
-              {relatedArtists.map((relatedArtist) => (
-                <Link
-                  key={relatedArtist.id}
-                  href={`/artist/${relatedArtist.slug}`}
-                  className="group flex flex-col items-center"
-                >
-                  {/* Circular Image with Glow */}
-                  <div className="relative w-32 h-32 md:w-40 md:h-40 mb-6 transition-transform duration-500 group-hover:-translate-y-2">
-                    {/* Rotating Border Effect */}
-                    <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 opacity-0 group-hover:opacity-100 blur transition-opacity duration-500 animate-spin-slow" />
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-8 md:gap-12">
+                {relatedArtists.map((relatedArtist) => (
+                  <Link
+                    key={relatedArtist.id}
+                    href={`/artist/${relatedArtist.slug}`}
+                    className="group flex flex-col items-center"
+                  >
+                    {/* Circular Image with Glow */}
+                    <div className="relative w-32 h-32 md:w-40 md:h-40 mb-6 transition-transform duration-500 group-hover:-translate-y-2">
+                      {/* Rotating Border Effect */}
+                      <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 opacity-0 group-hover:opacity-100 blur transition-opacity duration-500 animate-spin-slow" />
 
-                    <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-[#1a1a1a] group-hover:border-transparent transition-colors duration-300 shadow-2xl">
-                      <Image
-                        src={relatedArtist.image_url}
-                        alt={relatedArtist.name}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
+                      <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-[#1a1a1a] group-hover:border-transparent transition-colors duration-300 shadow-2xl">
+                        <Image
+                          src={relatedArtist.image_url}
+                          alt={relatedArtist.name}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Text Info */}
-                  <div className="text-center">
-                    <h3 className="text-lg font-bold text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-orange-400 group-hover:to-pink-500 transition-all duration-300">
-                      {relatedArtist.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1 uppercase tracking-wider font-medium">
-                      {(Array.isArray(relatedArtist.category)
-                        ? relatedArtist.category[0]
-                        : relatedArtist.category)}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+                    {/* Text Info */}
+                    <div className="text-center">
+                      <h3 className="text-lg font-bold text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-orange-400 group-hover:to-pink-500 transition-all duration-300">
+                        {relatedArtist.name}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1 uppercase tracking-wider font-medium">
+                        {(Array.isArray(relatedArtist.category)
+                          ? relatedArtist.category[0]
+                          : relatedArtist.category)}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )
+      }
 
       {/* Sticky Mobile Booking Bar */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0a0a0b]/95 backdrop-blur-xl border-t border-gray-800/50 md:hidden z-40">
