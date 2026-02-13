@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Users,
-  Calendar,
   FolderOpen,
   MessageSquare,
   TrendingUp,
@@ -14,7 +13,6 @@ import {
   CheckCircle,
   Loader2,
   Bell,
-  Package,
   LogOut,
 } from "lucide-react";
 
@@ -292,7 +290,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Secondary Actions Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           <Link
             href="/admin/inquiries"
             className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group relative overflow-hidden"
@@ -306,18 +304,6 @@ export default function AdminDashboard() {
             </div>
             <h3 className="font-semibold text-white mb-1">Inquiries</h3>
             <p className="text-xs text-gray-500">{requirementStats.total} Total</p>
-          </Link>
-
-          <Link
-            href="/admin/events"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group relative"
-          >
-            <ArrowUpRight className="absolute top-3 right-3 w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
-            <div className="w-10 h-10 bg-green-500/10 text-green-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-500/20 transition-colors">
-              <Calendar className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-white mb-1">Events</h3>
-            <p className="text-xs text-gray-500">Manage Types</p>
           </Link>
 
           <Link
@@ -342,18 +328,6 @@ export default function AdminDashboard() {
             </div>
             <h3 className="font-semibold text-white mb-1">Blogs</h3>
             <p className="text-xs text-gray-500">Posts & Updates</p>
-          </Link>
-
-          <Link
-            href="/admin/packages"
-            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group relative"
-          >
-            <ArrowUpRight className="absolute top-3 right-3 w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
-            <div className="w-10 h-10 bg-violet-500/10 text-violet-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-violet-500/20 transition-colors">
-              <Package className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-white mb-1">Packages</h3>
-            <p className="text-xs text-gray-500">Bundles</p>
           </Link>
         </div>
 
