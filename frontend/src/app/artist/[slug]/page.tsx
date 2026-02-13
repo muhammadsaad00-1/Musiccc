@@ -213,76 +213,17 @@ export default function ArtistPage({ params }: ArtistPageProps) {
     <div className="min-h-screen bg-[#0a0a0b]">
       {/* ============ HERO SECTION ============ */}
       <section className="relative h-[50vh] min-h-[400px] max-h-[550px] overflow-hidden">
-        {/* Cover Image Carousel */}
-        {artist.gallery_urls && artist.gallery_urls.length > 0 ? (
-          <>
-            {artist.gallery_urls.map((url: string, index: number) => (
-              <div
-                key={index}
-                className={`absolute inset-0 transition-opacity duration-1000 ${index === galleryIndex ? "opacity-100" : "opacity-0"
-                  }`}
-              >
-                <Image
-                  src={url}
-                  alt={`${artist.name} ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  priority={index === 0}
-                />
-              </div>
-            ))}
-
-            {/* Navigation Arrows */}
-            {artist.gallery_urls.length > 1 && (
-              <>
-                <button
-                  onClick={() =>
-                    setGalleryIndex(
-                      (prev) =>
-                        (prev - 1 + artist.gallery_urls.length) %
-                        artist.gallery_urls.length,
-                    )
-                  }
-                  className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-black/70 transition-all"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() =>
-                    setGalleryIndex(
-                      (prev) => (prev + 1) % artist.gallery_urls.length,
-                    )
-                  }
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-black/70 transition-all"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-
-                {/* Dots */}
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-                  {artist.gallery_urls.map((_: string, idx: number) => (
-                    <button
-                      key={idx}
-                      onClick={() => setGalleryIndex(idx)}
-                      className={`h-2 rounded-full transition-all ${idx === galleryIndex
-                        ? "w-8 bg-orange-500"
-                        : "w-2 bg-white/40 hover:bg-white/60"
-                        }`}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </>
-        ) : (
+        {/* Header Image */}
+        <div className="absolute inset-0">
           <Image
             src={artist.cover_image || artist.image_url}
             alt={artist.name}
             fill
             className="object-cover"
+            style={{ objectPosition: 'center 30%' }}
             priority
           />
-        )}
+        </div>
 
         {/* Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/40 to-transparent" />
@@ -292,11 +233,11 @@ export default function ArtistPage({ params }: ArtistPageProps) {
         <div className="absolute top-6 left-0 right-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Link
-              href={`/artists?category=${category?.name || "Artists"}`}
+              href={category && category.slug && category.slug !== 'artists' ? `/artists/${category.slug}` : `/artists`}
               className="inline-flex items-center gap-2 text-white hover:text-orange-400 transition-colors bg-black/40 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/10 hover:border-orange-500/50"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to {category?.name || "Artists"}
+              Back to {category?.name && category.name !== 'Artists' ? category.name : "Artists"}
             </Link>
           </div>
         </div>
@@ -719,11 +660,16 @@ export default function ArtistPage({ params }: ArtistPageProps) {
         </div>
       </section>
 
-      {/* ============ GOT QUESTIONS WA SECTION ============ */}
+
+
+      {/* ============ FAQ SECTION ============ */}
+      <ArtistFAQ artistName={artist.name} />
+
+      {/* ============ STILL GOT QUESTIONS WA SECTION ============ */}
       <section className="py-12 border-t border-gray-900 bg-[#0a0a0b] relative z-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h3 className="text-2xl font-bold text-white mb-3">
-            Got Questions about {artist.name}?
+            Still got Questions?
           </h3>
           <p className="text-gray-400 mb-6">
             Need to discuss availability, specific packages, or custom requirements?
@@ -739,10 +685,6 @@ export default function ArtistPage({ params }: ArtistPageProps) {
           </a>
         </div>
       </section>
-
-
-      {/* ============ FAQ SECTION ============ */}
-      <ArtistFAQ artistName={artist.name} />
 
       {/* ============ RELATED ARTISTS ============ */}
       {

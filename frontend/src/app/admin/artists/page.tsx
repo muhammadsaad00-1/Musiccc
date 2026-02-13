@@ -156,11 +156,13 @@ export default function ManageArtistsPage() {
         setShowAddModal(false);
         setShowEditModal(false);
       } else {
-        alert("Failed to save artist");
+        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }));
+        console.error("Server error response:", response.status, errorData);
+        alert(`Failed to save artist: ${errorData.detail || "Server error"}`);
       }
     } catch (error) {
-      console.error("Failed to save artist:", error);
-      alert("Failed to save artist");
+      console.error("Network or Fetch error:", error);
+      alert("Failed to save artist. Please check your connection and try again.");
     } finally {
       setSubmitting(false);
     }

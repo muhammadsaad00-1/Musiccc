@@ -12,16 +12,31 @@ const categoryIcons: Record<string, string> = {
     'Qawwals': '🎵',
     'Qawwal': '🎵',
     'Live Bands': '🎸',
+    'Band': '🎸',
     'Bhangra Artists': '💃',
+    'Bhangra': '💃',
     'DJs': '🎧',
     'DJ': '🎧',
-    'Musicians': '🎸',
-    'Musician': '🎸',
-    'Comedians': '😄',
-    'Comedian': '😄',
-    'Photographers': '📷',
-    'Photographer': '📷',
-    'Photography': '📷',
+    'Musicians': '🎹',
+    'Musician': '🎹',
+    'Comedians': '🎭',
+    'Comedian': '🎭',
+    'Photographers': '📸',
+    'Photographer': '📸',
+    'Photography': '📸',
+    'Sufi': '✨',
+    'Sufi Artists': '✨',
+    'Ghazal': '🎻',
+    'Ghazal Artists': '🎻',
+    'Folk': '🪕',
+    'Folk Singers': '🪕',
+    'Classical': '🎼',
+    'Classical Musicians': '🎼',
+    'Dancer': '👯',
+    'Anchor': '🎙️',
+    'Makeup Artist': '💄',
+    'Mehndi Artist': '🎨',
+    'Decorator': '🎈',
 };
 
 // Event types
@@ -57,10 +72,10 @@ export default function Header() {
                 if (response.ok) {
                     const categories = await response.json();
                     // Transform to include icon and hot flag
-                    const transformed = categories.slice(0, 8).map((cat: any) => ({
+                    const transformed = categories.map((cat: any) => ({
                         name: cat.name,
                         slug: cat.slug,
-                        icon: categoryIcons[cat.name] || '🎵',
+                        icon: categoryIcons[cat.name] || categoryIcons[cat.name?.split(' ')[0]] || '🎵',
                         hot: cat.artist_count > 10, // Mark as hot if has more than 10 artists
                     }));
                     setArtistCategories(transformed);
@@ -126,7 +141,7 @@ export default function Header() {
                                                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                                                     <Star className="w-3 h-3" /> Artists
                                                 </h3>
-                                                <div className="space-y-3">
+                                                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                                     {artistCategories.map((category) => (
                                                         <Link
                                                             key={category.slug}
@@ -140,6 +155,13 @@ export default function Header() {
                                                             )}
                                                         </Link>
                                                     ))}
+                                                    <Link
+                                                        href="/categories"
+                                                        className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-all duration-200 pt-2 border-t border-gray-800 font-bold"
+                                                    >
+                                                        <span>📂</span>
+                                                        <span className="text-sm">View All Categories</span>
+                                                    </Link>
                                                 </div>
                                             </div>
 
@@ -182,7 +204,7 @@ export default function Header() {
 
                                                 {/* Quick CTA */}
                                                 <Link
-                                                    href="/search"
+                                                    href="/artists"
                                                     className="mt-6 block px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-600 text-white text-center text-sm font-semibold rounded-lg hover:shadow-lg hover:shadow-pink-500/30 transition-all"
                                                 >
                                                     Browse All Artists
@@ -231,7 +253,7 @@ export default function Header() {
                     {/* Right Section */}
                     <div className="hidden lg:flex items-center space-x-4">
                         <Link
-                            href="/search"
+                            href="/artists"
                             className="p-2 text-gray-400 hover:text-white transition-colors"
                         >
                             <Search className="w-5 h-5" />

@@ -3,7 +3,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, ArrowRight, Loader2, Calendar, Users, CheckCircle, MapPin, Music, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Calendar, Users, CheckCircle, MapPin, Music, ChevronDown, Star } from 'lucide-react';
 import { useState, useEffect, use } from 'react';
 import ArtistCard from '@/components/artists/ArtistCard';
 import FAQSection from '@/components/ui/FAQSection';
@@ -107,6 +107,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
     const [relevantCategories, setRelevantCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [heroImageIndex, setHeroImageIndex] = useState(0);
+    const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
     // Auto-advance hero carousel
     useEffect(() => {
@@ -208,11 +209,11 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                 const eventCategoryMap: Record<string, string[]> = {
                     'wedding': ['singer', 'dj', 'musician', 'dancer', 'photographer', 'band', 'live band', 'bhangra', 'qawwal'],
                     'mehendi': ['singer', 'dancer', 'dj', 'musician', 'bhangra', 'band', 'qawwal'],
-                    'concert': ['singer', 'musician', 'dj', 'band', 'live band', 'qawwal'],
+                    'concert': ['singer', 'musician', 'dj', 'band', 'live band', 'qawwal', 'bhangra', 'punjabi'],
                     'corporate': ['singer', 'dj', 'musician', 'anchor', 'band', 'qawwal'],
                     'birthday': ['singer', 'dj', 'comedian', 'dancer', 'musician', 'bhangra', 'qawwal'],
                     'private-party': ['singer', 'dj', 'musician', 'band', 'bhangra', 'qawwal'],
-                    'milad': ['singer', 'qawwal', 'musician', 'naat'],
+                    'milad': ['qawwal', 'musician', 'naat', 'sufi'],
                 };
 
                 const relevantKeywords = eventCategoryMap[eventType] || ['singer', 'dj', 'musician'];
@@ -234,6 +235,11 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                         matchesKeywords(cat.name)
                     );
                     setRelevantCategories(filteredCategories);
+
+                    // Set initial active category if available
+                    if (filteredCategories.length > 0) {
+                        setActiveCategory(filteredCategories[0].name.toLowerCase());
+                    }
                 }
 
                 // Fetch all performers
@@ -380,131 +386,98 @@ export default function EventTypePage({ params }: EventTypePageProps) {
             </section>
 
             {/* Artists Grouped by Category */}
-            <section className="py-16">
+            <section className="py-20 bg-[#0a0a0b]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Section Header */}
-                    <div className="flex items-center justify-between mb-10">
-                        <div>
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500/10 to-pink-600/10 rounded-full text-orange-400 text-sm font-medium mb-4 border border-orange-500/20">
-                                <Music className="w-4 h-4" />
-                                <span>Artists for {event.name}</span>
-                            </div>
-                            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-                                Perfect for Your{' '}
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">
-                                    {event.name}
-                                </span>
-                            </h2>
-                            <p className="text-gray-400">
-                                {relevantArtists.length > 0
-                                    ? `Handpicked performers to make your ${event.name.toLowerCase()} extraordinary`
-                                    : 'Post your requirements and we\'ll find the perfect match'}
-                            </p>
+                    <div className="text-center mb-16">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 rounded-full text-orange-400 text-sm font-medium mb-6 border border-orange-500/20">
+                            <Star className="w-4 h-4" />
+                            <span>Recommended Talent</span>
                         </div>
-                        {relevantArtists.length > 0 && (
-                            <Link
-                                href="/artists"
-                                className="hidden sm:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full font-medium hover:shadow-lg hover:shadow-pink-500/30 transition-all"
-                            >
-                                View All <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        )}
+                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                            Best for <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">{event.name}s</span>
+                        </h2>
+                        <p className="text-gray-400 max-w-2xl mx-auto">
+                            Handpicked performers specialized in {event.name.toLowerCase()} entertainment.
+                            Choose a category to explore our top choices.
+                        </p>
                     </div>
 
-                    {relevantCategories.length > 0 ? (
-                        <div className="space-y-16">
-                            {relevantCategories.map((category) => {
-                                // Find artists matching this category (category_id is now an array)
-                                const catName = category.name.toLowerCase();
-                                const catSlug = (category.slug || '').toLowerCase();
-                                const categoryArtists = relevantArtists.filter(
-                                    (artist) => {
+                    {relevantCategories.length > 0 && (
+                        <div className="mb-12">
+                            {/* Category Selection Buttons */}
+                            <div className="flex flex-wrap justify-center gap-3 mb-12">
+                                {relevantCategories.map((category) => {
+                                    const isActive = activeCategory === category.name.toLowerCase();
+                                    return (
+                                        <button
+                                            key={category.id}
+                                            onClick={() => setActiveCategory(category.name.toLowerCase())}
+                                            className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all border ${isActive
+                                                ? 'bg-gradient-to-r from-orange-500 to-pink-600 border-transparent text-white shadow-lg shadow-orange-500/20'
+                                                : 'bg-[#1a1a1a] border-gray-800 text-gray-400 hover:border-gray-600 hover:text-white'
+                                                }`}
+                                        >
+                                            {category.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Artist Grid for Selected Category */}
+                            <div className="min-h-[400px]">
+                                {(() => {
+                                    const currentCategory = activeCategory;
+                                    const categoryArtists = relevantArtists.filter((artist) => {
                                         const cats = Array.isArray(artist.category_id)
                                             ? artist.category_id
                                             : [artist.category_id || ''];
                                         return cats.some((c: string) => {
                                             const artCat = c.toLowerCase();
-                                            return artCat === catName ||
-                                                artCat === catSlug ||
-                                                catName.includes(artCat) ||
-                                                artCat.includes(catName);
+                                            return currentCategory && (
+                                                artCat === currentCategory ||
+                                                currentCategory.includes(artCat) ||
+                                                artCat.includes(currentCategory)
+                                            );
                                         });
-                                    }
-                                );
+                                    });
 
-                                return (
-                                    <div key={category.id}>
-                                        {/* Category Header */}
-                                        <div className="flex items-center justify-between mb-6">
-                                            <div className="flex items-center gap-4">
-                                                {category.image_url && (
-                                                    <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-gray-700 flex-shrink-0">
-                                                        <Image
-                                                            src={category.image_url}
-                                                            alt={category.name}
-                                                            fill
-                                                            className="object-cover"
-                                                        />
-                                                    </div>
-                                                )}
-                                                <div>
-                                                    <h3 className="text-2xl font-bold text-white">
-                                                        {category.name}
-                                                    </h3>
-                                                    <p className="text-sm text-gray-500">
-                                                        {categoryArtists.length} {categoryArtists.length === 1 ? 'artist' : 'artists'} available
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <Link
-                                                href={`/artists/${category.slug}`}
-                                                className="flex items-center gap-1.5 text-orange-400 hover:text-orange-300 text-sm font-medium transition-colors"
-                                            >
-                                                View all {category.name}
-                                                <ArrowRight className="w-4 h-4" />
-                                            </Link>
-                                        </div>
-
-                                        {/* Category Artists */}
-                                        {categoryArtists.length > 0 ? (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                    if (categoryArtists.length > 0) {
+                                        return (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                                                 {categoryArtists.map((artist) => (
                                                     <ArtistCard key={artist.id} artist={artist} />
                                                 ))}
                                             </div>
-                                        ) : (
-                                            <div className="bg-[#1a1a1a] rounded-2xl border border-gray-800/50 p-8 text-center">
-                                                <p className="text-gray-500 text-sm">
-                                                    No {category.name.toLowerCase()} listed for this event yet.{' '}
-                                                    <Link href={`/artists/${category.slug}`} className="text-orange-400 hover:underline">
-                                                        Browse all {category.name}
-                                                    </Link>
-                                                </p>
-                                            </div>
-                                        )}
+                                        );
+                                    }
 
-                                        {/* Divider */}
-                                        <div className="mt-12 h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent" />
-                                    </div>
-                                );
-                            })}
+                                    return (
+                                        <div className="text-center py-20 bg-[#141414] rounded-3xl border border-gray-800/50">
+                                            <p className="text-gray-500">No {activeCategory} listed for this event type yet.</p>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </div>
-                    ) : relevantArtists.length > 0 ? (
-                        /* Fallback: show all artists without category grouping */
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    )}
+
+                    {!relevantCategories.length && relevantArtists.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                             {relevantArtists.map((artist) => (
                                 <ArtistCard key={artist.id} artist={artist} />
                             ))}
                         </div>
-                    ) : (
-                        <div className="text-center py-16 bg-gradient-to-b from-[#1a1a1a]/50 to-[#151515]/50 rounded-3xl border border-gray-800/50">
+                    )}
+
+                    {!relevantArtists.length && !loading && (
+                        <div className="text-center py-20 bg-[#1a1a1a]/50 rounded-3xl border border-gray-800/50">
                             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center">
                                 <Music className="w-10 h-10 text-orange-400" />
                             </div>
                             <h3 className="text-xl font-semibold text-white mb-2">No Artists Listed Yet</h3>
                             <p className="text-gray-500 mb-8 max-w-md mx-auto">
                                 We're working on adding amazing artists for {event.name} events.
-                                Post your requirements and we'll personally match you with the best talent.
                             </p>
                             <Link
                                 href="/post-requirement"

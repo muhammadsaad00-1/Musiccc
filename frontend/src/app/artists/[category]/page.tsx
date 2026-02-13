@@ -262,13 +262,13 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16">
           <Link
-            href="/"
+            href="/artists"
             className="inline-flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-8 group"
           >
             <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/20 transition-all">
               <ArrowLeft className="w-4 h-4" />
             </div>
-            <span className="text-sm font-medium">Back to Home</span>
+            <span className="text-sm font-medium">Back to Artists</span>
           </Link>
 
           <div className="text-center max-w-4xl mx-auto">

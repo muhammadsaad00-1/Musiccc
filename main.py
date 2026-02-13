@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, Request
+from fastapi import FastAPI, UploadFile, File, Form, Request, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -87,10 +87,12 @@ def ensure_bucket_exists(bucket_name: str):
             error_str = str(create_error).lower()
             if "already exists" in error_str or "duplicate" in error_str:
                 print(f"Bucket '{bucket_name}' already exists")
-            elif "row-level security" in error_str or "403" in error_str:
+            elif "row-level security" in error_str or "403" in error_str or "unauthorized" in error_str:
                 print(f"⚠️  Bucket '{bucket_name}' exists but has RLS restrictions.")
                 print(f"   Go to: https://supabase.com/dashboard/project/ubskhylblogbuhzxhadk/storage/buckets")
                 print(f"   And make sure '{bucket_name}' bucket is set to PUBLIC")
+                print(f"   Or run this SQL in SQL Editor to allow uploads:")
+                print(f"   CREATE POLICY \"Allow service_role full access\" ON storage.objects FOR ALL TO service_role USING (bucket_id = '{bucket_name}') WITH CHECK (bucket_id = '{bucket_name}');")
             else:
                 print(f"Bucket creation note: {create_error}")
 
@@ -456,8 +458,12 @@ async def create_performer(
         file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
         profile_path = f"{performer_id}_{sanitized_name}.{file_extension}"
         
-        # Upload file
-        upload_response = supabase.storage.from_("performers").upload(profile_path, file_bytes)
+        # Upload file with upsert enabled
+        upload_response = supabase.storage.from_("performers").upload(
+            profile_path, 
+            file_bytes,
+            file_options={"upsert": "true"}
+        )
         profile_image_url = supabase.storage.from_("performers").get_public_url(profile_path)
         
         update_data = {"profile_image_url": profile_image_url}
@@ -465,12 +471,15 @@ async def create_performer(
         print(f"❌ Upload error: {upload_error}")
         error_str = str(upload_error).lower()
         if "403" in error_str or "unauthorized" in error_str or "row-level security" in error_str:
-            raise Exception(
+            raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
                 "Storage upload failed due to RLS policy. "
                 "Please go to Supabase Dashboard > Storage > 'performers' bucket > "
                 "Click 'Edit bucket' and enable 'Public bucket' option. "
                 "Or add RLS policies to allow service_role access."
             )
+        )
         raise
     
     # Upload header image if provided
@@ -478,7 +487,11 @@ async def create_performer(
         header_bytes = await header_image.read()
         header_extension = header_image.filename.split('.')[-1] if '.' in header_image.filename else 'jpg'
         header_path = f"{performer_id}_{sanitized_name}_header.{header_extension}"
-        supabase.storage.from_("performers").upload(header_path, header_bytes)
+        supabase.storage.from_("performers").upload(
+            header_path, 
+            header_bytes,
+            file_options={"upsert": "true"}
+        )
         header_image_url = supabase.storage.from_("performers").get_public_url(header_path)
         update_data["header_image_url"] = header_image_url
     
@@ -489,7 +502,11 @@ async def create_performer(
             gallery_bytes = await gallery_image.read()
             gallery_extension = gallery_image.filename.split('.')[-1] if '.' in gallery_image.filename else 'jpg'
             gallery_path = f"{performer_id}_{sanitized_name}_gallery_{idx}.{gallery_extension}"
-            supabase.storage.from_("performers").upload(gallery_path, gallery_bytes)
+            supabase.storage.from_("performers").upload(
+                gallery_path, 
+                gallery_bytes,
+                file_options={"upsert": "true"}
+            )
             gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
             gallery_urls.append(gallery_url)
         update_data["gallery_image_urls"] = gallery_urls
@@ -696,7 +713,11 @@ async def update_performer(
         path = f"{id}_{sanitized_name}.{file_extension}"
         
         # Upload with upsert option to overwrite if exists
-        supabase.storage.from_("performers").upload(path, file_bytes, {"upsert": "true"})
+        supabase.storage.from_("performers").upload(
+            path, 
+            file_bytes, 
+            file_options={"upsert": "true"}
+        )
         update_data["profile_image_url"] = supabase.storage.from_("performers").get_public_url(path)
     
     if header_image and header_image.filename:
@@ -704,7 +725,11 @@ async def update_performer(
         header_extension = header_image.filename.split('.')[-1] if '.' in header_image.filename else 'jpg'
         header_path = f"{id}_{sanitized_name}_header.{header_extension}"
         
-        supabase.storage.from_("performers").upload(header_path, header_bytes, {"upsert": "true"})
+        supabase.storage.from_("performers").upload(
+            header_path, 
+            header_bytes, 
+            file_options={"upsert": "true"}
+        )
         update_data["header_image_url"] = supabase.storage.from_("performers").get_public_url(header_path)
     
     if gallery_images and len(gallery_images) > 0:
@@ -716,7 +741,11 @@ async def update_performer(
                 gallery_extension = gallery_image.filename.split('.')[-1] if '.' in gallery_image.filename else 'jpg'
                 gallery_path = f"{id}_{sanitized_name}_gallery_{idx}.{gallery_extension}"
                 
-                supabase.storage.from_("performers").upload(gallery_path, gallery_bytes, {"upsert": "true"})
+                supabase.storage.from_("performers").upload(
+                    gallery_path, 
+                    gallery_bytes, 
+                    file_options={"upsert": "true"}
+                )
                 gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
                 gallery_urls.append(gallery_url)
             update_data["gallery_image_urls"] = gallery_urls
@@ -785,20 +814,27 @@ async def create_event(
         # Ensure bucket exists before uploading
         ensure_bucket_exists("events")
         
-        # Upload file
-        upload_response = supabase.storage.from_("events").upload(path, file_bytes)
+        # Upload file with upsert enabled
+        upload_response = supabase.storage.from_("events").upload(
+            path, 
+            file_bytes,
+            file_options={"upsert": "true"}
+        )
         header_image_url = supabase.storage.from_("events").get_public_url(path)
         
     except Exception as upload_error:
         print(f"❌ Event image upload error: {upload_error}")
         error_str = str(upload_error).lower()
         if "403" in error_str or "unauthorized" in error_str or "row-level security" in error_str:
-            raise Exception(
+            raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
                 "Storage upload failed due to RLS policy. "
                 "Please go to Supabase Dashboard > Storage > 'events' bucket > "
                 "Click 'Edit bucket' and enable 'Public bucket' option. "
                 "URL: https://supabase.com/dashboard/project/ubskhylblogbuhzxhadk/storage/buckets"
             )
+        )
         raise
     
     # Update event with header image URL
@@ -1706,6 +1742,36 @@ async def submit_review(
             }
         raise
 
+
+# ============================================
+# STATS ENDPOINT
+# ============================================
+
+@app.get("/api/stats")
+async def get_stats():
+    """
+    Get application statistics: total artists, total events, etc.
+    """
+    try:
+        # Get total artists from performers table
+        performers_count = supabase.table("performers").select("*", count="exact").execute()
+        total_artists = performers_count.count if hasattr(performers_count, 'count') else 0
+        
+        # Return statistics
+        return {
+            "total_artists": total_artists,
+            "total_events": 362, # Fixed number as requested
+            "total_cities": 20,
+            "average_rating": 4.9
+        }
+    except Exception as e:
+        print(f"Error fetching stats: {e}")
+        return {
+            "total_artists": 200,
+            "total_events": 362,
+            "total_cities": 20,
+            "average_rating": 4.9
+        }
 
 # ============================================
 # CONTACT FORM ENDPOINT

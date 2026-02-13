@@ -9,6 +9,7 @@ import FAQSection from '@/components/ui/FAQSection';
 import {
     Loader2, ArrowLeft, Music, Users, Search, Sparkles
 } from 'lucide-react';
+import Pagination from '@/components/ui/Pagination';
 import { Artist } from '@/types';
 
 // Hero background images
@@ -42,6 +43,10 @@ export default function AllArtistsPage() {
     const [availableCategories, setAvailableCategories] = useState<string[]>([]);
     const [heroImageIndex, setHeroImageIndex] = useState(0);
 
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;
+
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
@@ -53,6 +58,11 @@ export default function AllArtistsPage() {
             setCategoryFilter(categoryParam);
         }
     }, [searchParams]);
+
+    // Reset pagination when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, categoryFilter]);
 
     // Auto-advance hero carousel
     useEffect(() => {
@@ -111,6 +121,18 @@ export default function AllArtistsPage() {
 
         return result;
     })();
+
+    // Paginated artists
+    const totalPages = Math.ceil(filteredArtists.length / itemsPerPage);
+    const paginatedArtists = filteredArtists.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 500, behavior: 'smooth' });
+    };
 
     const hasFilters = !!(searchQuery || categoryFilter);
 
@@ -254,9 +276,12 @@ export default function AllArtistsPage() {
             <section className="py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Results count */}
-                    <div className="mb-8">
+                    <div className="mb-8 flex justify-between items-center">
                         <p className="text-gray-400">
-                            Showing <span className="text-white font-semibold">{filteredArtists.length}</span> artists
+                            Showing <span className="text-white font-semibold">
+                                {paginatedArtists.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}-
+                                {Math.min(currentPage * itemsPerPage, filteredArtists.length)}
+                            </span> of <span className="text-white font-semibold">{filteredArtists.length}</span> artists
                         </p>
                     </div>
 
@@ -264,12 +289,20 @@ export default function AllArtistsPage() {
                         <div className="flex items-center justify-center py-20">
                             <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
                         </div>
-                    ) : filteredArtists.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filteredArtists.map((artist) => (
-                                <ArtistCard key={artist.id} artist={artist} />
-                            ))}
-                        </div>
+                    ) : paginatedArtists.length > 0 ? (
+                        <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {paginatedArtists.map((artist) => (
+                                    <ArtistCard key={artist.id} artist={artist} />
+                                ))}
+                            </div>
+
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
+                            />
+                        </>
                     ) : (
                         <div className="text-center py-16 bg-gradient-to-b from-[#1a1a1a]/50 to-[#151515]/50 rounded-3xl border border-gray-800/50">
                             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center">

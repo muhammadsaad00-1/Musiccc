@@ -47,7 +47,7 @@ export default function ReviewsCarousel({ artistId, className }: { artistId?: st
 
         const timer = setInterval(() => {
             setCurrentIndex((prev) => (prev + 1) % reviews.length);
-        }, 5000);
+        }, 2000); // 2 seconds per user request
 
         return () => clearInterval(timer);
     }, [reviews.length, isPaused]);

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import Hero from '@/components/home/Hero';
 import FeaturedArtists from '@/components/home/FeaturedArtists';
@@ -30,6 +31,15 @@ export default function Home() {
             </p>
           </div>
           <ReviewsCarousel />
+          <div className="mt-12 text-center">
+            <Link
+              href="/reviews"
+              className="text-orange-400 hover:text-orange-300 font-bold flex items-center justify-center gap-2 group"
+            >
+              View All Reviews & Leave Yours
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </Link>
+          </div>
         </div>
       </section>
 

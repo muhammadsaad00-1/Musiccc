@@ -99,14 +99,19 @@ export default function CategoryGrid() {
         { x: 95, y: 40, length: 100, delay: 1.0 },
     ];
 
-    const displayCategories = categories.slice(0, 6);
+    const displayCategories = categories.slice(0, 8);
 
     return (
         <section className="relative py-24 bg-[#0a0a0b] overflow-hidden min-h-[800px]">
             {/* Background Atmosphere */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-orange-600/5 rounded-full blur-[100px]" />
-                <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-pink-600/5 rounded-full blur-[100px]" />
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-orange-500/10 rounded-full blur-[150px] animate-pulse" />
+                <div className="absolute bottom-0 right-1/4 w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[150px] animate-pulse delay-1000" />
+
+                {/* Studio Spotlights - Multiple points for depth */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,_rgba(255,255,255,0.06)_0%,_transparent_60%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_60%,_rgba(249,115,22,0.04)_0%,_transparent_50%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_60%,_rgba(99,102,241,0.04)_0%,_transparent_50%)]" />
             </div>
 
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
@@ -134,13 +139,49 @@ export default function CategoryGrid() {
                             stroke="url(#threadGradient)"
                             strokeWidth="3"
                             vectorEffect="non-scaling-stroke"
-                            className="drop-shadow-[0_0_10px_rgba(249,115,22,0.3)]"
+                            className="drop-shadow-[0_0_15px_rgba(249,115,22,0.4)]"
                         />
+
+                        {/* Fairy Lights along the path */}
+                        {[...Array(15)].map((_, i) => {
+                            const t = i / 14;
+                            // Quadratic Bezier: (1-t)^2*P0 + 2(1-t)*t*P1 + t^2*P2
+                            // P0=(0,50), P1=(640,250), P2=(1280,50)
+                            const cx = Math.pow(1 - t, 2) * 0 + 2 * (1 - t) * t * 640 + Math.pow(t, 2) * 1280;
+                            const cy = Math.pow(1 - t, 2) * 50 + 2 * (1 - t) * t * 250 + Math.pow(t, 2) * 50;
+
+                            return (
+                                <g key={i}>
+                                    {/* Outer Bloom */}
+                                    <circle
+                                        cx={cx}
+                                        cy={cy}
+                                        r="6"
+                                        fill="white"
+                                        className="animate-pulse opacity-20"
+                                        style={{ animationDelay: `${i * 0.2}s` }}
+                                    />
+                                    {/* Inner Light */}
+                                    <circle
+                                        cx={cx}
+                                        cy={cy}
+                                        r="2"
+                                        fill="white"
+                                        className="animate-pulse"
+                                        style={{
+                                            animationDelay: `${i * 0.2}s`,
+                                            filter: 'drop-shadow(0 0 5px white)'
+                                        }}
+                                    />
+                                </g>
+                            );
+                        })}
+
                         <defs>
                             <linearGradient id="threadGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" stopColor="#f97316" stopOpacity="0.4" />
-                                <stop offset="50%" stopColor="#db2777" stopOpacity="0.8" />
-                                <stop offset="100%" stopColor="#f97316" stopOpacity="0.4" />
+                                <stop offset="0%" stopColor="#f97316" stopOpacity="0.6" />
+                                <stop offset="50%" stopColor="#db2777" stopOpacity="0.9" />
+                                <stop offset="100%" stopColor="#f97316" stopOpacity="0.6" />
                             </linearGradient>
                         </defs>
                     </svg>
@@ -216,8 +257,10 @@ export default function CategoryGrid() {
                     })}
                 </div>
 
-                {/* Mobile Fallback: Standard Grid (since complex physics/thread is hard on small screens) */}
-                <div className="lg:hidden grid grid-cols-2 gap-4 mt-8">
+                <div className="lg:hidden grid grid-cols-2 gap-4 mt-8 relative">
+                    {/* Atmospheric glow for mobile */}
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(249,115,22,0.05)_0%,_transparent_70%)] pointer-events-none" />
+
                     {categories.slice(0, 6).map((category) => (
                         <Link
                             key={category.id}
@@ -235,7 +278,7 @@ export default function CategoryGrid() {
                 {/* View All Button */}
                 <div className="text-center mt-20 relative z-20">
                     <Link
-                        href="/artists"
+                        href="/categories"
                         className="inline-flex items-center gap-2 px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white font-medium transition-all hover:scale-105"
                     >
                         View All Categories
