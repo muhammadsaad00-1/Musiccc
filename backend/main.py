@@ -12,7 +12,6 @@ from slowapi.errors import RateLimitExceeded
 from cachetools import TTLCache
 import hashlib
 from email_service import send_requirement_notification, send_contact_message
-from dotenv import load_dotenv
 import os
 
 # Initialize rate limiter
@@ -20,7 +19,6 @@ limiter = Limiter(key_func=get_remote_address)
 
 # Initialize cache (maxsize=1000 items, TTL=300 seconds = 5 minutes)
 cache = TTLCache(maxsize=1000, ttl=300)
-load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -1825,131 +1823,3 @@ async def submit_contact_form(
             "message": "An error occurred. Please try again later."
         }
 
-
-# @app.post("/api/submit-requirement")
-# @limiter.limit("5/minute")
-# async def submit_requirement(
-#     request: Request,
-#     eventType: str = Form(...),
-#     eventDate: str = Form(...),
-#     eventLocation: str = Form(...),
-#     budget: str = Form(None),
-#     artistType: str = Form(...),
-#     name: str = Form(...),
-#     email: str = Form(...),
-#     phone: str = Form(...),
-#     message: str = Form(None)
-# ):
-#     import smtplib
-#     from email.mime.text import MIMEText
-#     from email.mime.multipart import MIMEMultipart
-#     from datetime import datetime
-    
-#     # Store requirement in database
-#     try:
-#         supabase.table("requirements").insert({
-#             "event_type": eventType,
-#             "event_date": eventDate,
-#             "event_location": eventLocation,
-#             "budget": budget,
-#             "artist_type": artistType,
-#             "customer_name": name,
-#             "customer_email": email,
-#             "customer_phone": phone,
-#             "message": message,
-#             "status": "pending"
-#         }).execute()
-#     except Exception as e:
-#         print(f"Database error: {e}")
-    
-#     # Send confirmation email to customer
-#     try:
-#         # Email configuration (CHANGE THESE VALUES)
-#         SMTP_SERVER = "smtp.gmail.com"
-#         SMTP_PORT = 587
-#         SENDER_EMAIL = "your-email@gmail.com"  # Change this
-#         SENDER_PASSWORD = "your-app-password"  # Change this (use app password for Gmail)
-        
-#         # Create email content
-#         msg = MIMEMultipart('alternative')
-#         msg['Subject'] = 'Event Booking Request Received - We\'ll Get Back to You Soon!'
-#         msg['From'] = SENDER_EMAIL
-#         msg['To'] = email
-        
-#         # HTML email body
-#         html_body = f"""
-#         <html>
-#             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-#                 <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-#                     <div style="background: linear-gradient(135deg, #f97316 0%, #ec4899 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-#                         <h1 style="color: white; margin: 0;">Thank You for Your Request!</h1>
-#                     </div>
-                    
-#                     <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px;">
-#                         <p>Dear {name},</p>
-                        
-#                         <p>Thank you for submitting your event requirement. We have received your request and our team will review it carefully.</p>
-                        
-#                         <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-#                             <h3 style="margin-top: 0; color: #f97316;">Your Request Details:</h3>
-#                             <table style="width: 100%; border-collapse: collapse;">
-#                                 <tr>
-#                                     <td style="padding: 8px 0; font-weight: bold;">Event Type:</td>
-#                                     <td style="padding: 8px 0;">{eventType}</td>
-#                                 </tr>
-#                                 <tr>
-#                                     <td style="padding: 8px 0; font-weight: bold;">Event Date:</td>
-#                                     <td style="padding: 8px 0;">{eventDate}</td>
-#                                 </tr>
-#                                 <tr>
-#                                     <td style="padding: 8px 0; font-weight: bold;">Location:</td>
-#                                     <td style="padding: 8px 0;">{eventLocation}</td>
-#                                 </tr>
-#                                 <tr>
-#                                     <td style="padding: 8px 0; font-weight: bold;">Artist Type:</td>
-#                                     <td style="padding: 8px 0;">{artistType}</td>
-#                                 </tr>
-#                                 {f'<tr><td style="padding: 8px 0; font-weight: bold;">Budget:</td><td style="padding: 8px 0;">{budget}</td></tr>' if budget else ''}
-#                             </table>
-#                         </div>
-                        
-#                         <p><strong>What happens next?</strong></p>
-#                         <ul>
-#                             <li>Our team will review your requirements within 24 hours</li>
-#                             <li>We'll match you with the best available artists</li>
-#                             <li>You'll receive personalized recommendations via email</li>
-#                             <li>One of our coordinators will contact you on {phone}</li>
-#                         </ul>
-                        
-#                         <p>If you have any urgent queries, feel free to reach out to us.</p>
-                        
-#                         <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #f3f4f6;">
-#                             <p style="color: #666; font-size: 14px;">Best regards,<br><strong>The Event Team</strong></p>
-#                         </div>
-#                     </div>
-#                 </div>
-#             </body>
-#         </html>
-#         """
-        
-#         html_part = MIMEText(html_body, 'html')
-#         msg.attach(html_part)
-        
-#         # Send email
-#         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-#             server.starttls()
-#             server.login(SENDER_EMAIL, SENDER_PASSWORD)
-#             server.send_message(msg)
-            
-#         return {
-#             "message": "Requirement submitted successfully",
-#             "email_sent": True
-#         }
-        
-#     except Exception as e:
-#         print(f"Email error: {e}")
-#         return {
-#             "message": "Requirement submitted successfully",
-#             "email_sent": False,
-#             "email_error": str(e)
-#         }
