@@ -18,8 +18,11 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the app
+# Copy backend files
 COPY . .
+
+# Copy frontend folder from parent directory
+COPY ../Frontend ./frontend
 
 # Run the app using the Python start script
 CMD ["python", "start.py"]
