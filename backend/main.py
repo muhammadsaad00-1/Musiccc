@@ -102,7 +102,7 @@ def ensure_bucket_exists(bucket_name: str):
                 print(f"Bucket creation note: {create_error}")
 
 # Mount static files for frontend
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+# app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 # Serve frontend pages
 @app.get("/")
