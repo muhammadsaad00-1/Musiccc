@@ -105,16 +105,19 @@ def ensure_bucket_exists(bucket_name: str):
 # app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 # Serve frontend pages
+# @app.get("/")
+# @limiter.limit("60/minute")
+# def read_root(request: Request):
+#     return FileResponse("frontend/user/index.html")
+
+# @app.get("/admin")
+# @limiter.limit("30/minute")
+# def read_admin(request: Request):
+#     return FileResponse("frontend/admin/admin.html")
+
 @app.get("/")
-@limiter.limit("60/minute")
-def read_root(request: Request):
-    return FileResponse("frontend/user/index.html")
-
-@app.get("/admin")
-@limiter.limit("30/minute")
-def read_admin(request: Request):
-    return FileResponse("frontend/admin/admin.html")
-
+def health_check():
+    return {"status": "ok", "message": "Welcome to Musiccc API!"}
 
 # ============================================
 # ADMIN AUTHENTICATION ENDPOINTS
