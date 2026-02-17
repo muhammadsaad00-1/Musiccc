@@ -6,6 +6,7 @@ import ArtistCard from "@/components/artists/ArtistCard";
 import { Search, Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import FAQSection from "@/components/ui/FAQSection";
+import { API_BASE_URL } from '@/lib/api';
 
 // Transform backend performer to frontend artist format
 function transformPerformerToArtist(performer: any): any {
@@ -47,7 +48,7 @@ function SearchContent() {
     async function fetchPerformers() {
       setLoading(true);
       try {
-        const response = await fetch("http://127.0.0.1:8000/performers");
+        const response = await fetch(`${API_BASE_URL}/performers`);
         if (response.ok) {
           const performers = await response.json();
           const transformedPerformers = performers.map(
@@ -72,7 +73,7 @@ function SearchContent() {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const response = await fetch("http://127.0.0.1:8000/categories");
+        const response = await fetch(`${API_BASE_URL}/categories`);
         if (response.ok) {
           const data = await response.json();
           setCategories(data || []);

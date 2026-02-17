@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'https://artistfactorybackend-340951229057.us-central1.run.app';
 let editingPerformerId = null;
 let editingEventId = null;
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Lock, Loader2, User } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { API_BASE_URL } from '@/lib/api';
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function AdminLogin() {
 
     try {
       // Call backend authentication endpoint
-      const response = await fetch("http://127.0.0.1:8000/api/admin/login", {
+      const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

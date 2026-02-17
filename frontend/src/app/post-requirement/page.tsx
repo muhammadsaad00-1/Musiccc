@@ -31,6 +31,7 @@ import {
   User2,
 } from "lucide-react";
 import { eventTypes, cities } from "@/lib/mockData";
+import { API_BASE_URL } from '@/lib/api';
 
 // Floating particles component for background
 const FloatingParticles = () => {
@@ -174,7 +175,7 @@ export default function PostRequirementPage() {
     // Handle artist pre-fill
     if (artistSlug) {
       setLoadingArtist(true);
-      fetch(`http://127.0.0.1:8000/performers/by-name/${encodeURIComponent(artistSlug)}`)
+      fetch(`${API_BASE_URL}/performers/by-name/${encodeURIComponent(artistSlug)}`)
         .then((response) => response.json())
         .then((data) => {
           if (!data.error) {
@@ -199,7 +200,7 @@ export default function PostRequirementPage() {
     // Handle package pre-fill
     if (packageId) {
       setLoadingPackage(true);
-      fetch(`http://127.0.0.1:8000/packages/${packageId}`)
+      fetch(`${API_BASE_URL}/packages/${packageId}`)
         .then((response) => response.json())
         .then((data) => {
           if (!data.error) {
@@ -254,7 +255,7 @@ export default function PostRequirementPage() {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const response = await fetch('http://127.0.0.1:8000/categories');
+        const response = await fetch(`${API_BASE_URL}/categories`);
         if (response.ok) {
           const data = await response.json();
           setCategories(data);
@@ -323,7 +324,7 @@ export default function PostRequirementPage() {
       }
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/submit-requirement",
+        `${API_BASE_URL}/api/submit-requirement`,
         {
           method: "POST",
           body: submitData,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Star, Loader2, MessageSquare, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 
 interface Review {
     id: string;
@@ -21,8 +22,8 @@ export default function ReviewsCarousel({ artistId, className }: { artistId?: st
         const fetchReviews = async () => {
             try {
                 const url = artistId
-                    ? `http://127.0.0.1:8000/api/reviews?artist_id=${artistId}`
-                    : 'http://127.0.0.1:8000/api/reviews?limit=20';
+                    ? `${API_BASE_URL}/api/reviews?artist_id=${artistId}`
+                    : `${API_BASE_URL}/api/reviews?limit=20`;
 
                 const response = await fetch(url);
                 if (response.ok) {

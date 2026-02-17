@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Loader2, Calendar, Users, CheckCircle, MapPin, M
 import { useState, useEffect, use } from 'react';
 import ArtistCard from '@/components/artists/ArtistCard';
 import FAQSection from '@/components/ui/FAQSection';
+import { API_BASE_URL } from '@/lib/api';
 
 interface EventTypePageProps {
     params: Promise<{ type: string }>;
@@ -127,7 +128,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
 
             try {
                 // Try to fetch from backend
-                const response = await fetch('http://127.0.0.1:8000/events');
+                const response = await fetch(`${API_BASE_URL}/events`);
                 if (response.ok) {
                     const backendEvents: BackendEvent[] = await response.json();
                     const createSlug = (name: string) => {
@@ -227,7 +228,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                 };
 
                 // Fetch categories from backend
-                const categoriesRes = await fetch('http://127.0.0.1:8000/categories');
+                const categoriesRes = await fetch(`${API_BASE_URL}/categories`);
                 if (categoriesRes.ok) {
                     const allCategories = await categoriesRes.json();
                     // Filter categories that match event type keywords
@@ -243,7 +244,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                 }
 
                 // Fetch all performers
-                const performersRes = await fetch('http://127.0.0.1:8000/performers');
+                const performersRes = await fetch(`${API_BASE_URL}/performers`);
                 if (performersRes.ok) {
                     const allPerformers = await performersRes.json();
 

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
+import { API_BASE_URL } from '@/lib/api';
 
 interface RequirementStats {
   total: number;
@@ -53,7 +54,7 @@ export default function AdminDashboard() {
 
       // Verify token with backend
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/admin/verify", {
+        const response = await fetch(`${API_BASE_URL}/api/admin/verify`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -84,7 +85,7 @@ export default function AdminDashboard() {
 
     const fetchStats = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/requirements");
+        const response = await fetch(`${API_BASE_URL}/api/requirements`);
         const data = await response.json();
 
         const stats = {
@@ -105,7 +106,7 @@ export default function AdminDashboard() {
 
     const fetchArtists = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/performers");
+        const response = await fetch(`${API_BASE_URL}/performers`);
         const data = await response.json();
         setArtistCount(data.length);
         setRecentArtists(data.slice(0, 5));
@@ -118,7 +119,7 @@ export default function AdminDashboard() {
 
     const fetchCategories = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/categories");
+        const response = await fetch(`${API_BASE_URL}/categories`);
         const data = await response.json();
         setCategoryCount(data.length);
       } catch (error) {
@@ -137,7 +138,7 @@ export default function AdminDashboard() {
 
     try {
       // Call backend logout endpoint
-      await fetch("http://127.0.0.1:8000/api/admin/logout", {
+      await fetch(`${API_BASE_URL}/api/admin/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

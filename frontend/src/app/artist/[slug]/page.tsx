@@ -21,6 +21,7 @@ import {
   Instagram,
   ExternalLink,
 } from "lucide-react";
+import { API_BASE_URL } from '@/lib/api';
 
 interface ArtistPageProps {
   params: Promise<{ slug: string }>;
@@ -111,7 +112,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
       setLoading(true);
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/performers/by-name/${encodeURIComponent(slug)}`,
+          `${API_BASE_URL}/performers/by-name/${encodeURIComponent(slug)}`,
         );
         if (response.ok) {
           const performer = await response.json();
@@ -135,7 +136,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const response = await fetch("http://127.0.0.1:8000/categories");
+        const response = await fetch(`${API_BASE_URL}/categories`);
         if (response.ok) {
           const categories = await response.json();
           if (artist) {
@@ -165,7 +166,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
       try {
         // Fetch all performers to get a random selection
         // In a real app with many artists, we'd want a specific endpoint for this
-        const response = await fetch("http://127.0.0.1:8000/performers");
+        const response = await fetch(`${API_BASE_URL}/performers`);
         if (response.ok) {
           const allPerformers = await response.json();
           // Filter out current artist

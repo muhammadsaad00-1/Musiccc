@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, Users, Music, Sparkles, PartyPopper, ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
 import FAQSection from '@/components/ui/FAQSection';
+import { API_BASE_URL } from '@/lib/api';
 
 
 const eventIcons: { [key: string]: React.ReactNode } = {
@@ -32,7 +33,7 @@ export default function EventsPage() {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch('http://127.0.0.1:8000/events');
+                const response = await fetch(`${API_BASE_URL}/events`);
                 if (response.ok) {
                     const data = await response.json();
                     setBackendEvents(data);

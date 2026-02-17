@@ -4,6 +4,7 @@ import { useState, useEffect, JSX } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Mic2, Music, Disc3, Sparkles, Users, Star, Heart, Zap, Loader2, ArrowRight } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 
 // Icon mapping for categories
 const iconMap: Record<string, JSX.Element> = {
@@ -51,7 +52,7 @@ export default function CategoryGrid() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch('http://127.0.0.1:8000/categories');
+                const response = await fetch(`${API_BASE_URL}/categories`);
                 if (response.ok) {
                     const data = await response.json();
                     setCategories(data.categories || data || []);

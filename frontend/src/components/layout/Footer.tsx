@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Facebook, Instagram, Youtube, Linkedin, Heart } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 
 // Simple TikTok icon component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -18,7 +19,7 @@ export default function Footer() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch('http://127.0.0.1:8000/categories');
+                const response = await fetch(`${API_BASE_URL}/categories`);
                 const data = await response.json();
                 setCategories(data);
             } catch (error) {

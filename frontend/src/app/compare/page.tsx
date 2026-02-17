@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Plus, X, Check, MapPin, Clock, ArrowRight, ArrowLeft } from 'lucide-react';
 
 import { Artist } from '@/types';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function ComparePage() {
     const [selectedArtists, setSelectedArtists] = useState<Artist[]>([]);
@@ -19,7 +20,7 @@ export default function ComparePage() {
     useEffect(() => {
         async function fetchCategories() {
             try {
-                const response = await fetch('http://127.0.0.1:8000/categories');
+                const response = await fetch(`${API_BASE_URL}/categories`);
                 if (response.ok) {
                     const data = await response.json();
                     setCategories(data);
@@ -49,7 +50,7 @@ export default function ComparePage() {
         async function fetchArtists() {
             setLoading(true);
             try {
-                const response = await fetch('http://127.0.0.1:8000/performers');
+                const response = await fetch(`${API_BASE_URL}/performers`);
                 if (response.ok) {
                     const performers = await response.json();
                     const transformed = performers.map((p: any) => ({

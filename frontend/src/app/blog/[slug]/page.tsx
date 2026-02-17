@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Clock, Calendar, ArrowLeft, Loader2, User, Share2, Facebook, Twitter, Link as LinkIcon, Instagram } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 
 interface BlogPageProps {
     params: Promise<{ slug: string }>;
@@ -40,7 +41,7 @@ export default function BlogDetailPage({ params }: BlogPageProps) {
         async function fetchBlog() {
             setLoading(true);
             try {
-                const response = await fetch(`http://127.0.0.1:8000/blogs/${slug}`);
+                const response = await fetch(`${API_BASE_URL}/blogs/${slug}`);
                 if (response.ok) {
                     const data = await response.json();
                     if (data.error) {
@@ -48,7 +49,7 @@ export default function BlogDetailPage({ params }: BlogPageProps) {
                     } else {
                         setBlog(data);
                         // Fetch related blogs
-                        const relatedResponse = await fetch(`http://127.0.0.1:8000/blogs?category=${encodeURIComponent(data.category)}&limit=4`);
+                        const relatedResponse = await fetch(`${API_BASE_URL}/blogs?category=${encodeURIComponent(data.category)}&limit=4`);
                         if (relatedResponse.ok) {
                             const related = await relatedResponse.json();
                             setRelatedBlogs(related.filter((b: BlogPost) => b.id !== data.id).slice(0, 3));

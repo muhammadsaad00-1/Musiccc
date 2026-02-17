@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Loader2, ArrowLeft, Sparkles, Music, Star, Mic2, Disc3, Heart, Users } from 'lucide-react';
 import Pagination from '@/components/ui/Pagination';
+import { API_BASE_URL } from '@/lib/api';
 
 const categoryIcons: Record<string, any> = {
     'Singers': <Mic2 className="w-8 h-8" />,
@@ -33,7 +34,7 @@ export default function CategoriesPage() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch('http://127.0.0.1:8000/categories');
+                const response = await fetch(`${API_BASE_URL}/categories`);
                 if (response.ok) {
                     const data = await response.json();
                     setCategories(data.categories || data || []);

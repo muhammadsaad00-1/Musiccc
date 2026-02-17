@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Pagination from '@/components/ui/Pagination';
 import { Artist } from '@/types';
+import { API_BASE_URL } from '@/lib/api';
 
 // Hero background images
 const heroImages = [
@@ -78,7 +79,7 @@ export default function AllArtistsPage() {
             setLoading(true);
             try {
                 // Fetch performers
-                const performersRes = await fetch('http://127.0.0.1:8000/performers');
+                const performersRes = await fetch(`${API_BASE_URL}/performers`);
                 if (performersRes.ok) {
                     const backendPerformers = await performersRes.json();
                     const transformedArtists = backendPerformers.map((p: any) => transformPerformerToArtist(p));
@@ -86,7 +87,7 @@ export default function AllArtistsPage() {
                 }
 
                 // Fetch categories from backend
-                const categoriesRes = await fetch('http://127.0.0.1:8000/categories');
+                const categoriesRes = await fetch(`${API_BASE_URL}/categories`);
                 if (categoriesRes.ok) {
                     const categories = await categoriesRes.json();
                     const categoryNames = categories.map((cat: any) => cat.name).sort();

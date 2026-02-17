@@ -9,6 +9,7 @@ import ArtistCard from "@/components/artists/ArtistCard";
 import { Loader2, ChevronDown, ArrowLeft, Music, Users } from "lucide-react";
 import { Artist } from "@/types";
 import { use } from "react";
+import { API_BASE_URL } from '@/lib/api';
 
 interface CategoryPageProps {
   params: Promise<{ category: string }>;
@@ -152,7 +153,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
       setLoading(true);
       try {
         // 1. Fetch all categories to find the current one
-        const catResponse = await fetch('http://127.0.0.1:8000/categories');
+        const catResponse = await fetch(`${API_BASE_URL}/categories`);
         let currentCategory: { name: string; description: string; id: number } | null = null;
         let queryName = "";
         let allCategories: any[] = [];
@@ -197,7 +198,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
         // 2. Fetch performers for this category
         const response = await fetch(
-          `http://127.0.0.1:8000/performers?category=${encodeURIComponent(queryName)}`,
+          `${API_BASE_URL}/performers?category=${encodeURIComponent(queryName)}`,
         );
 
         if (response.ok) {

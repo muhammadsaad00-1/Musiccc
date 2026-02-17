@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Package, Users, Clock, Check, ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 
 interface PackageType {
     id: string;
@@ -29,8 +30,8 @@ export default function PackagesPage() {
             setLoading(true);
             try {
                 const url = selectedEventType === 'all'
-                    ? 'http://127.0.0.1:8000/packages?is_active=true'
-                    : `http://127.0.0.1:8000/packages?event_type=${selectedEventType}&is_active=true`;
+                    ? `${API_BASE_URL}/packages?is_active=true`
+                    : `${API_BASE_URL}/packages?event_type=${selectedEventType}&is_active=true`;
 
                 const response = await fetch(url);
                 if (response.ok) {

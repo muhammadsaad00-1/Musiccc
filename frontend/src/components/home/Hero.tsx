@@ -6,6 +6,7 @@ import Image from 'next/image';
 import SearchBar from '@/components/ui/SearchBar';
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 import { Mic2, Music, Star, MapPin, Sparkles, Users, Calendar, Award } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 
 const categories = [
     { name: 'Singers', slug: 'singers', icon: '🎤' },
@@ -103,7 +104,7 @@ export default function Hero() {
         // Fetch real stats from backend
         const fetchStats = async () => {
             try {
-                const response = await fetch('http://127.0.0.1:8000/api/stats');
+                const response = await fetch(`${API_BASE_URL}/api/stats`);
                 if (response.ok) {
                     const data = await response.json();
                     setStats({

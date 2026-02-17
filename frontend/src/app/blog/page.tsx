@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Clock, ArrowRight, Calendar, ArrowLeft, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '@/lib/api';
 
 interface BlogPost {
     id: string;
@@ -25,7 +26,7 @@ export default function BlogPage() {
     useEffect(() => {
         async function fetchBlogs() {
             try {
-                const response = await fetch('http://127.0.0.1:8000/blogs?limit=20');
+                const response = await fetch(`${API_BASE_URL}/blogs?limit=20`);
                 if (response.ok) {
                     const data = await response.json();
                     setBlogs(data);

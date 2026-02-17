@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Music } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL } from '@/lib/api';
 
 interface SearchBarProps {
     size?: 'default' | 'large';
@@ -22,7 +23,7 @@ export default function SearchBar({ size = 'default', showCategory = true, class
     useEffect(() => {
         async function fetchCategories() {
             try {
-                const response = await fetch('http://127.0.0.1:8000/categories');
+                const response = await fetch(`${API_BASE_URL}/categories`);
                 if (response.ok) {
                     const data = await response.json();
                     setCategories(data || []);

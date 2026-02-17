@@ -22,6 +22,7 @@ import {
   X,
   MessageCircle,
 } from "lucide-react";
+import { API_BASE_URL } from '@/lib/api';
 
 interface Requirement {
   id: string;
@@ -75,8 +76,8 @@ export default function InquiriesPage() {
     try {
       const url =
         filter === "all"
-          ? "http://127.0.0.1:8000/api/requirements"
-          : `http://127.0.0.1:8000/api/requirements?status=${filter}`;
+          ? `${API_BASE_URL}/api/requirements`
+          : `${API_BASE_URL}/api/requirements?status=${filter}`;
       const response = await fetch(url);
       const data = await response.json();
       setRequirements(data);
@@ -98,7 +99,7 @@ export default function InquiriesPage() {
       formData.append("status", newStatus);
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/requirements/${id}/status`,
+        `${API_BASE_URL}/api/requirements/${id}/status`,
         {
           method: "PUT",
           body: formData,

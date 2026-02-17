@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, ArrowLeft, Edit2, Trash2, Loader2, X, Upload, Eye, EyeOff } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 
 interface Blog {
     id: string;
@@ -41,7 +42,7 @@ export default function ManageBlogsPage() {
     const fetchBlogs = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://127.0.0.1:8000/blogs?limit=100');
+            const response = await fetch(`${API_BASE_URL}/blogs?limit=100`);
             if (!response.ok) throw new Error('Failed to fetch blogs');
             const data = await response.json();
             setBlogs(data);
@@ -61,7 +62,7 @@ export default function ManageBlogsPage() {
         if (!confirm('Are you sure you want to delete this blog post?')) return;
 
         try {
-            const response = await fetch(`http://127.0.0.1:8000/admin/blogs/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/admin/blogs/${id}`, {
                 method: 'DELETE',
             });
 
@@ -116,8 +117,8 @@ export default function ManageBlogsPage() {
             }
 
             const url = editingBlog
-                ? `http://127.0.0.1:8000/admin/blogs/${editingBlog.id}`
-                : 'http://127.0.0.1:8000/admin/blogs';
+                ? `${API_BASE_URL}/admin/blogs/${editingBlog.id}`
+                : `${API_BASE_URL}/admin/blogs`;
             const method = editingBlog ? 'PUT' : 'POST';
 
             const response = await fetch(url, {

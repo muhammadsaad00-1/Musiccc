@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Mail, Phone, MapPin, Send, CheckCircle, ArrowLeft, Star, Navigation, MessageCircle, ArrowRight } from 'lucide-react';
 import FAQSection from '@/components/ui/FAQSection';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function ContactPage() {
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -31,7 +32,7 @@ export default function ContactPage() {
             formDataToSend.append('email', formData.email);
             formDataToSend.append('message', formData.message);
 
-            const response = await fetch('http://127.0.0.1:8000/api/contact', {
+            const response = await fetch(`${API_BASE_URL}/api/contact`, {
                 method: 'POST',
                 body: formDataToSend,
             });

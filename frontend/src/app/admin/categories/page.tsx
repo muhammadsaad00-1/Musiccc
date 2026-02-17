@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Plus, ArrowLeft, Edit2, Trash2, Loader2, X, Upload } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 // import { mockCategories } from '@/lib/mockData'; // Removed mock data
 
 interface Category {
@@ -32,7 +33,7 @@ export default function ManageCategoriesPage() {
     const fetchCategories = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://127.0.0.1:8000/categories');
+            const response = await fetch(`${API_BASE_URL}/categories`);
             if (!response.ok) throw new Error('Failed to fetch categories');
             const data = await response.json();
             setCategories(data);
@@ -52,7 +53,7 @@ export default function ManageCategoriesPage() {
         if (!confirm('Are you sure you want to delete this category?')) return;
 
         try {
-            const response = await fetch(`http://127.0.0.1:8000/admin/categories/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/admin/categories/${id}`, {
                 method: 'DELETE',
             });
 
@@ -86,7 +87,7 @@ export default function ManageCategoriesPage() {
                 data.append('image', formData.image);
             }
 
-            const response = await fetch('http://127.0.0.1:8000/admin/categories', {
+            const response = await fetch(`${API_BASE_URL}/admin/categories`, {
                 method: 'POST',
                 body: data,
             });

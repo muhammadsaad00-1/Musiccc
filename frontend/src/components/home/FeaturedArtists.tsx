@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { ArrowRight, Star, Loader2, Sparkles, Music, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 
 interface Artist {
     id: number;
@@ -27,7 +28,7 @@ export default function FeaturedArtists() {
         const fetchFeaturedArtists = async () => {
             try {
                 // Fetch more to allow rotation
-                const response = await fetch('http://127.0.0.1:8000/performers');
+                const response = await fetch(`${API_BASE_URL}/performers`);
                 if (response.ok) {
                     const data = await response.json();
 

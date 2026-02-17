@@ -13,6 +13,7 @@ import {
   X,
   Upload,
 } from "lucide-react";
+import { API_BASE_URL } from '@/lib/api';
 
 export default function ManageArtistsPage() {
   const searchParams = useSearchParams();
@@ -52,7 +53,7 @@ export default function ManageArtistsPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/categories");
+      const response = await fetch(`${API_BASE_URL}/categories`);
       const data = await response.json();
       setCategories(data);
     } catch (error) {
@@ -63,7 +64,7 @@ export default function ManageArtistsPage() {
   const fetchArtists = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/performers");
+      const response = await fetch(`${API_BASE_URL}/performers`);
       const data = await response.json();
       setArtists(data);
     } catch (error) {
@@ -82,7 +83,7 @@ export default function ManageArtistsPage() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/admin/performers/${id}`,
+        `${API_BASE_URL}/admin/performers/${id}`,
         {
           method: "DELETE",
         },
@@ -140,8 +141,8 @@ export default function ManageArtistsPage() {
       );
 
       const url = showEditModal
-        ? `http://127.0.0.1:8000/admin/performers/${selectedArtist.id}`
-        : "http://127.0.0.1:8000/admin/performers";
+        ? `${API_BASE_URL}/admin/performers/${selectedArtist.id}`
+        : `${API_BASE_URL}/admin/performers`;
 
       const method = showEditModal ? "PUT" : "POST";
 

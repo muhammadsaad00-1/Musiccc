@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Menu, X, Search, ChevronDown, Zap, Mic2, Music, Home, MapPin, Star, Calendar, Info, Phone } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 
 // Icon mapping for categories
 const categoryIcons: Record<string, string> = {
@@ -68,7 +69,7 @@ export default function Header() {
     useEffect(() => {
         async function fetchCategories() {
             try {
-                const response = await fetch('http://127.0.0.1:8000/categories');
+                const response = await fetch(`${API_BASE_URL}/categories`);
                 if (response.ok) {
                     const categories = await response.json();
                     // Transform to include icon and hot flag

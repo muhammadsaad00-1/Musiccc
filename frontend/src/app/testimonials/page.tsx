@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Star, MapPin, Quote, ArrowRight, Loader2, CheckCircle, User, ArrowLeft } from 'lucide-react';
 import FAQSection from '@/components/ui/FAQSection';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function TestimonialsPage() {
     const [name, setName] = useState('');
@@ -20,7 +21,7 @@ export default function TestimonialsPage() {
     useEffect(() => {
         async function fetchReviews() {
             try {
-                const response = await fetch('http://127.0.0.1:8000/api/reviews');
+                const response = await fetch(`${API_BASE_URL}/api/reviews`);
                 if (response.ok) {
                     const data = await response.json();
                     setReviews(data.reviews || data || []);
@@ -56,7 +57,7 @@ export default function TestimonialsPage() {
             formData.append('rating', String(rating));
             formData.append('review', review.trim());
 
-            const response = await fetch('http://127.0.0.1:8000/api/reviews', {
+            const response = await fetch(`${API_BASE_URL}/api/reviews`, {
                 method: 'POST',
                 body: formData,
             });
