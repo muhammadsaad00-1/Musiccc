@@ -21,8 +21,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend files
 COPY . .
 
-# Copy frontend folder from parent directory
-COPY ../Frontend ./frontend
+
 
 # Run the app using the Python start script
 CMD ["python", "start.py"]
