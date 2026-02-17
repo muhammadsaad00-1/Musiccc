@@ -2,7 +2,8 @@ from fastapi import FastAPI, UploadFile, File, Form, Request, HTTPException, sta
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from supabase_client import supabase
+from supabase_functions import create_client
+from supabase import create_client
 from typing import Optional
 import json
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -11,12 +12,18 @@ from slowapi.errors import RateLimitExceeded
 from cachetools import TTLCache
 import hashlib
 from email_service import send_requirement_notification, send_contact_message
+from dotenv import load_dotenv
+import os
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
 # Initialize cache (maxsize=1000 items, TTL=300 seconds = 5 minutes)
 cache = TTLCache(maxsize=1000, ttl=300)
+load_dotenv()
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Helper function to generate cache keys
 def get_cache_key(prefix: str, **kwargs) -> str:
