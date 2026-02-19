@@ -2135,3 +2135,83 @@ def delete_artist_testimonial(request: Request, testimonial_id: str):
     except Exception as e:
         print(f"Error deleting artist testimonial: {e}")
         raise
+
+# ─────────────────────────────────────────────
+#  PORTFOLIO ENDPOINTS
+# ─────────────────────────────────────────────
+
+@app.get("/api/portfolio")
+@limiter.limit("60/minute")
+def get_portfolio(request: Request):
+    """Return portfolio images and videos."""
+    try:
+        cached = cache.get("portfolio")
+        if cached:
+            return cached
+        result = supabase.table("portfolio").select("*").order("created_at", desc=True).execute()
+        images = [r for r in result.data if r.get("type") == "image"]
+        videos = [r for r in result.data if r.get("type") == "video"]
+        payload = {
+            "images": [{"id": r["id"], "url": r["url"], "title": r.get("title", ""), "created_at": r.get("created_at", "")} for r in images],
+            "videos": [{"id": r["id"], "url": r["url"], "title": r.get("title", ""), "created_at": r.get("created_at", "")} for r in videos],
+        }
+        cache["portfolio"] = payload
+        return payload
+    except Exception as e:
+        print(f"Error fetching portfolio: {e}")
+        return {"images": [], "videos": []}
+
+
+@app.post("/admin/portfolio/images")
+@limiter.limit("20/minute")
+async def upload_portfolio_image(request: Request, file: UploadFile = File(...), title: str = Form("")):
+    import time as _time
+    try:
+        ensure_bucket_exists("portfolio")
+        file_bytes = await file.read()
+        ext = file.filename.split(".")[-1] if file.filename and "." in file.filename else "jpg"
+        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", title.lower().replace(" ", "_")) if title else "image"
+        filename = sanitized + "_" + str(int(_time.time())) + "." + ext
+        supabase.storage.from_("portfolio").upload(filename, file_bytes, file_options={"upsert": "true"})
+        url = supabase.storage.from_("portfolio").get_public_url(filename)
+        supabase.table("portfolio").insert({"type": "image", "url": url, "title": title}).execute()
+        cache.pop("portfolio", None)
+        return {"success": True, "url": url, "title": title}
+    except Exception as e:
+        print(f"Error uploading portfolio image: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/admin/portfolio/videos")
+@limiter.limit("20/minute")
+async def add_portfolio_video(request: Request, url: str = Form(...), title: str = Form("")):
+    try:
+        supabase.table("portfolio").insert({"type": "video", "url": url, "title": title}).execute()
+        cache.pop("portfolio", None)
+        return {"success": True, "url": url, "title": title}
+    except Exception as e:
+        print(f"Error adding portfolio video: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/admin/portfolio/{item_id}")
+@limiter.limit("20/minute")
+def delete_portfolio_item(request: Request, item_id: str):
+    """Delete a portfolio item (also removes image from storage)."""
+    try:
+        result = supabase.table("portfolio").select("*").eq("id", item_id).execute()
+        if result.data:
+            item = result.data[0]
+            if item.get("type") == "image":
+                try:
+                    url_str = item.get("url", "")
+                    fname = url_str.split("/")[-1].split("?")[0]
+                    supabase.storage.from_("portfolio").remove([fname])
+                except Exception:
+                    pass
+        supabase.table("portfolio").delete().eq("id", item_id).execute()
+        cache.pop("portfolio", None)
+        return {"success": True, "message": "Portfolio item deleted"}
+    except Exception as e:
+        print(f"Error deleting portfolio item: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

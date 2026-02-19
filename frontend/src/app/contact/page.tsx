@@ -323,6 +323,45 @@ export default function ContactPage() {
                 </div>
             </section>
 
+
+            {/* Global Presence Cards */}
+            <section className="py-16 border-t border-gray-800/50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-10">
+                        <h2 className="text-3xl font-bold text-white mb-2">We&apos;re Where You Are</h2>
+                        <p className="text-gray-500">Serving clients across five countries with the same standard of excellence</p>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                        {[
+                            { code: 'pk', name: 'Pakistan', sub: 'Home Base · Lahore, Karachi, Islamabad', color: 'from-green-500/10 to-white/5', border: 'hover:border-green-500/30' },
+                            { code: 'ae', name: 'UAE', sub: 'Dubai & Abu Dhabi', color: 'from-red-500/10 to-black/5', border: 'hover:border-red-500/30' },
+                            { code: 'us', name: 'USA', sub: 'New York & Texas', color: 'from-blue-500/10 to-red/5', border: 'hover:border-blue-500/30' },
+                            { code: 'gb', name: 'UK', sub: 'London & Manchester', color: 'from-blue-600/10 to-red/5', border: 'hover:border-blue-600/30' },
+                            { code: 'ca', name: 'Canada', sub: 'Toronto & Vancouver', color: 'from-red-600/10 to-white/5', border: 'hover:border-red-400/30' },
+                        ].map((country) => (
+                            <div key={country.name} className={`group bg-[#1a1a1a] rounded-2xl p-5 border border-gray-800 ${country.border} transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col items-center text-center gap-4`}>
+                                <div className="w-16 h-11 rounded-lg overflow-hidden border border-gray-700/50 group-hover:border-white/10 transition-all group-hover:scale-105 duration-200 shadow-md">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={`https://flagcdn.com/w80/${country.code}.png`}
+                                        srcSet={`https://flagcdn.com/w160/${country.code}.png 2x`}
+                                        alt={`${country.name} flag`}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <div>
+                                    <p className="text-white font-semibold text-sm mb-1">{country.name}</p>
+                                    <p className="text-gray-600 text-xs leading-snug">{country.sub}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-center text-gray-600 text-sm mt-8">
+                        Wherever your event is — we handle the entertainment. <a href="/post-requirement" className="text-orange-400 hover:text-orange-300 underline underline-offset-2 transition-colors">Post your requirement →</a>
+                    </p>
+                </div>
+            </section>
+
             {/* FAQ Section */}
             <FAQSection
                 title="Common Questions?"

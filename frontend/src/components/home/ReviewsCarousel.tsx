@@ -12,8 +12,15 @@ interface Review {
     created_at?: string;
 }
 
+// Mock data for initial display
+const mockReviews: Review[] = [
+    { id: 'mr1', user_name: 'Zainab Ahmed', rating: 5, review: 'The Artist Factory made finding a Qawwal for our wedding so easy. The team was professional and the performance was magical!' },
+    { id: 'mr2', user_name: 'Omar Farooq', rating: 5, review: 'Booked a live band for our corporate annual dinner. Seamless coordination and a fantastic performance. Highly recommended.' },
+    { id: 'mr3', user_name: 'Sarah Khan', rating: 5, review: 'I was worried about booking an artist online, but TAF verified profiles gave me confidence. The process was transparent and secure.' },
+];
+
 export default function ReviewsCarousel({ artistId, className }: { artistId?: string; className?: string }) {
-    const [reviews, setReviews] = useState<Review[]>([]);
+    const [reviews, setReviews] = useState<Review[]>(mockReviews);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [isPaused, setIsPaused] = useState(false);
@@ -29,7 +36,13 @@ export default function ReviewsCarousel({ artistId, className }: { artistId?: st
                 if (response.ok) {
                     const backendReviews = await response.json();
                     if (backendReviews && backendReviews.length > 0) {
-                        setReviews(backendReviews);
+                        // Merge mock and backend reviews
+                        setReviews((prev) => {
+                            // Avoid duplicates if any
+                            const existingIds = new Set(prev.map(r => r.id));
+                            const newReviews = backendReviews.filter((r: Review) => !existingIds.has(r.id));
+                            return [...prev, ...newReviews];
+                        });
                     }
                 }
             } catch (error) {

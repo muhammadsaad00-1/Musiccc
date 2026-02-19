@@ -13,15 +13,60 @@ const TikTokIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
+
+// Icon mapping for categories
+const categoryIcons: Record<string, string> = {
+    'Singers': '🎤',
+    'Singer': '🎤',
+    'Qawwals': '🎵',
+    'Qawwal': '🎵',
+    'Live Bands': '🎸',
+    'Band': '🎸',
+    'Bhangra Artists': '💃',
+    'Bhangra': '💃',
+    'DJs': '🎧',
+    'DJ': '🎧',
+    'Musicians': '🎹',
+    'Musician': '🎹',
+    'Comedians': '🎭',
+    'Comedian': '🎭',
+    'Photographers': '📸',
+    'Photographer': '📸',
+    'Photography': '📸',
+    'Sufi': '✨',
+    'Sufi Artists': '✨',
+    'Ghazal': '🎻',
+    'Ghazal Artists': '🎻',
+    'Folk': '🪕',
+    'Folk Singers': '🪕',
+    'Classical': '🎼',
+    'Classical Musicians': '🎼',
+    'Dancer': '👯',
+    'Anchor': '🎙️',
+    'Makeup Artist': '💄',
+    'Mehndi Artist': '🎨',
+    'Decorator': '🎈',
+};
+
+
 export default function Footer() {
+
     const [categories, setCategories] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/categories`);
-                const data = await response.json();
-                setCategories(data);
+                if (response.ok) {
+                    const data = await response.json();
+                    // Transform to include icon (matching Header logic)
+                    const transformed = data.map((cat: any) => ({
+                        name: cat.name,
+                        slug: cat.slug,
+                        icon: categoryIcons[cat.name] || categoryIcons[cat.name?.split(' ')[0]] || '🎵',
+                    }));
+                    setCategories(transformed);
+                }
             } catch (error) {
                 console.error('Error fetching categories:', error);
             }
@@ -29,6 +74,7 @@ export default function Footer() {
 
         fetchCategories();
     }, []);
+
 
     // Helper to slugify text
     const slugify = (text: string) => {
@@ -95,9 +141,9 @@ export default function Footer() {
                             </span>
                         </h2>
 
-                        <p className="text-gray-400 mb-8 max-w-sm leading-relaxed">
+                        {/* <p className="text-gray-400 mb-8 max-w-sm leading-relaxed">
                             Pakistan&apos;s Largest Marketplace for Professional Artists. We connect you with the best talent for weddings, corporate events, and concerts.
-                        </p>
+                        </p> */}
 
                         <div className="flex items-center gap-4">
                             <span className="text-base font-medium text-white">Follow us On</span>
@@ -120,23 +166,63 @@ export default function Footer() {
                                 </a>
                             </div>
                         </div>
+
+
+                        {/* Global Presence — inline in brand column */}
+                        <div className="mt-8 pt-6 border-t border-gray-800/50">
+                            <p className="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-4 flex items-center gap-2">
+                                🌍 Global Presence
+                            </p>
+                            <div className="flex flex-wrap gap-4">
+                                {[
+                                    { code: 'pk', name: 'Pakistan' },
+                                    { code: 'ae', name: 'UAE' },
+                                    { code: 'us', name: 'USA' },
+                                    { code: 'gb', name: 'UK' },
+                                    { code: 'ca', name: 'Canada' },
+                                ].map((country) => (
+                                    <div key={country.name} className="flex flex-col items-center gap-1 group cursor-pointer">
+                                        <div className="w-10 h-7 rounded overflow-hidden border border-gray-700/50 group-hover:border-orange-500/40 transition-all duration-200 group-hover:scale-110 shadow-lg relative">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={`https://flagcdn.com/w80/${country.code}.png`}
+                                                alt={`${country.name} flag`}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                                        </div>
+                                        <span className="text-[10px] uppercase font-bold text-gray-600 group-hover:text-orange-400 transition-colors">{country.name}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Links Columns - Spans 8 columns (4 cols total) */}
                     <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-8 lg:mt-10 lg:pl-12">
+
                         {/* Artists Column */}
                         <div>
-                            <h3 className="text-white font-bold text-lg mb-6">Artists</h3>
+                            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
+                                Artists
+                            </h3>
                             <ul className="space-y-4">
                                 {categories.slice(0, 6).map((category, index) => (
                                     <li key={index}>
-                                        <Link href={`/artists/${category.slug}`} className="text-base text-gray-400 hover:text-orange-400 transition-colors block">
+                                        <Link href={`/artists/${category.slug}`} className="text-base text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2">
+                                            {/* <span className="text-sm opacity-70">{category.icon}</span> */}
                                             {category.name}
                                         </Link>
                                     </li>
                                 ))}
+                                <li>
+                                    <Link href="/artists" className="text-base font-semibold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-2 mt-2">
+                                        View All Categories →
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
+
 
                         {/* Events Column */}
                         <div>
@@ -168,44 +254,11 @@ export default function Footer() {
                     </div>
                 </div>
 
-                {/* Global Presence */}
-                <div className="py-10 border-y border-gray-800/50 mb-8">
-                    <div className="text-center mb-6">
-                        <h3 className="text-white font-bold text-xl mb-2">Global Presence</h3>
-                        <p className="text-gray-400 text-sm">Serving clients worldwide</p>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
-                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
-                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇵🇰</div>
-                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">Pakistan</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
-                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇦🇪</div>
-                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">UAE</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
-                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇸🇦</div>
-                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">Saudi Arabia</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
-                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇬🇧</div>
-                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">UK</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
-                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇺🇸</div>
-                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">USA</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
-                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇨🇦</div>
-                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">Canada</span>
-                        </div>
-                    </div>
-                </div>
 
                 {/* Bottom Bar */}
                 <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-gray-400 text-base">
-                        © Copyright 2024 - 2026 | The Artist Factory | All Rights Reserved.
+                        © Copyright 2026 | The Artist Factory | All Rights Reserved.
                     </p>
                     <div className="flex items-center gap-2 text-gray-400 text-base group">
                         <span>Made with</span>

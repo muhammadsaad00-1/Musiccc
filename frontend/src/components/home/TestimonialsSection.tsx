@@ -19,12 +19,12 @@ interface ArtistTestimonial {
 
 // Mock fallback data — shown while API loads or has no entries yet
 const mockArtistTestimonials: ArtistTestimonial[] = [
-    { id: 'm1', name: 'Ali Zafar Qawwal',    role: 'Qawwal & Sufi Artist',          location: 'Lahore',     emoji: '🎵', photo_url: null, rating: 5, review: 'Artist Factory transformed my career. Within a month of joining I had three corporate event bookings. The platform makes it incredibly easy to showcase my work and connect with serious clients.' },
-    { id: 'm2', name: 'Fatima Khan',           role: 'Classical Dancer',               location: 'Karachi',    emoji: '💃', photo_url: null, rating: 5, review: "Finally a platform that takes artists seriously. The team is professional, payments are secure, and the clients are genuine. I've performed at some of Pakistan's most prestigious events through TAF." },
-    { id: 'm3', name: 'DJ Raza',               role: 'Professional DJ',                location: 'Islamabad',  emoji: '🎧', photo_url: null, rating: 5, review: 'I joined Artist Factory two years ago and it has been a game changer. My booking calendar is always full. The support team helps with everything from negotiations to logistics.' },
-    { id: 'm4', name: 'Nazia & the Band',      role: 'Live Band – Wedding Specialists', location: 'Faisalabad', emoji: '🎸', photo_url: null, rating: 5, review: "We've performed at 80+ weddings booked through Artist Factory. The clients are well-informed and appreciate live music. TAF is the best platform for serious performers in Pakistan." },
-    { id: 'm5', name: 'Ustad Hamid Ali',       role: 'Classical Vocalist',             location: 'Multan',     emoji: '🎼', photo_url: null, rating: 5, review: "As a classical artist, I was worried about the right audience. Artist Factory specifically caters to premium events and that's exactly where I belong. Highly recommend it to all artists." },
-    { id: 'm6', name: 'Meher Naz',             role: 'Folk Singer',                    location: 'Peshawar',   emoji: '🪕', photo_url: null, rating: 5, review: "The platform gave me exposure I never had before. Corporate clients, TV channels, and private events – Artist Factory opens all doors. It's a must for every Pakistani artist." },
+    { id: 'm1', name: 'Ali Zafar Qawwal', role: 'Qawwal & Sufi Artist', location: 'Lahore', emoji: '🎵', photo_url: null, rating: 5, review: 'Artist Factory transformed my career. Within a month of joining I had three corporate event bookings. The platform makes it incredibly easy to showcase my work and connect with serious clients.' },
+    { id: 'm2', name: 'Fatima Khan', role: 'Classical Dancer', location: 'Karachi', emoji: '💃', photo_url: null, rating: 5, review: "Finally a platform that takes artists seriously. The team is professional, payments are secure, and the clients are genuine. I've performed at some of Pakistan's most prestigious events through TAF." },
+    { id: 'm3', name: 'DJ Raza', role: 'Professional DJ', location: 'Islamabad', emoji: '🎧', photo_url: null, rating: 5, review: 'I joined Artist Factory two years ago and it has been a game changer. My booking calendar is always full. The support team helps with everything from negotiations to logistics.' },
+    { id: 'm4', name: 'Nazia & the Band', role: 'Live Band – Wedding Specialists', location: 'Faisalabad', emoji: '🎸', photo_url: null, rating: 5, review: "We've performed at 80+ weddings booked through Artist Factory. The clients are well-informed and appreciate live music. TAF is the best platform for serious performers in Pakistan." },
+    { id: 'm5', name: 'Ustad Hamid Ali', role: 'Classical Vocalist', location: 'Multan', emoji: '🎼', photo_url: null, rating: 5, review: "As a classical artist, I was worried about the right audience. Artist Factory specifically caters to premium events and that's exactly where I belong. Highly recommend it to all artists." },
+    { id: 'm6', name: 'Meher Naz', role: 'Folk Singer', location: 'Peshawar', emoji: '🪕', photo_url: null, rating: 5, review: "The platform gave me exposure I never had before. Corporate clients, TV channels, and private events – Artist Factory opens all doors. It's a must for every Pakistani artist." },
 ];
 
 function ArtistTestimonialsGrid() {
@@ -38,7 +38,11 @@ function ArtistTestimonialsGrid() {
                 if (res.ok) {
                     const data: ArtistTestimonial[] = await res.json();
                     if (Array.isArray(data) && data.length > 0) {
-                        setTestimonials(data);
+                        setTestimonials(prev => {
+                            const existingIds = new Set(prev.map(t => t.id));
+                            const newTestimonials = data.filter(t => !existingIds.has(t.id));
+                            return [...prev, ...newTestimonials];
+                        });
                     }
                 }
             } catch {
@@ -144,22 +148,20 @@ export default function TestimonialsSection({ bgClass = 'bg-[#0a0a0b]' }: Testim
                     <div className="flex gap-2 p-1.5 bg-[#1a1a1a] rounded-xl border border-gray-800">
                         <button
                             onClick={() => setActiveTab('clients')}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                                activeTab === 'clients'
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${activeTab === 'clients'
                                     ? 'bg-gradient-to-r from-orange-500 to-pink-600 text-white shadow-lg shadow-orange-500/20'
                                     : 'text-gray-400 hover:text-white'
-                            }`}
+                                }`}
                         >
                             <Users className="w-4 h-4" />
                             Client Reviews
                         </button>
                         <button
                             onClick={() => setActiveTab('artists')}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                                activeTab === 'artists'
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${activeTab === 'artists'
                                     ? 'bg-gradient-to-r from-orange-500 to-pink-600 text-white shadow-lg shadow-orange-500/20'
                                     : 'text-gray-400 hover:text-white'
-                            }`}
+                                }`}
                         >
                             <Mic2 className="w-4 h-4" />
                             Artist Testimonials

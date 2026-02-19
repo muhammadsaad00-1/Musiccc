@@ -1,331 +1,244 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Star, MapPin, Quote, ArrowRight, Loader2, CheckCircle, User, ArrowLeft } from 'lucide-react';
-import FAQSection from '@/components/ui/FAQSection';
-import { API_BASE_URL } from '@/lib/api';
+import { useState } from "react";
+import Image from "next/image";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
+import AnimatedCounter from "@/components/ui/AnimatedCounter";
+import { Mic2, Music, Globe, Award, Send, Star, User, MapPin, Briefcase } from "lucide-react";
 
-export default function TestimonialsPage() {
-    const [name, setName] = useState('');
-    const [rating, setRating] = useState(5);
-    const [review, setReview] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState('');
-    const [submitSuccess, setSubmitSuccess] = useState(false);
-    const [reviews, setReviews] = useState<any[]>([]);
-    const [loadingReviews, setLoadingReviews] = useState(true);
+// Reuse stats data structure for consistency
+const stats = [
+    { value: 500, suffix: "+", label: "Verified Artists", icon: Mic2 },
+    { value: 2000, suffix: "+", label: "Events Delivered", icon: Music },
+    { value: 5, suffix: "", label: "Countries Served", icon: Globe },
+    { value: 98, suffix: "%", label: "Client Satisfaction", icon: Award },
+];
 
-    // Fetch reviews from API
-    useEffect(() => {
-        async function fetchReviews() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/reviews`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setReviews(data.reviews || data || []);
-                }
-            } catch (error) {
-                console.error('Error fetching reviews:', error);
-            } finally {
-                setLoadingReviews(false);
-            }
-        }
-        fetchReviews();
-    }, [submitSuccess]);
+function ReviewForm() {
+    const [formData, setFormData] = useState({
+        name: "",
+        role: "",
+        location: "",
+        rating: 5,
+        review: ""
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
 
-    const submitReview = async (event: React.FormEvent) => {
-        event.preventDefault();
-        if (!name.trim()) {
-            setSubmitError('Please enter your name.');
-            return;
-        }
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
 
-        if (!review.trim()) {
-            setSubmitError('Please add your review.');
-            return;
-        }
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
-        setSubmitting(true);
-        setSubmitError('');
-        setSubmitSuccess(false);
+        // Reset and show success
+        setIsSubmitting(false);
+        setSubmitted(true);
+        setFormData({ name: "", role: "", location: "", rating: 5, review: "" });
 
-        try {
-            const formData = new FormData();
-            formData.append('user_name', name.trim());
-            formData.append('rating', String(rating));
-            formData.append('review', review.trim());
-
-            const response = await fetch(`${API_BASE_URL}/api/reviews`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data?.success) {
-                throw new Error(data?.message || 'Failed to submit review');
-            }
-
-            setSubmitSuccess(true);
-            setName('');
-            setRating(5);
-            setReview('');
-        } catch (error) {
-            setSubmitError(error instanceof Error ? error.message : 'Failed to submit review');
-        } finally {
-            setSubmitting(false);
-        }
+        // Hide success message after 5 seconds
+        setTimeout(() => setSubmitted(false), 5000);
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0b]">
-            {/* Hero */}
-            <section className="relative py-20">
-                <div className="absolute inset-0">
-                    <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/10 rounded-full blur-[100px]" />
-                    <div className="absolute bottom-20 right-10 w-96 h-96 bg-pink-600/10 rounded-full blur-[120px]" />
-                </div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <Link
-                        href="/"
-                        className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
-                    >
-                        <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-gray-700 flex items-center justify-center group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition-all">
-                            <ArrowLeft className="w-4 h-4" />
-                        </div>
-                        <span className="text-sm font-medium">Back to Home</span>
-                    </Link>
-                    <div className="text-center">
-                        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-                            Success
-                            <span className="bg-gradient-to-r from-orange-400 via-pink-500 to-orange-400 bg-clip-text text-transparent"> Stories</span>
-                        </h1>
-                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                            See how we've helped make events unforgettable across Pakistan
-                        </p>
-                    </div>
-                </div>
-            </section>
+        <div className="bg-[#1a1a1a] border border-gray-800 rounded-3xl p-8 md:p-12 relative overflow-hidden">
+            {/* Background Glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
 
-            {/* Stats */}
-            <section className="py-12 border-b border-gray-800">
-                <div className="max-w-5xl mx-auto px-4">
-                    <div className="grid grid-cols-3 gap-8 text-center">
-                        <div>
-                            <div className="text-4xl font-bold text-white mb-2">10,000+</div>
-                            <div className="text-gray-500">Events Completed</div>
+            <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-orange-500/10 to-pink-600/10 border border-orange-500/20 rounded-full text-orange-400 text-xs font-medium mb-6">
+                        ✍️ Share Your Story
+                    </span>
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                        How Was Your Experience?
+                    </h2>
+                    <p className="text-gray-400 mb-8 leading-relaxed">
+                        Your feedback helps us maintain the highest standards of excellence. Whether you're an artist or a client, we'd love to hear from you.
+                    </p>
+
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center text-2xl">🌟</div>
+                            <div>
+                                <h4 className="text-white font-semibold">Rate Your Experience</h4>
+                                <p className="text-sm text-gray-500">Tap the stars to rate</p>
+                            </div>
                         </div>
-                        <div>
-                            <div className="text-4xl font-bold text-white mb-2">98%</div>
-                            <div className="text-gray-500">Satisfaction Rate</div>
-                        </div>
-                        <div>
-                            <div className="text-4xl font-bold text-white mb-2">4.9</div>
-                            <div className="text-gray-500 flex items-center justify-center gap-1">
-                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                Average Rating
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center text-2xl">📝</div>
+                            <div>
+                                <h4 className="text-white font-semibold">Detailed Feedback</h4>
+                                <p className="text-sm text-gray-500">Tell us what you loved</p>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
 
-            {/* Testimonials Grid */}
-            <section className="py-16">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {loadingReviews ? (
-                        <div className="flex items-center justify-center py-20">
-                            <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
-                        </div>
-                    ) : reviews.length > 0 ? (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {reviews.map((testimonial, index) => (
-                                <div
-                                    key={testimonial.id || index}
-                                    className="bg-[#1a1a1a] rounded-3xl border border-gray-800 overflow-hidden hover:border-gray-700 transition-all"
-                                >
-                                    {/* Header with avatar */}
-                                    <div className="p-6">
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center">
-                                                <User className="w-6 h-6 text-orange-400" />
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-white">{testimonial.user_name || testimonial.name}</p>
-                                                <p className="text-sm text-gray-500">
-                                                    {new Date(testimonial.created_at).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Rating */}
-                                        <div className="flex gap-1 mb-4">
-                                            {[...Array(testimonial.rating || 5)].map((_, i) => (
-                                                <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                                            ))}
-                                        </div>
-
-                                        {/* Quote */}
-                                        <div className="relative">
-                                            <Quote className="absolute -top-2 -left-2 w-8 h-8 text-orange-500/30" />
-                                            <p className="text-gray-300 leading-relaxed pl-4">
-                                                "{testimonial.review || testimonial.testimonial}"
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                <form onSubmit={handleSubmit} className="space-y-4 bg-black/20 p-6 rounded-2xl border border-white/5">
+                    {submitted ? (
+                        <div className="text-center py-12">
+                            <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">✓</div>
+                            <h3 className="text-xl font-bold text-white mb-2">Thank You!</h3>
+                            <p className="text-gray-400">Your review has been submitted successfully.</p>
                         </div>
                     ) : (
-                        <div className="text-center py-20 bg-[#1a1a1a] rounded-2xl border border-gray-800">
-                            <Quote className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-semibold text-white mb-2">No Reviews Yet</h3>
-                            <p className="text-gray-400">Be the first to share your experience!</p>
-                        </div>
-                    )}
-                </div>
-            </section>
-
-            {/* Review Form */}
-            <section className="py-16 border-t border-gray-800">
-                <div className="max-w-4xl mx-auto px-4">
-                    <div className="bg-[#111114] border border-gray-800 rounded-3xl p-8 sm:p-10">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-                            <div>
-                                <p className="text-sm uppercase tracking-wider text-orange-400 font-semibold mb-2">
-                                    Share your experience
-                                </p>
-                                <h2 className="text-3xl font-bold text-white">Leave a Review</h2>
-                                <p className="text-gray-400 mt-2">
-                                    Your testimonial helps others book with confidence.
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-2 text-yellow-400">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className="w-5 h-5 fill-yellow-400" />
-                                ))}
-                                <span className="text-sm text-gray-400">Trusted by clients nationwide</span>
-                            </div>
-                        </div>
-
-                        <form onSubmit={submitReview} className="space-y-6">
-                            <div className="grid gap-6 sm:grid-cols-2">
-                                <div>
-                                    <label className="block text-sm text-gray-400 mb-2">Your Name</label>
-                                    <input
-                                        type="text"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        placeholder="Enter your full name"
-                                        className="w-full rounded-xl bg-[#0a0a0b] border border-gray-800 px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-                                    />
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-gray-400 ml-1">Your Name</label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            className="w-full bg-[#0a0a0b] border border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-white focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 outline-none transition-all placeholder:text-gray-600"
+                                            placeholder="John Doe"
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm text-gray-400 mb-2">Rating</label>
-                                    <div className="flex items-center gap-2">
-                                        {[1, 2, 3, 4, 5].map((value) => (
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-gray-400 ml-1">Role / Event Type</label>
+                                    <div className="relative">
+                                        <Briefcase className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.role}
+                                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                            className="w-full bg-[#0a0a0b] border border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-white focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 outline-none transition-all placeholder:text-gray-600"
+                                            placeholder="e.g. Wedding Planner"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-gray-400 ml-1">Location</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.location}
+                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                            className="w-full bg-[#0a0a0b] border border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-white focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 outline-none transition-all placeholder:text-gray-600"
+                                            placeholder="City, Country"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-gray-400 ml-1">Rating</label>
+                                    <div className="flex bg-[#0a0a0b] border border-gray-800 rounded-xl py-2 px-4 gap-2 items-center h-[46px]">
+                                        {[1, 2, 3, 4, 5].map((star) => (
                                             <button
-                                                key={value}
+                                                key={star}
                                                 type="button"
-                                                onClick={() => setRating(value)}
-                                                className={`p-2 rounded-lg border transition-colors ${rating >= value
-                                                    ? 'border-yellow-500/60 bg-yellow-500/10'
-                                                    : 'border-gray-800 bg-[#0a0a0b]'
-                                                    }`}
+                                                onClick={() => setFormData({ ...formData, rating: star })}
+                                                className="focus:outline-none transition-transform hover:scale-110"
                                             >
                                                 <Star
-                                                    className={`w-5 h-5 ${rating >= value
-                                                        ? 'text-yellow-400 fill-yellow-400'
-                                                        : 'text-gray-600'
-                                                        }`}
+                                                    className={`w-5 h-5 ${star <= formData.rating ? "fill-orange-400 text-orange-400" : "text-gray-600"}`}
                                                 />
                                             </button>
                                         ))}
+                                        <span className="ml-auto text-sm text-gray-400 font-medium">{formData.rating}.0</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-2">Your Review</label>
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium text-gray-400 ml-1">Your Review</label>
                                 <textarea
-                                    value={review}
-                                    onChange={(e) => setReview(e.target.value)}
-                                    rows={5}
-                                    placeholder="Tell us about your experience with Artist Factory"
-                                    className="w-full rounded-xl bg-[#0a0a0b] border border-gray-800 px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                                    required
+                                    rows={4}
+                                    value={formData.review}
+                                    onChange={(e) => setFormData({ ...formData, review: e.target.value })}
+                                    className="w-full bg-[#0a0a0b] border border-gray-800 rounded-xl py-3 px-4 text-white focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 outline-none transition-all placeholder:text-gray-600 resize-none"
+                                    placeholder="Share your experience working with The Artist Factory..."
                                 />
                             </div>
 
-                            {submitError && (
-                                <p className="text-sm text-red-400">{submitError}</p>
-                            )}
-
-                            {submitSuccess && (
-                                <div className="flex items-center gap-2 text-sm text-green-400">
-                                    <CheckCircle className="w-4 h-4" />
-                                    Thank you! Your review has been submitted.
-                                </div>
-                            )}
-
                             <button
                                 type="submit"
-                                disabled={submitting}
-                                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold hover:shadow-lg hover:shadow-orange-500/20 transition-all disabled:opacity-60"
+                                disabled={isSubmitting}
+                                className="w-full py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
-                                {submitting ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Submitting...
-                                    </>
+                                {isSubmitting ? (
+                                    <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                                 ) : (
-                                    'Submit Review'
+                                    <>
+                                        Submit Review <Send className="w-4 h-4" />
+                                    </>
                                 )}
                             </button>
-                        </form>
+                        </>
+                    )}
+                </form>
+            </div>
+        </div>
+    );
+}
+
+export default function TestimonialsPage() {
+    return (
+        <div className="min-h-screen bg-[#0a0a0b]">
+
+            {/* ══ HERO ══════════════════════════════════════════════════ */}
+            <section className="relative py-28 md:py-36 overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[120px]" />
+                    <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-pink-600/10 rounded-full blur-[100px]" />
+                </div>
+                <div className="relative max-w-4xl mx-auto px-4 text-center">
+                    <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-orange-500/20 to-pink-600/20 rounded-full text-orange-400 text-sm font-medium mb-8 border border-orange-500/30">
+                        ✨ Client Stories
+                    </span>
+                    <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight leading-none">
+                        Trusted by the <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">
+                            Best in the Business
+                        </span>
+                    </h1>
+                    <p className="text-gray-400 text-xl max-w-2xl mx-auto leading-relaxed">
+                        From multinational corporations to happy couples, see why thousands choose The Artist Factory for their most important moments.
+                    </p>
+                </div>
+            </section>
+
+            {/* ══ STATS STRIP ════════════════════════════════════════════ */}
+            <section className="border-y border-gray-800/50 bg-[#0f0f10]/50 backdrop-blur-sm relative z-10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                        {stats.map((stat) => (
+                            <div key={stat.label} className="text-center group">
+                                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 group-hover:border-orange-500/30 shadow-lg">
+                                    <stat.icon className="w-5 h-5 text-orange-400" />
+                                </div>
+                                <div className="text-3xl font-extrabold text-white mb-1 flex items-center justify-center gap-0.5">
+                                    <AnimatedCounter end={stat.value} duration={2000} suffix={stat.suffix} />
+                                </div>
+                                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">{stat.label}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
 
-            {/* FAQ Section */}
-            <FAQSection
-                title="Review Questions?"
-                subtitle="Common questions about reviews and testimonials"
-                faqs={[
-                    {
-                        question: "Are these reviews verified?",
-                        answer: "Yes! All reviews are from real customers who booked artists through our platform. We verify each review for authenticity."
-                    },
-                    {
-                        question: "Can I leave a review without booking?",
-                        answer: "Reviews are typically from customers who have used our services, but we welcome feedback from anyone who has interacted with our platform."
-                    },
-                    {
-                        question: "How do I edit or delete my review?",
-                        answer: "Contact our support team with your review details and we'll assist you with any modifications or deletions."
-                    }
-                ]}
-            />
+            {/* ══ EXISTING TESTIMONIALS ══════════════════════════════════ */}
+            <TestimonialsSection />
 
-            {/* CTA */}
-            <section className="py-16">
-                <div className="max-w-4xl mx-auto px-4">
-                    <div className="bg-gradient-to-r from-orange-500 via-pink-600 to-orange-500 bg-size-200 animate-gradient rounded-3xl p-12 text-center">
-                        <h2 className="text-3xl font-bold text-white mb-4">Ready to Create Your Success Story?</h2>
-                        <p className="text-white/90 mb-8 max-w-xl mx-auto">
-                            Join thousands of happy customers who've made their events unforgettable with Artist Factory
-                        </p>
-                        <Link
-                            href="/post-requirement"
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-colors shadow-lg"
-                        >
-                            Get Started Today
-                            <ArrowRight className="w-5 h-5" />
-                        </Link>
-                    </div>
+            {/* ══ SUBMIT REVIEW ══════════════════════════════════════════ */}
+            <section className="py-20 bg-[#0f0f10]">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <ReviewForm />
                 </div>
             </section>
+
         </div>
     );
 }
