@@ -6,6 +6,8 @@ from supabase_functions import create_client
 from supabase import create_client
 from typing import Optional
 import json
+import re
+import traceback
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -13,6 +15,9 @@ from cachetools import TTLCache
 import hashlib
 from email_service import send_requirement_notification, send_contact_message
 import os
+from dotenv import load_dotenv
+
+load_dotenv()  
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -1826,3 +1831,307 @@ async def submit_contact_form(
             "message": "An error occurred. Please try again later."
         }
 
+
+# ============================================
+# CLIENT LOGOS ENDPOINTS
+# ============================================
+
+@app.get("/api/client-logos")
+@limiter.limit("100/minute")
+def get_client_logos(request: Request):
+    """Get all active client logos for the public website."""
+    cache_key = "client_logos_all"
+    if cache_key in cache:
+        return cache[cache_key]
+    try:
+        response = (
+            supabase.table("client_logos")
+            .select("*")
+            .eq("is_active", True)
+            .order("display_order", desc=False)
+            .execute()
+        )
+        result = response.data
+        cache[cache_key] = result
+        return result
+    except Exception as e:
+        print(f"Error fetching client logos: {e}")
+        return []
+
+
+@app.get("/admin/client-logos")
+@limiter.limit("100/minute")
+def get_all_client_logos(request: Request):
+    """Get ALL client logos (including inactive) for admin panel."""
+    try:
+        response = (
+            supabase.table("client_logos")
+            .select("*")
+            .order("display_order", desc=False)
+            .execute()
+        )
+        return response.data
+    except Exception as e:
+        print(f"Error fetching client logos: {e}")
+        return []
+
+
+@app.post("/admin/client-logos")
+@limiter.limit("20/minute")
+async def create_client_logo(
+    request: Request,
+    name: str = Form(...),
+    display_order: int = Form(0),
+    is_active: bool = Form(True),
+    logo: UploadFile = File(None),
+):
+    """Create a new corporate client entry (with optional logo image)."""
+    try:
+        client_data = {
+            "name": name,
+            "display_order": display_order,
+            "is_active": is_active,
+            "logo_url": None,
+        }
+
+        response = supabase.table("client_logos").insert(client_data).execute()
+        if not response.data:
+            return {"success": False, "message": "Failed to create client"}
+
+        client_id = response.data[0]["id"]
+
+        if logo and logo.filename:
+            ensure_bucket_exists("client-logos")
+            file_bytes = await logo.read()
+            ext = logo.filename.split(".")[-1] if "." in logo.filename else "png"
+            sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
+            path = f"{client_id}_{sanitized}.{ext}"
+            supabase.storage.from_("client-logos").upload(
+                path, file_bytes, file_options={"upsert": "true"}
+            )
+            logo_url = supabase.storage.from_("client-logos").get_public_url(path)
+            supabase.table("client_logos").update({"logo_url": logo_url}).eq("id", client_id).execute()
+
+        # Invalidate cache
+        cache.pop("client_logos_all", None)
+        return {"success": True, "message": "Client created", "id": client_id}
+    except Exception as e:
+        print(f"Error creating client logo: {e}")
+        raise
+
+
+@app.put("/admin/client-logos/{client_id}")
+@limiter.limit("20/minute")
+async def update_client_logo(
+    request: Request,
+    client_id: str,
+    name: str = Form(None),
+    display_order: int = Form(None),
+    is_active: bool = Form(None),
+    logo: UploadFile = File(None),
+):
+    """Update an existing corporate client entry."""
+    try:
+        update_data: dict = {}
+        if name is not None:
+            update_data["name"] = name
+        if display_order is not None:
+            update_data["display_order"] = display_order
+        if is_active is not None:
+            update_data["is_active"] = is_active
+
+        if logo and logo.filename:
+            ensure_bucket_exists("client-logos")
+            file_bytes = await logo.read()
+            ext = logo.filename.split(".")[-1] if "." in logo.filename else "png"
+            label = name or client_id
+            sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", str(label).lower().replace(" ", "_"))
+            path = f"{client_id}_{sanitized}.{ext}"
+            supabase.storage.from_("client-logos").upload(
+                path, file_bytes, file_options={"upsert": "true"}
+            )
+            update_data["logo_url"] = supabase.storage.from_("client-logos").get_public_url(path)
+
+        if update_data:
+            supabase.table("client_logos").update(update_data).eq("id", client_id).execute()
+
+        cache.pop("client_logos_all", None)
+        return {"success": True, "message": "Client updated"}
+    except Exception as e:
+        print(f"Error updating client logo: {e}")
+        raise
+
+
+@app.delete("/admin/client-logos/{client_id}")
+@limiter.limit("20/minute")
+def delete_client_logo(request: Request, client_id: str):
+    """Delete a corporate client entry."""
+    try:
+        supabase.table("client_logos").delete().eq("id", client_id).execute()
+        cache.pop("client_logos_all", None)
+        return {"success": True, "message": "Client deleted"}
+    except Exception as e:
+        print(f"Error deleting client logo: {e}")
+        raise
+
+
+# ============================================
+# ARTIST TESTIMONIALS ENDPOINTS
+# ============================================
+
+@app.get("/api/artist-testimonials")
+@limiter.limit("100/minute")
+def get_artist_testimonials(request: Request):
+    """Get all active artist testimonials for the public website."""
+    cache_key = "artist_testimonials_all"
+    if cache_key in cache:
+        return cache[cache_key]
+    try:
+        response = (
+            supabase.table("artist_testimonials")
+            .select("*")
+            .eq("is_active", True)
+            .order("created_at", desc=False)
+            .execute()
+        )
+        result = response.data
+        cache[cache_key] = result
+        return result
+    except Exception as e:
+        print(f"Error fetching artist testimonials: {e}")
+        return []
+
+
+@app.get("/admin/artist-testimonials")
+@limiter.limit("100/minute")
+def get_all_artist_testimonials(request: Request):
+    """Get ALL artist testimonials (including inactive) for admin panel."""
+    try:
+        response = (
+            supabase.table("artist_testimonials")
+            .select("*")
+            .order("created_at", desc=True)
+            .execute()
+        )
+        return response.data
+    except Exception as e:
+        print(f"Error fetching artist testimonials: {e}")
+        return []
+
+
+@app.post("/admin/artist-testimonials")
+@limiter.limit("20/minute")
+async def create_artist_testimonial(
+    request: Request,
+    name: str = Form(...),
+    role: str = Form(...),
+    location: str = Form(...),
+    review: str = Form(...),
+    rating: int = Form(5),
+    emoji: str = Form("🎵"),
+    is_active: bool = Form(True),
+    photo: UploadFile = File(None),
+):
+    """Create a new artist testimonial (with optional photo)."""
+    try:
+        data = {
+            "name": name,
+            "role": role,
+            "location": location,
+            "review": review,
+            "rating": max(1, min(5, rating)),
+            "emoji": emoji,
+            "is_active": is_active,
+            "photo_url": None,
+        }
+
+        response = supabase.table("artist_testimonials").insert(data).execute()
+        if not response.data:
+            return {"success": False, "message": "Failed to create testimonial"}
+
+        testimonial_id = response.data[0]["id"]
+
+        if photo and photo.filename:
+            ensure_bucket_exists("artist-testimonials")
+            file_bytes = await photo.read()
+            ext = photo.filename.split(".")[-1] if "." in photo.filename else "jpg"
+            sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
+            path = f"{testimonial_id}_{sanitized}.{ext}"
+            supabase.storage.from_("artist-testimonials").upload(
+                path, file_bytes, file_options={"upsert": "true"}
+            )
+            photo_url = supabase.storage.from_("artist-testimonials").get_public_url(path)
+            supabase.table("artist_testimonials").update({"photo_url": photo_url}).eq("id", testimonial_id).execute()
+
+        cache.pop("artist_testimonials_all", None)
+        return {"success": True, "message": "Testimonial created", "id": testimonial_id}
+    except Exception as e:
+        print(f"Error creating artist testimonial: {e}")
+        raise
+
+
+@app.put("/admin/artist-testimonials/{testimonial_id}")
+@limiter.limit("20/minute")
+async def update_artist_testimonial(
+    request: Request,
+    testimonial_id: str,
+    name: str = Form(None),
+    role: str = Form(None),
+    location: str = Form(None),
+    review: str = Form(None),
+    rating: int = Form(None),
+    emoji: str = Form(None),
+    is_active: bool = Form(None),
+    photo: UploadFile = File(None),
+):
+    """Update an existing artist testimonial."""
+    try:
+        update_data: dict = {}
+        if name is not None:
+            update_data["name"] = name
+        if role is not None:
+            update_data["role"] = role
+        if location is not None:
+            update_data["location"] = location
+        if review is not None:
+            update_data["review"] = review
+        if rating is not None:
+            update_data["rating"] = max(1, min(5, rating))
+        if emoji is not None:
+            update_data["emoji"] = emoji
+        if is_active is not None:
+            update_data["is_active"] = is_active
+
+        if photo and photo.filename:
+            ensure_bucket_exists("artist-testimonials")
+            file_bytes = await photo.read()
+            ext = photo.filename.split(".")[-1] if "." in photo.filename else "jpg"
+            label = name or testimonial_id
+            sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", str(label).lower().replace(" ", "_"))
+            path = f"{testimonial_id}_{sanitized}.{ext}"
+            supabase.storage.from_("artist-testimonials").upload(
+                path, file_bytes, file_options={"upsert": "true"}
+            )
+            update_data["photo_url"] = supabase.storage.from_("artist-testimonials").get_public_url(path)
+
+        if update_data:
+            supabase.table("artist_testimonials").update(update_data).eq("id", testimonial_id).execute()
+
+        cache.pop("artist_testimonials_all", None)
+        return {"success": True, "message": "Testimonial updated"}
+    except Exception as e:
+        print(f"Error updating artist testimonial: {e}")
+        raise
+
+
+@app.delete("/admin/artist-testimonials/{testimonial_id}")
+@limiter.limit("20/minute")
+def delete_artist_testimonial(request: Request, testimonial_id: str):
+    """Delete an artist testimonial."""
+    try:
+        supabase.table("artist_testimonials").delete().eq("id", testimonial_id).execute()
+        cache.pop("artist_testimonials_all", None)
+        return {"success": True, "message": "Testimonial deleted"}
+    except Exception as e:
+        print(f"Error deleting artist testimonial: {e}")
+        raise

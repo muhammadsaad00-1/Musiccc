@@ -1,12 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Users, Award, Calendar, Heart, ArrowLeft } from 'lucide-react';
-import ReviewsCarousel from '@/components/home/ReviewsCarousel';
+import TestimonialsSection from '@/components/home/TestimonialsSection';
 import FeatureSection from '@/components/home/FeatureSection';
 import FAQSection from '@/components/ui/FAQSection';
 
 const stats = [
-    { icon: <Users className="w-6 h-6" />, value: '500+', label: 'Verified Artists' },
+    { icon: <Users className="w-6 h-6" />, value: '400+', label: 'Verified Artists' },
     { icon: <Calendar className="w-6 h-6" />, value: '10,000+', label: 'Events Completed' },
     { icon: <Award className="w-6 h-6" />, value: '50+', label: 'Cities Covered' },
     { icon: <Heart className="w-6 h-6" />, value: '98%', label: 'Client Satisfaction' },
@@ -147,22 +147,70 @@ export default function AboutPage() {
                 </div>
             </section>
 
-
-
-            {/* Testimonials Section */}
+            {/* Global Presence Section */}
             <section className="py-16 lg:py-24">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
+                        <span className="inline-block px-4 py-1.5 bg-gradient-to-r from-orange-500/20 to-pink-600/20 rounded-full text-orange-400 text-sm font-medium mb-4 border border-orange-500/30">
+                            🌍 Global Reach
+                        </span>
                         <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                            What Our Clients Say
+                            Serving Clients Worldwide
                         </h2>
                         <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                            Don't just take our word for it. Here's what our satisfied customers have to say about their experience.
+                            From Pakistan to North America, the UK to the Middle East – our artists perform at events across the globe.
                         </p>
                     </div>
-                    <ReviewsCarousel />
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 max-w-5xl mx-auto">
+                        <div className="flex flex-col items-center gap-4 p-6 bg-[#1a1a1a] rounded-2xl border border-gray-800 hover:border-orange-500/30 transition-all group">
+                            <div className="text-6xl transition-transform group-hover:scale-110">🇵🇰</div>
+                            <div className="text-center">
+                                <div className="text-white font-semibold mb-1">Pakistan</div>
+                                <div className="text-xs text-gray-500">Home Base</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center gap-4 p-6 bg-[#1a1a1a] rounded-2xl border border-gray-800 hover:border-orange-500/30 transition-all group">
+                            <div className="text-6xl transition-transform group-hover:scale-110">🇦🇪</div>
+                            <div className="text-center">
+                                <div className="text-white font-semibold mb-1">UAE</div>
+                                <div className="text-xs text-gray-500">Dubai & Abu Dhabi</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center gap-4 p-6 bg-[#1a1a1a] rounded-2xl border border-gray-800 hover:border-orange-500/30 transition-all group">
+                            <div className="text-6xl transition-transform group-hover:scale-110">🇸🇦</div>
+                            <div className="text-center">
+                                <div className="text-white font-semibold mb-1">Saudi Arabia</div>
+                                <div className="text-xs text-gray-500">Riyadh & Jeddah</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center gap-4 p-6 bg-[#1a1a1a] rounded-2xl border border-gray-800 hover:border-orange-500/30 transition-all group">
+                            <div className="text-6xl transition-transform group-hover:scale-110">🇬🇧</div>
+                            <div className="text-center">
+                                <div className="text-white font-semibold mb-1">United Kingdom</div>
+                                <div className="text-xs text-gray-500">London & Manchester</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center gap-4 p-6 bg-[#1a1a1a] rounded-2xl border border-gray-800 hover:border-orange-500/30 transition-all group">
+                            <div className="text-6xl transition-transform group-hover:scale-110">🇺🇸</div>
+                            <div className="text-center">
+                                <div className="text-white font-semibold mb-1">USA</div>
+                                <div className="text-xs text-gray-500">New York & Texas</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center gap-4 p-6 bg-[#1a1a1a] rounded-2xl border border-gray-800 hover:border-orange-500/30 transition-all group">
+                            <div className="text-6xl transition-transform group-hover:scale-110">🇨🇦</div>
+                            <div className="text-center">
+                                <div className="text-white font-semibold mb-1">Canada</div>
+                                <div className="text-xs text-gray-500">Toronto & Vancouver</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
+
+
+            {/* Testimonials — Clients & Artists */}
+            <TestimonialsSection bgClass="bg-[#0a0a0b]" />
 
             {/* FAQ Section */}
             <FAQSection

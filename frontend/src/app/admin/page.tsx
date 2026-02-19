@@ -14,6 +14,8 @@ import {
   Loader2,
   Bell,
   LogOut,
+  Building2,
+  Quote,
 } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
@@ -329,6 +331,30 @@ export default function AdminDashboard() {
             </div>
             <h3 className="font-semibold text-white mb-1">Blogs</h3>
             <p className="text-xs text-gray-500">Posts & Updates</p>
+          </Link>
+
+          <Link
+            href="/admin/clients"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group relative"
+          >
+            <ArrowUpRight className="absolute top-3 right-3 w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
+            <div className="w-10 h-10 bg-green-500/10 text-green-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-500/20 transition-colors">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-white mb-1">Our Clients</h3>
+            <p className="text-xs text-gray-500">Logos & Brands</p>
+          </Link>
+
+          <Link
+            href="/admin/testimonials"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group relative"
+          >
+            <ArrowUpRight className="absolute top-3 right-3 w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
+            <div className="w-10 h-10 bg-yellow-500/10 text-yellow-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-yellow-500/20 transition-colors">
+              <Quote className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-white mb-1">Artist Reviews</h3>
+            <p className="text-xs text-gray-500">Testimonials</p>
           </Link>
         </div>
 

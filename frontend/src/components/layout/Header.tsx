@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Menu, X, Search, ChevronDown, Zap, Mic2, Music, Home, MapPin, Star, Calendar, Info, Phone } from 'lucide-react';
+import { Menu, X, Search, ChevronDown, Zap, Mic2, Music, Home, Star, Calendar, Info, Phone } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 
 // Icon mapping for categories
@@ -50,16 +50,6 @@ const eventTypes = [
     { name: 'Milad/Religious', slug: 'milad', icon: '🕌' },
 ];
 
-// Major Pakistani cities
-const cities = [
-    { name: 'Lahore', slug: 'lahore' },
-    { name: 'Karachi', slug: 'karachi' },
-    { name: 'Islamabad', slug: 'islamabad' },
-    { name: 'Rawalpindi', slug: 'rawalpindi' },
-    { name: 'Faisalabad', slug: 'faisalabad' },
-    { name: 'Multan', slug: 'multan' },
-];
-
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -103,7 +93,7 @@ export default function Header() {
                         />
                         <div className="hidden sm:block">
                             <span className="text-xl font-bold text-white">The Artist Factory</span>
-                            <span className="block text-[10px] text-gray-500 -mt-1">Book Artists in Pakistan</span>
+                            <span className="block text-[10px] text-orange-400 -mt-1 tracking-wide italic font-medium">Bringing stars to your event!</span>
                         </div>
                     </Link>
 
@@ -136,7 +126,7 @@ export default function Header() {
                                         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-orange-500/20 via-pink-600/20 to-orange-500/20 opacity-50 blur-xl -z-10" />
                                         <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#1a1a1a] rotate-45 border-l border-t border-gray-700" />
 
-                                        <div className="grid grid-cols-3 gap-8">
+                                        <div className="grid grid-cols-2 gap-8">
                                             {/* Artists Column */}
                                             <div>
                                                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -186,31 +176,6 @@ export default function Header() {
                                                 </div>
                                             </div>
 
-                                            {/* Cities Column */}
-                                            <div>
-                                                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                                    <MapPin className="w-3 h-3" /> Cities
-                                                </h3>
-                                                <div className="space-y-3">
-                                                    {cities.map((city) => (
-                                                        <Link
-                                                            key={city.slug}
-                                                            href={`/artists?location=${encodeURIComponent(city.name)}`}
-                                                            className="block text-sm text-gray-400 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 transition-all duration-200 font-medium"
-                                                        >
-                                                            {city.name}
-                                                        </Link>
-                                                    ))}
-                                                </div>
-
-                                                {/* Quick CTA */}
-                                                <Link
-                                                    href="/artists"
-                                                    className="mt-6 block px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-600 text-white text-center text-sm font-semibold rounded-lg hover:shadow-lg hover:shadow-pink-500/30 transition-all"
-                                                >
-                                                    Browse All Artists
-                                                </Link>
-                                            </div>
                                         </div>
                                     </div>
                                 </>

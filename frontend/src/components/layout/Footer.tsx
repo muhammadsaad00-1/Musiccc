@@ -38,15 +38,6 @@ export default function Footer() {
             .replace(/[^\w-]+/g, '');
     };
 
-    const cities = [
-        "Lahore",
-        "Karachi",
-        "Islamabad",
-        "Faisalabad",
-        "Multan",
-        "Peshawar"
-    ];
-
     const events = [
         { name: "Wedding Events", slug: "wedding" },
         { name: "Mehendi Events", slug: "mehendi" },
@@ -88,8 +79,11 @@ export default function Footer() {
                             />
                             <div>
                                 <span className="text-2xl font-bold text-white block">The Artist Factory</span>
-                                <span className="text-xs uppercase tracking-widest text-orange-500 font-semibold">
+                                {/* <span className="text-xs uppercase tracking-widest text-orange-500 font-semibold">
                                     Pakistan&apos;s Premier Marketplace
+                                </span> */}
+                                <span className="block text-sm text-orange-300 italic font-medium mt-1">
+                                    Bringing stars to your event!
                                 </span>
                             </div>
                         </Link>
@@ -129,7 +123,7 @@ export default function Footer() {
                     </div>
 
                     {/* Links Columns - Spans 8 columns (4 cols total) */}
-                    <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-8 lg:mt-10 lg:pl-12">
+                    <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-8 lg:mt-10 lg:pl-12">
                         {/* Artists Column */}
                         <div>
                             <h3 className="text-white font-bold text-lg mb-6">Artists</h3>
@@ -143,21 +137,6 @@ export default function Footer() {
                                 ))}
                             </ul>
                         </div>
-
-                        {/* Cities Column */}
-                        <div>
-                            <h3 className="text-white font-bold text-lg mb-6">Cities</h3>
-                            <ul className="space-y-4">
-                                {cities.map((city, index) => (
-                                    <li key={index}>
-                                        <Link href={`/artists?location=${city}`} className="text-base text-gray-400 hover:text-orange-400 transition-colors block">
-                                            Artists in {city}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
 
                         {/* Events Column */}
                         <div>
@@ -189,8 +168,42 @@ export default function Footer() {
                     </div>
                 </div>
 
+                {/* Global Presence */}
+                <div className="py-10 border-y border-gray-800/50 mb-8">
+                    <div className="text-center mb-6">
+                        <h3 className="text-white font-bold text-xl mb-2">Global Presence</h3>
+                        <p className="text-gray-400 text-sm">Serving clients worldwide</p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
+                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇵🇰</div>
+                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">Pakistan</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇦🇪</div>
+                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">UAE</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇸🇦</div>
+                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">Saudi Arabia</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇬🇧</div>
+                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">UK</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇺🇸</div>
+                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">USA</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div className="text-5xl md:text-6xl transition-transform group-hover:scale-110">🇨🇦</div>
+                            <span className="text-gray-400 text-sm font-medium group-hover:text-orange-400 transition-colors">Canada</span>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Bottom Bar */}
-                <div className="pt-8 border-t border-gray-800/50 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-gray-400 text-base">
                         © Copyright 2024 - 2026 | The Artist Factory | All Rights Reserved.
                     </p>

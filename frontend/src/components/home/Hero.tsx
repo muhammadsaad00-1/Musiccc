@@ -78,7 +78,7 @@ interface Stats {
 
 export default function Hero() {
     const [stats, setStats] = useState<Stats>({
-        artists: 200,
+        artists: 400,
         events: 5000,
         cities: 20,
         rating: 4.9,
@@ -148,6 +148,11 @@ export default function Hero() {
                             For Your Event
                         </h1>
 
+                        {/* Tagline */}
+                        <p className="text-lg sm:text-xl font-semibold italic text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 -mt-4">
+                            Bringing stars to your event!
+                        </p>
+
                         {/* Subtitle */}
                         <p className="text-lg text-gray-400 max-w-xl leading-relaxed">
                             From soulful <strong>Qawwals</strong> to high-energy <strong>Live Bands</strong>, we connect you with Pakistan&apos;s finest talent for weddings, corporate events, and concerts.
@@ -198,6 +203,9 @@ export default function Hero() {
                                 <div className="text-sm text-gray-500">Rating</div>
                             </div>
                         </div>
+
+                        {/* Global Presence Indicator */}
+
                     </div>
 
                     {/* Right Image (now Left on Desktop) */}

@@ -147,11 +147,7 @@ export default function AdminLogin() {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-gray-800">
-            <p className="text-center text-sm text-gray-500">
-              Use your Supabase admin credentials to sign in
-            </p>
-          </div>
+  
         </div>
 
         {/* Back to Site */}
