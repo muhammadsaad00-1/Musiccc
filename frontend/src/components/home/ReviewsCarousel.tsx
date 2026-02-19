@@ -17,6 +17,15 @@ const mockReviews: Review[] = [
     { id: 'mr1', user_name: 'Zainab Ahmed', rating: 5, review: 'The Artist Factory made finding a Qawwal for our wedding so easy. The team was professional and the performance was magical!' },
     { id: 'mr2', user_name: 'Omar Farooq', rating: 5, review: 'Booked a live band for our corporate annual dinner. Seamless coordination and a fantastic performance. Highly recommended.' },
     { id: 'mr3', user_name: 'Sarah Khan', rating: 5, review: 'I was worried about booking an artist online, but TAF verified profiles gave me confidence. The process was transparent and secure.' },
+    { id: 'mr4', user_name: 'Bilal Hassan', rating: 5, review: 'Absolutely stellar service! We needed a last-minute replacement for our event host, and TAF came through with a professional MC within hours.' },
+    { id: 'mr5', user_name: 'Ayesha Malik', rating: 5, review: 'The variety of artists available is unmatched. From traditional folk singers to modern DJs, they have it all. Our mehndi night was a hit!' },
+    { id: 'mr6', user_name: 'Usman Qureshi', rating: 4, review: 'Great platform for finding local talent. The booking process was straightforward, and the artist arrived on time and well-prepared.' },
+    { id: 'mr7', user_name: 'Hina Riaz', rating: 5, review: 'We hired a photographer through Artist Factory for a family reunion. The photos turned out beautiful, capturing every precious moment perfectly.' },
+    { id: 'mr8', user_name: 'Saad Ali', rating: 5, review: 'Top-notch professionalism. The team at Artist Factory understood our specific requirements for a brand activation event and delivered exactly what we needed.' },
+    { id: 'mr9', user_name: 'Mariam Yusuf', rating: 5, review: 'I’ve used this platform twice now, once for a birthday and once for a corporate launch. Consistent quality and excellent customer support every time.' },
+    { id: 'mr10', user_name: 'Fahad Mustafa', rating: 5, review: 'Found an amazing Sufi group for our private gathering. The soulful performance left everyone mesmerizing. Thank you, TAF!' },
+    { id: 'mr11', user_name: 'Nida Karim', rating: 4, review: 'Very user-friendly website. It was easy to compare different artists and read reviews before making a decision. Will definitely use again.' },
+    { id: 'mr12', user_name: 'Rizwan Ahmed', rating: 5, review: 'The "Verified Artist" badge really helps. You know you are getting a genuine professional. Our event was a huge success thanks to the talented band we found here.' }
 ];
 
 export default function ReviewsCarousel({ artistId, className }: { artistId?: string; className?: string }) {
@@ -118,33 +127,33 @@ export default function ReviewsCarousel({ artistId, className }: { artistId?: st
             onMouseLeave={() => setIsPaused(false)}
         >
             {/* Main Review Card */}
-            <div className="relative bg-gradient-to-br from-[#1a1a1a] to-[#252525] rounded-3xl p-8 md:p-12 border border-gray-800 hover:border-orange-500/50 text-center transition-all duration-500 group">
-                {/* Neon Glow Effect */}
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-pink-600/0 group-hover:from-orange-500/10 group-hover:via-orange-500/20 group-hover:to-pink-600/10 transition-all duration-500" />
+            <div className="relative bg-[#0f0f10] rounded-3xl p-10 md:p-14 border border-gray-800 hover:border-orange-500/30 text-center transition-all duration-500 group shadow-2xl">
+                {/* Elegant glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/2 bg-gradient-to-b from-orange-500/10 to-transparent blur-3xl opacity-50 group-hover:opacity-80 transition-opacity duration-500" />
 
-                {/* Quote Icon */}
-                <div className="absolute top-6 left-6 opacity-20 group-hover:opacity-40 transition-opacity">
-                    <Quote className="w-16 h-16 text-orange-500" />
+                {/* Quote Icon - More subtle */}
+                <div className="mb-8">
+                    <Quote className="w-12 h-12 text-orange-500/40 mx-auto" />
                 </div>
 
                 {/* Stars */}
-                <div className="relative mb-6">
+                <div className="relative mb-8">
                     {renderStars(currentReview.rating)}
                 </div>
 
-                {/* Review Text */}
-                <p className="relative text-xl md:text-2xl lg:text-3xl font-medium text-white leading-relaxed mb-8 max-w-3xl mx-auto group-hover:text-gray-100 transition-colors">
-                    "<span className="text-orange-400/90">{currentReview.review.charAt(0)}</span>{currentReview.review.slice(1)}"
+                {/* Review Text - Serif & Elegant */}
+                <p className="relative text-xl md:text-3xl font-serif italic text-gray-200 leading-relaxed mb-10 max-w-4xl mx-auto">
+                    "{currentReview.review}"
                 </p>
 
                 {/* User Info */}
-                <div className="relative flex items-center justify-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-pink-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-orange-500/30">
+                <div className="relative flex flex-col items-center justify-center gap-3 border-t border-gray-800/50 pt-8 max-w-xs mx-auto">
+                    <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full flex items-center justify-center text-white text-lg font-bold border border-gray-700 shadow-inner">
                         {currentReview.user_name.charAt(0).toUpperCase()}
                     </div>
-                    <div className="text-left">
-                        <p className="text-white font-semibold text-lg">{currentReview.user_name}</p>
-                        <p className="text-orange-400/70 text-sm">Verified Customer ✓</p>
+                    <div>
+                        <p className="text-white font-medium text-lg tracking-wide">{currentReview.user_name}</p>
+                        <p className="text-orange-400/80 text-xs uppercase tracking-widest font-semibold mt-1">Verified Client</p>
                     </div>
                 </div>
             </div>

@@ -21,7 +21,7 @@ export default function Home() {
       <TestimonialsSection />
 
       {/* Our Corporate Clients */}
-      <OurClients />
+      {/* <OurClients /> */}
 
       <HowItWorks />
       <CTASection />
