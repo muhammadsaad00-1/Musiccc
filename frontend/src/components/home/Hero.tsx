@@ -76,6 +76,21 @@ interface Stats {
     rating: number;
 }
 
+interface HeroImage {
+    id: string;
+    image_url: string;
+    title?: string;
+    subtitle?: string;
+}
+
+// Fallback hero images if backend has none
+const fallbackHeroImages = [
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1000&auto=format&fit=crop", // Music concert
+    "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1000&auto=format&fit=crop", // Stage performance
+    "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=1000&auto=format&fit=crop", // Band
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1000&auto=format&fit=crop"  // DJ
+];
+
 export default function Hero() {
     const [stats, setStats] = useState<Stats>({
         artists: 400,
@@ -85,13 +100,27 @@ export default function Hero() {
     });
 
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [heroImages, setHeroImages] = useState<string[]>(fallbackHeroImages);
+    const [backendImages, setBackendImages] = useState<HeroImage[]>([]);
 
-    const heroImages = [
-        "https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=1000&auto=format&fit=crop", // Singer
-        "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1000&auto=format&fit=crop", // Mic
-        "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=1000&auto=format&fit=crop", // Concert
-        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1000&auto=format&fit=crop"  // DJ
-    ];
+    // Fetch hero images from backend
+    useEffect(() => {
+        const fetchHeroImages = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/hero-images`);
+                if (response.ok) {
+                    const data: HeroImage[] = await response.json();
+                    if (data && data.length > 0) {
+                        setBackendImages(data);
+                        setHeroImages(data.map(img => img.image_url));
+                    }
+                }
+            } catch (error) {
+                console.log('Using fallback hero images');
+            }
+        };
+        fetchHeroImages();
+    }, []);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -129,7 +158,6 @@ export default function Hero() {
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-900/20 rounded-full blur-[120px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-900/20 rounded-full blur-[100px]" />
-                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02]" />
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">

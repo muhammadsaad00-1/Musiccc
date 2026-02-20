@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 import TestimonialsSection from "@/components/home/TestimonialsSection";
+import PortfolioGrid from "@/components/home/PortfolioGrid";
 import {
     CheckCircle,
     Star,
@@ -672,7 +673,7 @@ export default function AboutPage() {
             </section>
 
             {/* ══ PORTFOLIO (dynamic) ════════════════════════════════════ */}
-            <PortfolioSection />
+            <PortfolioGrid bgClass="bg-[#0f0f10]" />
 
             {/* ══ TESTIMONIALS ══════════════════════════════════════════ */}
             <TestimonialsSection bgClass="bg-[#0a0a0b]" />

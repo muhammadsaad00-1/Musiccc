@@ -16,6 +16,8 @@ import hashlib
 from email_service import send_requirement_notification, send_contact_message
 import os
 from dotenv import load_dotenv
+from datetime import datetime
+import secrets
 
 load_dotenv()  
 
@@ -1829,6 +1831,431 @@ async def submit_contact_form(
         return {
             "success": False,
             "message": "An error occurred. Please try again later."
+        }
+
+
+@app.post("/api/testimonials/submit")
+@limiter.limit("5/minute")
+async def submit_testimonial(request: Request):
+    """
+    Submit a testimonial from clients or artists.
+    Stores in database for admin review.
+    """
+    try:
+        # Parse JSON body
+        body = await request.json()
+        
+        name = body.get("name", "").strip()
+        role = body.get("role", "").strip()
+        location = body.get("location", "").strip()
+        rating = body.get("rating", 5)
+        review = body.get("review", "").strip()
+        testimonial_type = body.get("type", "client")  # client or artist
+        
+        # Validate required fields
+        if not name:
+            return {
+                "success": False,
+                "message": "Name is required"
+            }
+        
+        if not review:
+            return {
+                "success": False,
+                "message": "Review text is required"
+            }
+        
+        # Validate rating
+        if rating < 1 or rating > 5:
+            return {
+                "success": False,
+                "message": "Rating must be between 1 and 5"
+            }
+        
+        # Prepare data for database
+        testimonial_data = {
+            "name": name,
+            "role": role if role else None,
+            "location": location if location else None,
+            "rating": rating,
+            "review": review,
+            "type": testimonial_type,
+            "is_approved": False,  # Requires admin approval
+            "submitted_at": "now()"
+        }
+        
+        # Save to database
+        response = supabase.table("testimonials").insert(testimonial_data).execute()
+        
+        if response.data:
+            return {
+                "success": True,
+                "message": "Thank you for your testimonial! It will be reviewed by our team."
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Failed to submit testimonial. Please try again."
+            }
+            
+    except Exception as e:
+        print(f"Error submitting testimonial: {e}")
+        return {
+            "success": False,
+            "message": "An error occurred. Please try again later."
+        }
+
+
+# ============================================
+# PORTFOLIO ENDPOINTS
+# ============================================
+
+@app.get("/api/portfolio")
+@limiter.limit("100/minute")
+def get_portfolio_items(request: Request):
+    """Get all active portfolio items (images and videos)."""
+    cache_key = "portfolio_items_all"
+    if cache_key in cache:
+        return cache[cache_key]
+    try:
+        response = (
+            supabase.table("portfolio_items")
+            .select("*")
+            .eq("is_active", True)
+            .order("display_order", desc=False)
+            .execute()
+        )
+        data = response.data if response.data else []
+        cache[cache_key] = data
+        return data
+    except Exception as e:
+        print(f"Error fetching portfolio items: {e}")
+        return []
+
+
+@app.post("/api/admin/portfolio")
+@limiter.limit("20/minute")
+async def create_portfolio_item(
+    request: Request,
+    title: str = Form(...),
+    description: str = Form(""),
+    item_type: str = Form(...),  # 'image' or 'video'
+    media_url: str = Form(...),  # Image URL from storage or YouTube link
+    thumbnail_url: str = Form(""),
+    display_order: int = Form(0)
+):
+    """Admin: Create a new portfolio item."""
+    try:
+        # Validate item_type
+        if item_type not in ["image", "video"]:
+            return {
+                "success": False,
+                "message": "Invalid item type. Must be 'image' or 'video'"
+            }
+        
+        item_data = {
+            "title": title,
+            "description": description,
+            "item_type": item_type,
+            "media_url": media_url,
+            "thumbnail_url": thumbnail_url if thumbnail_url else None,
+            "display_order": display_order,
+            "is_active": True
+        }
+        
+        response = supabase.table("portfolio_items").insert(item_data).execute()
+        
+        if response.data:
+            # Clear cache
+            cache.pop("portfolio_items_all", None)
+            return {
+                "success": True,
+                "message": "Portfolio item created successfully",
+                "data": response.data[0]
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Failed to create portfolio item"
+            }
+    except Exception as e:
+        print(f"Error creating portfolio item: {e}")
+        return {
+            "success": False,
+            "message": "An error occurred while creating the portfolio item"
+        }
+
+
+@app.put("/api/admin/portfolio/{item_id}")
+@limiter.limit("20/minute")
+async def update_portfolio_item(
+    request: Request,
+    item_id: str,
+    title: str = Form(...),
+    description: str = Form(""),
+    item_type: str = Form(...),
+    media_url: str = Form(...),
+    thumbnail_url: str = Form(""),
+    display_order: int = Form(0),
+    is_active: bool = Form(True)
+):
+    """Admin: Update a portfolio item."""
+    try:
+        # Validate item_type
+        if item_type not in ["image", "video"]:
+            return {
+                "success": False,
+                "message": "Invalid item type. Must be 'image' or 'video'"
+            }
+        
+        update_data = {
+            "title": title,
+            "description": description,
+            "item_type": item_type,
+            "media_url": media_url,
+            "thumbnail_url": thumbnail_url if thumbnail_url else None,
+            "display_order": display_order,
+            "is_active": is_active
+        }
+        
+        response = (
+            supabase.table("portfolio_items")
+            .update(update_data)
+            .eq("id", item_id)
+            .execute()
+        )
+        
+        if response.data:
+            # Clear cache
+            cache.pop("portfolio_items_all", None)
+            return {
+                "success": True,
+                "message": "Portfolio item updated successfully",
+                "data": response.data[0]
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Portfolio item not found"
+            }
+    except Exception as e:
+        print(f"Error updating portfolio item: {e}")
+        return {
+            "success": False,
+            "message": "An error occurred while updating the portfolio item"
+        }
+
+
+@app.delete("/api/admin/portfolio/{item_id}")
+@limiter.limit("20/minute")
+def delete_portfolio_item(request: Request, item_id: str):
+    """Admin: Delete a portfolio item."""
+    try:
+        response = supabase.table("portfolio_items").delete().eq("id", item_id).execute()
+        
+        if response.data:
+            # Clear cache
+            cache.pop("portfolio_items_all", None)
+            return {
+                "success": True,
+                "message": "Portfolio item deleted successfully"
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Portfolio item not found"
+            }
+    except Exception as e:
+        print(f"Error deleting portfolio item: {e}")
+        return {
+            "success": False,
+            "message": "An error occurred while deleting the portfolio item"
+        }
+
+
+# ============================================
+# HERO IMAGES ENDPOINTS
+# ============================================
+
+@app.get("/api/hero-images")
+@limiter.limit("100/minute")
+def get_hero_images(request: Request):
+    """Get all active hero images for the homepage."""
+    cache_key = "hero_images_all"
+    if cache_key in cache:
+        return cache[cache_key]
+    try:
+        response = (
+            supabase.table("hero_images")
+            .select("*")
+            .eq("is_active", True)
+            .order("display_order", desc=False)
+            .execute()
+        )
+        data = response.data if response.data else []
+        cache[cache_key] = data
+        return data
+    except Exception as e:
+        print(f"Error fetching hero images: {e}")
+        return []
+
+
+@app.post("/api/admin/hero-images")
+@limiter.limit("20/minute")
+async def create_hero_image(
+    request: Request,
+    title: str = Form(""),
+    subtitle: str = Form(""),
+    display_order: int = Form(0),
+    image: UploadFile = File(...)
+):
+    """Admin: Upload a new hero image."""
+    try:
+        # Validate file type
+        if not image.content_type or not image.content_type.startswith("image/"):
+            return {
+                "success": False,
+                "message": "Only image files are allowed"
+            }
+        
+        # Generate unique filename
+        ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
+        filename = f"hero_{datetime.now().timestamp()}_{secrets.token_hex(8)}.{ext}"
+        
+        # Upload to Supabase Storage
+        file_bytes = await image.read()
+        upload_response = supabase.storage.from_("hero-images").upload(
+            filename,
+            file_bytes,
+            {"content-type": image.content_type}
+        )
+        
+        if hasattr(upload_response, 'error') and upload_response.error:
+            return {
+                "success": False,
+                "message": f"Failed to upload image: {upload_response.error}"
+            }
+        
+        # Get public URL
+        public_url = supabase.storage.from_("hero-images").get_public_url(filename)
+        
+        # Save to database
+        hero_data = {
+            "image_url": public_url,
+            "title": title if title else None,
+            "subtitle": subtitle if subtitle else None,
+            "display_order": display_order,
+            "is_active": True
+        }
+        
+        response = supabase.table("hero_images").insert(hero_data).execute()
+        
+        if response.data:
+            # Clear cache
+            cache.pop("hero_images_all", None)
+            return {
+                "success": True,
+                "message": "Hero image created successfully",
+                "data": response.data[0]
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Failed to create hero image"
+            }
+    except Exception as e:
+        print(f"Error creating hero image: {e}")
+        return {
+            "success": False,
+            "message": "An error occurred while creating the hero image"
+        }
+
+
+@app.put("/api/admin/hero-images/{image_id}")
+@limiter.limit("20/minute")
+async def update_hero_image(
+    request: Request,
+    image_id: str,
+    title: str = Form(""),
+    subtitle: str = Form(""),
+    display_order: int = Form(0),
+    is_active: bool = Form(True)
+):
+    """Admin: Update a hero image (text fields only, not the image itself)."""
+    try:
+        update_data = {
+            "title": title if title else None,
+            "subtitle": subtitle if subtitle else None,
+            "display_order": display_order,
+            "is_active": is_active
+        }
+        
+        response = (
+            supabase.table("hero_images")
+            .update(update_data)
+            .eq("id", image_id)
+            .execute()
+        )
+        
+        if response.data:
+            # Clear cache
+            cache.pop("hero_images_all", None)
+            return {
+                "success": True,
+                "message": "Hero image updated successfully",
+                "data": response.data[0]
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Hero image not found"
+            }
+    except Exception as e:
+        print(f"Error updating hero image: {e}")
+        return {
+            "success": False,
+            "message": "An error occurred while updating the hero image"
+        }
+
+
+@app.delete("/api/admin/hero-images/{image_id}")
+@limiter.limit("20/minute")
+def delete_hero_image(request: Request, image_id: str):
+    """Admin: Delete a hero image."""
+    try:
+        # Get image data first to delete from storage
+        item_response = supabase.table("hero_images").select("image_url").eq("id", image_id).execute()
+        
+        if item_response.data and len(item_response.data) > 0:
+            image_url = item_response.data[0].get("image_url")
+            if image_url:
+                # Extract filename from URL and delete from storage
+                try:
+                    filename = image_url.split("/")[-1]
+                    supabase.storage.from_("hero-images").remove([filename])
+                except Exception as storage_err:
+                    print(f"Warning: Could not delete image from storage: {storage_err}")
+        
+        # Delete from database
+        response = supabase.table("hero_images").delete().eq("id", image_id).execute()
+        
+        if response.data:
+            # Clear cache
+            cache.pop("hero_images_all", None)
+            return {
+                "success": True,
+                "message": "Hero image deleted successfully"
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Hero image not found"
+            }
+    except Exception as e:
+        print(f"Error deleting hero image: {e}")
+        return {
+            "success": False,
+            "message": "An error occurred while deleting the hero image"
         }
 
 

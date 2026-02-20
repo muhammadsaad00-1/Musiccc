@@ -5,6 +5,7 @@ import Image from "next/image";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import AnimatedCounter from "@/components/ui/AnimatedCounter";
 import { Mic2, Music, Globe, Award, Send, Star, User, MapPin, Briefcase } from "lucide-react";
+import { API_BASE_URL } from '@/lib/api';
 
 // Reuse stats data structure for consistency
 const stats = [
@@ -29,16 +30,39 @@ function ReviewForm() {
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/testimonials/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: formData.name,
+                    role: formData.role,
+                    location: formData.location,
+                    rating: formData.rating,
+                    review: formData.review,
+                    type: 'client' // or 'artist' based on context
+                }),
+            });
 
-        // Reset and show success
-        setIsSubmitting(false);
-        setSubmitted(true);
-        setFormData({ name: "", role: "", location: "", rating: 5, review: "" });
-
-        // Hide success message after 5 seconds
-        setTimeout(() => setSubmitted(false), 5000);
+            if (response.ok) {
+                // Reset and show success
+                setSubmitted(true);
+                setFormData({ name: "", role: "", location: "", rating: 5, review: "" });
+                
+                // Hide success message after 5 seconds
+                setTimeout(() => setSubmitted(false), 5000);
+            } else {
+                console.error('Failed to submit testimonial');
+                alert('Failed to submit testimonial. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error submitting testimonial:', error);
+            alert('An error occurred. Please try again later.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
