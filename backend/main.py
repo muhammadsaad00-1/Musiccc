@@ -477,7 +477,7 @@ async def create_performer(
         upload_response = supabase.storage.from_("performers").upload(
             profile_path, 
             file_bytes,
-            file_options={"upsert": "true"}
+            {"upsert": "true"}
         )
         profile_image_url = supabase.storage.from_("performers").get_public_url(profile_path)
         
@@ -505,7 +505,7 @@ async def create_performer(
         supabase.storage.from_("performers").upload(
             header_path, 
             header_bytes,
-            file_options={"upsert": "true"}
+            {"upsert": "true"}
         )
         header_image_url = supabase.storage.from_("performers").get_public_url(header_path)
         update_data["header_image_url"] = header_image_url
@@ -520,7 +520,7 @@ async def create_performer(
             supabase.storage.from_("performers").upload(
                 gallery_path, 
                 gallery_bytes,
-                file_options={"upsert": "true"}
+                {"upsert": "true"}
             )
             gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
             gallery_urls.append(gallery_url)
@@ -731,7 +731,7 @@ async def update_performer(
         supabase.storage.from_("performers").upload(
             path, 
             file_bytes, 
-            file_options={"upsert": "true"}
+            {"upsert": "true"}
         )
         update_data["profile_image_url"] = supabase.storage.from_("performers").get_public_url(path)
     
@@ -743,7 +743,7 @@ async def update_performer(
         supabase.storage.from_("performers").upload(
             header_path, 
             header_bytes, 
-            file_options={"upsert": "true"}
+            {"upsert": "true"}
         )
         update_data["header_image_url"] = supabase.storage.from_("performers").get_public_url(header_path)
     
@@ -759,7 +759,7 @@ async def update_performer(
                 supabase.storage.from_("performers").upload(
                     gallery_path, 
                     gallery_bytes, 
-                    file_options={"upsert": "true"}
+                    {"upsert": "true"}
                 )
                 gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
                 gallery_urls.append(gallery_url)
@@ -2111,6 +2111,9 @@ async def create_hero_image(
 ):
     """Admin: Upload a new hero image."""
     try:
+        # Ensure bucket exists
+        ensure_bucket_exists("hero-images")
+        
         # Validate file type
         if not image.content_type or not image.content_type.startswith("image/"):
             return {
@@ -2333,11 +2336,18 @@ async def create_client_logo(
             ext = logo.filename.split(".")[-1] if "." in logo.filename else "png"
             sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
             path = f"{client_id}_{sanitized}.{ext}"
+            
+            # Upload to storage
             supabase.storage.from_("client-logos").upload(
-                path, file_bytes, file_options={"upsert": "true"}
+                path, file_bytes, {"upsert": "true"}
             )
+            
+            # Get public URL and update database
             logo_url = supabase.storage.from_("client-logos").get_public_url(path)
-            supabase.table("client_logos").update({"logo_url": logo_url}).eq("id", client_id).execute()
+            update_response = supabase.table("client_logos").update({"logo_url": logo_url}).eq("id", client_id).execute()
+            
+            if not update_response.data:
+                print(f"Warning: Failed to update logo_url for client {client_id}")
 
         # Invalidate cache
         cache.pop("client_logos_all", None)
@@ -2374,9 +2384,13 @@ async def update_client_logo(
             label = name or client_id
             sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", str(label).lower().replace(" ", "_"))
             path = f"{client_id}_{sanitized}.{ext}"
+            
+            # Upload to storage
             supabase.storage.from_("client-logos").upload(
-                path, file_bytes, file_options={"upsert": "true"}
+                path, file_bytes, {"upsert": "true"}
             )
+            
+            # Get public URL
             update_data["logo_url"] = supabase.storage.from_("client-logos").get_public_url(path)
 
         if update_data:
@@ -2484,11 +2498,18 @@ async def create_artist_testimonial(
             ext = photo.filename.split(".")[-1] if "." in photo.filename else "jpg"
             sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
             path = f"{testimonial_id}_{sanitized}.{ext}"
+            
+            # Upload to storage
             supabase.storage.from_("artist-testimonials").upload(
-                path, file_bytes, file_options={"upsert": "true"}
+                path, file_bytes, {"upsert": "true"}
             )
+            
+            # Get public URL and update database
             photo_url = supabase.storage.from_("artist-testimonials").get_public_url(path)
-            supabase.table("artist_testimonials").update({"photo_url": photo_url}).eq("id", testimonial_id).execute()
+            update_response = supabase.table("artist_testimonials").update({"photo_url": photo_url}).eq("id", testimonial_id).execute()
+            
+            if not update_response.data:
+                print(f"Warning: Failed to update photo_url for testimonial {testimonial_id}")
 
         cache.pop("artist_testimonials_all", None)
         return {"success": True, "message": "Testimonial created", "id": testimonial_id}
@@ -2536,9 +2557,13 @@ async def update_artist_testimonial(
             label = name or testimonial_id
             sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", str(label).lower().replace(" ", "_"))
             path = f"{testimonial_id}_{sanitized}.{ext}"
+            
+            # Upload to storage
             supabase.storage.from_("artist-testimonials").upload(
-                path, file_bytes, file_options={"upsert": "true"}
+                path, file_bytes, {"upsert": "true"}
             )
+            
+            # Get public URL
             update_data["photo_url"] = supabase.storage.from_("artist-testimonials").get_public_url(path)
 
         if update_data:
@@ -2563,82 +2588,74 @@ def delete_artist_testimonial(request: Request, testimonial_id: str):
         print(f"Error deleting artist testimonial: {e}")
         raise
 
-# ─────────────────────────────────────────────
-#  PORTFOLIO ENDPOINTS
-# ─────────────────────────────────────────────
 
-@app.get("/api/portfolio")
-@limiter.limit("60/minute")
-def get_portfolio(request: Request):
-    """Return portfolio images and videos."""
-    try:
-        cached = cache.get("portfolio")
-        if cached:
-            return cached
-        result = supabase.table("portfolio").select("*").order("created_at", desc=True).execute()
-        images = [r for r in result.data if r.get("type") == "image"]
-        videos = [r for r in result.data if r.get("type") == "video"]
-        payload = {
-            "images": [{"id": r["id"], "url": r["url"], "title": r.get("title", ""), "created_at": r.get("created_at", "")} for r in images],
-            "videos": [{"id": r["id"], "url": r["url"], "title": r.get("title", ""), "created_at": r.get("created_at", "")} for r in videos],
-        }
-        cache["portfolio"] = payload
-        return payload
-    except Exception as e:
-        print(f"Error fetching portfolio: {e}")
-        return {"images": [], "videos": []}
+# ============================================
+# PORTFOLIO IMAGE UPLOAD ENDPOINT
+# ============================================
 
-
-@app.post("/admin/portfolio/images")
+@app.post("/api/admin/portfolio/upload-image")
 @limiter.limit("20/minute")
-async def upload_portfolio_image(request: Request, file: UploadFile = File(...), title: str = Form("")):
+async def upload_portfolio_image(
+    request: Request,
+    image: UploadFile = File(...),
+    title: str = Form(...),
+    description: str = Form(""),
+    display_order: int = Form(0)
+):
+    """Admin: Upload an image for portfolio_items."""
     import time as _time
     try:
-        ensure_bucket_exists("portfolio")
-        file_bytes = await file.read()
-        ext = file.filename.split(".")[-1] if file.filename and "." in file.filename else "jpg"
-        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", title.lower().replace(" ", "_")) if title else "image"
-        filename = sanitized + "_" + str(int(_time.time())) + "." + ext
-        supabase.storage.from_("portfolio").upload(filename, file_bytes, file_options={"upsert": "true"})
-        url = supabase.storage.from_("portfolio").get_public_url(filename)
-        supabase.table("portfolio").insert({"type": "image", "url": url, "title": title}).execute()
-        cache.pop("portfolio", None)
-        return {"success": True, "url": url, "title": title}
+        # Ensure bucket exists
+        ensure_bucket_exists("portfolio-items")
+        
+        # Validate file type
+        if not image.content_type or not image.content_type.startswith("image/"):
+            return {
+                "success": False,
+                "message": "Only image files are allowed"
+            }
+        
+        # Upload image to storage
+        file_bytes = await image.read()
+        ext = image.filename.split(".")[-1] if image.filename and "." in image.filename else "jpg"
+        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", title.lower().replace(" ", "_"))
+        filename = f"{sanitized}_{int(_time.time())}.{ext}"
+        
+        # Upload to storage
+        supabase.storage.from_("portfolio-items").upload(
+            filename, 
+            file_bytes, 
+            {"upsert": "true"}
+        )
+        
+        # Get public URL
+        media_url = supabase.storage.from_("portfolio-items").get_public_url(filename)
+        
+        # Create portfolio item in database
+        item_data = {
+            "title": title,
+            "description": description,
+            "item_type": "image",
+            "media_url": media_url,
+            "display_order": display_order,
+            "is_active": True
+        }
+        
+        response = supabase.table("portfolio_items").insert(item_data).execute()
+        
+        if response.data:
+            # Clear cache
+            cache.pop("portfolio_items_all", None)
+            return {
+                "success": True,
+                "message": "Portfolio image uploaded successfully",
+                "data": response.data[0]
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Failed to create portfolio item"
+            }
     except Exception as e:
         print(f"Error uploading portfolio image: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/admin/portfolio/videos")
-@limiter.limit("20/minute")
-async def add_portfolio_video(request: Request, url: str = Form(...), title: str = Form("")):
-    try:
-        supabase.table("portfolio").insert({"type": "video", "url": url, "title": title}).execute()
-        cache.pop("portfolio", None)
-        return {"success": True, "url": url, "title": title}
-    except Exception as e:
-        print(f"Error adding portfolio video: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.delete("/admin/portfolio/{item_id}")
-@limiter.limit("20/minute")
-def delete_portfolio_item(request: Request, item_id: str):
-    """Delete a portfolio item (also removes image from storage)."""
-    try:
-        result = supabase.table("portfolio").select("*").eq("id", item_id).execute()
-        if result.data:
-            item = result.data[0]
-            if item.get("type") == "image":
-                try:
-                    url_str = item.get("url", "")
-                    fname = url_str.split("/")[-1].split("?")[0]
-                    supabase.storage.from_("portfolio").remove([fname])
-                except Exception:
-                    pass
-        supabase.table("portfolio").delete().eq("id", item_id).execute()
-        cache.pop("portfolio", None)
-        return {"success": True, "message": "Portfolio item deleted"}
-    except Exception as e:
-        print(f"Error deleting portfolio item: {e}")
         raise HTTPException(status_code=500, detail=str(e))

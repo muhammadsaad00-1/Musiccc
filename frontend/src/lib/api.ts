@@ -3,7 +3,7 @@
 
 import { Artist, Category, Inquiry, SearchFilters } from '@/types';
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+export const API_BASE_URL ='http://127.0.0.1:8000';
 
 // Helper function for API calls
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
