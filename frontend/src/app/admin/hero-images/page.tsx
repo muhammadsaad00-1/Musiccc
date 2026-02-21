@@ -161,15 +161,57 @@ export default function AdminHeroImagesPage() {
         display_order: 0,
         is_active: true
     });
+    const [adminUsername, setAdminUsername] = useState("");
+
 
     useEffect(() => {
+        const checkAuth = async () => {
+      const isLoggedIn = sessionStorage.getItem("adminLoggedIn");
+      const accessToken = sessionStorage.getItem("adminAccessToken");
+
+      if (isLoggedIn !== "true" || !accessToken) {
+        router.push("/admin/login");
+        return;
+      }
+
+      // Verify token with backend
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/verify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            access_token: accessToken,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          // Session invalid, redirect to login
+          sessionStorage.clear();
+          router.push("/admin/login");
+          return;
+        }
+
+        setAdminUsername(sessionStorage.getItem("adminUsername") || "Admin");
+      } catch (error) {
+        console.error("Auth verification failed:", error);
+        sessionStorage.clear();
+        router.push("/admin/login");
+        return;
+      }
+    };
+    checkAuth();
         fetchImages();
     }, []);
 
     const fetchImages = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('adminToken');
+            
+            const token = sessionStorage.getItem("adminAccessToken");
             if (!token) {
                 router.push('/admin/login');
                 return;
@@ -193,7 +235,7 @@ export default function AdminHeroImagesPage() {
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
-            const token = localStorage.getItem('adminToken');
+            const token = sessionStorage.getItem("adminAccessToken");
             const formBody = new FormData();
             
             if (formData.id) {
@@ -264,7 +306,7 @@ export default function AdminHeroImagesPage() {
         if (!confirm('Are you sure you want to delete this hero image?')) return;
 
         try {
-            const token = localStorage.getItem('adminToken');
+            const token = sessionStorage.getItem("adminAccessToken");
             const response = await fetch(`${API_BASE_URL}/api/admin/hero-images/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }

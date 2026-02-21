@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Plus, ArrowLeft, Edit2, Trash2, Loader2, X, Upload, Star, Quote, Eye, EyeOff } from 'lucide-react';
+import { Plus, ArrowLeft, Edit2, Trash2, Loader2, X, Upload, Star, Quote, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 
 interface ArtistTestimonial {
@@ -197,6 +198,7 @@ const TestimonialForm = ({
 );
 
 export default function ManageTestimonialsPage() {
+    const router = useRouter();
     const [testimonials, setTestimonials] = useState<ArtistTestimonial[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -208,6 +210,21 @@ export default function ManageTestimonialsPage() {
     const [formData, setFormData] = useState({ ...emptyForm });
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    // Auth check
+    useEffect(() => {
+        const isLoggedIn = sessionStorage.getItem("adminLoggedIn");
+        const accessToken = sessionStorage.getItem("adminAccessToken");
+        if (isLoggedIn !== "true" || !accessToken) {
+            router.push("/admin/login");
+        }
+    }, [router]);
+
+    const showToast = (type: 'success' | 'error', message: string) => {
+        setToast({ type, message });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     const fetchTestimonials = async () => {
         try {
@@ -271,10 +288,19 @@ export default function ManageTestimonialsPage() {
             setSubmitting(true);
             const res = await fetch(`${API_BASE_URL}/admin/artist-testimonials`, { method: 'POST', body: buildBody() });
             const data = await res.json();
-            if (data.success) { await fetchTestimonials(); closeModals(); }
-            else alert(data.message || 'Failed to create testimonial');
-        } catch (err) { console.error(err); alert('Error creating testimonial'); }
-        finally { setSubmitting(false); }
+            if (data.success) {
+                await fetchTestimonials();
+                closeModals();
+                showToast('success', 'Testimonial created successfully!');
+            } else {
+                showToast('error', data.message || 'Failed to create testimonial');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('error', 'Error creating testimonial. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleEdit = async (e: React.FormEvent) => {
@@ -284,10 +310,19 @@ export default function ManageTestimonialsPage() {
             setSubmitting(true);
             const res = await fetch(`${API_BASE_URL}/admin/artist-testimonials/${selected.id}`, { method: 'PUT', body: buildBody() });
             const data = await res.json();
-            if (data.success) { await fetchTestimonials(); closeModals(); }
-            else alert(data.message || 'Failed to update');
-        } catch (err) { console.error(err); alert('Error updating'); }
-        finally { setSubmitting(false); }
+            if (data.success) {
+                await fetchTestimonials();
+                closeModals();
+                showToast('success', 'Testimonial updated successfully!');
+            } else {
+                showToast('error', data.message || 'Failed to update testimonial');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('error', 'Error updating testimonial. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleDelete = async (id: string) => {
@@ -295,9 +330,16 @@ export default function ManageTestimonialsPage() {
         try {
             const res = await fetch(`${API_BASE_URL}/admin/artist-testimonials/${id}`, { method: 'DELETE' });
             const data = await res.json();
-            if (data.success) setTestimonials((t) => t.filter((x) => x.id !== id));
-            else alert('Failed to delete');
-        } catch (err) { console.error(err); }
+            if (data.success) {
+                setTestimonials((t) => t.filter((x) => x.id !== id));
+                showToast('success', 'Testimonial deleted successfully');
+            } else {
+                showToast('error', data.message || 'Failed to delete testimonial');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('error', 'Error deleting testimonial. Please try again.');
+        }
     };
 
     const toggleActive = async (t: ArtistTestimonial) => {
@@ -306,12 +348,36 @@ export default function ManageTestimonialsPage() {
             body.append('is_active', String(!t.is_active));
             const res = await fetch(`${API_BASE_URL}/admin/artist-testimonials/${t.id}`, { method: 'PUT', body });
             const data = await res.json();
-            if (data.success) setTestimonials((arr) => arr.map((x) => x.id === t.id ? { ...x, is_active: !x.is_active } : x));
-        } catch (err) { console.error(err); }
+            if (data.success) {
+                setTestimonials((arr) => arr.map((x) => x.id === t.id ? { ...x, is_active: !x.is_active } : x));
+                showToast('success', `Testimonial ${!t.is_active ? 'shown' : 'hidden'} successfully`);
+            } else {
+                showToast('error', data.message || 'Failed to update visibility');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('error', 'Error updating visibility. Please try again.');
+        }
     };
 
     return (
         <div className="min-h-screen bg-[#0a0a0b] p-6">
+            {/* Toast Notification */}
+            {toast && (
+                <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border text-sm font-medium transition-all ${
+                    toast.type === 'success' 
+                        ? 'bg-green-500/10 border-green-500/30 text-green-400' 
+                        : 'bg-red-500/10 border-red-500/30 text-red-400'
+                }`}>
+                    {toast.type === 'success' ? (
+                        <CheckCircle className="w-5 h-5" />
+                    ) : (
+                        <XCircle className="w-5 h-5" />
+                    )}
+                    {toast.message}
+                </div>
+            )}
+
             <div className="max-w-6xl mx-auto">
                 {/* Back link */}
                 <div className="mb-8">

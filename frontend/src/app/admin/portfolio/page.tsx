@@ -15,13 +15,19 @@ import {
     Film,
     CheckCircle,
     XCircle,
+    Play,
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
 interface PortfolioItem {
     id: string;
-    url: string;
+    media_url: string;
     title: string;
+    description: string;
+    item_type: "image" | "video";
+    thumbnail_url: string | null;
+    display_order: number;
+    is_active: boolean;
     created_at: string;
 }
 
@@ -51,6 +57,9 @@ export default function AdminPortfolioPage() {
     const [videoTitle, setVideoTitle] = useState("");
     const [addingVideo, setAddingVideo] = useState(false);
 
+    // Video playback state
+    const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+
     const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
     // Auth check
@@ -67,9 +76,9 @@ export default function AdminPortfolioPage() {
         try {
             const res = await fetch(`${API_BASE_URL}/api/portfolio`);
             if (res.ok) {
-                const data = await res.json();
-                setImages(data.images || []);
-                setVideos(data.videos || []);
+                const data: PortfolioItem[] = await res.json();
+                setImages(data.filter((item) => item.item_type === "image"));
+                setVideos(data.filter((item) => item.item_type === "video"));
             }
         } catch (e) {
             console.error("Failed to fetch portfolio:", e);
@@ -97,22 +106,25 @@ export default function AdminPortfolioPage() {
 
     const handleUploadImage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!imageFile) return;
+        if (!imageFile || !imageTitle.trim()) return;
         setUploadingImage(true);
         try {
             const form = new FormData();
-            form.append("file", imageFile);
-            form.append("title", imageTitle);
-            const res = await fetch(`${API_BASE_URL}/admin/portfolio/images`, { method: "POST", body: form });
-            if (!res.ok) throw new Error("Upload failed");
+            form.append("image", imageFile);
+            form.append("title", imageTitle.trim());
+            form.append("description", "");
+            form.append("display_order", "0");
+            const res = await fetch(`${API_BASE_URL}/api/admin/portfolio/upload-image`, { method: "POST", body: form });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message || "Upload failed");
             showFeedback("success", "Image uploaded successfully!");
             setImageFile(null);
             setImageTitle("");
             setImagePreview(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
             fetchPortfolio();
-        } catch (err) {
-            showFeedback("error", "Failed to upload image. Please try again.");
+        } catch (err: any) {
+            showFeedback("error", err.message || "Failed to upload image. Please try again.");
         } finally {
             setUploadingImage(false);
         }
@@ -129,16 +141,20 @@ export default function AdminPortfolioPage() {
         setAddingVideo(true);
         try {
             const form = new FormData();
-            form.append("url", videoUrl.trim());
-            form.append("title", videoTitle.trim());
-            const res = await fetch(`${API_BASE_URL}/admin/portfolio/videos`, { method: "POST", body: form });
-            if (!res.ok) throw new Error("Failed");
+            form.append("video_url", videoUrl.trim());
+            form.append("title", videoTitle.trim() || "Untitled Video");
+            form.append("description", "");
+            form.append("thumbnail_url", `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`);
+            form.append("display_order", "0");
+            const res = await fetch(`${API_BASE_URL}/api/admin/portfolio/upload-video`, { method: "POST", body: form });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message || "Failed to add video");
             showFeedback("success", "Video added to portfolio!");
             setVideoUrl("");
             setVideoTitle("");
             fetchPortfolio();
-        } catch {
-            showFeedback("error", "Failed to add video. Please try again.");
+        } catch (err: any) {
+            showFeedback("error", err.message || "Failed to add video. Please try again.");
         } finally {
             setAddingVideo(false);
         }
@@ -147,11 +163,13 @@ export default function AdminPortfolioPage() {
     const handleDelete = async (id: string) => {
         if (!confirm("Remove this item from the portfolio?")) return;
         try {
-            await fetch(`${API_BASE_URL}/admin/portfolio/${id}`, { method: "DELETE" });
+            const res = await fetch(`${API_BASE_URL}/api/admin/portfolio/${id}`, { method: "DELETE" });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message || "Delete failed");
             showFeedback("success", "Item removed from portfolio.");
             fetchPortfolio();
-        } catch {
-            showFeedback("error", "Failed to delete item.");
+        } catch (err: any) {
+            showFeedback("error", err.message || "Failed to delete item.");
         }
     };
 
@@ -367,7 +385,7 @@ export default function AdminPortfolioPage() {
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {images.map((img) => (
                                 <div key={img.id} className="group relative bg-[#1a1a1a] rounded-xl overflow-hidden border border-gray-800 hover:border-orange-500/30 transition-all aspect-square">
-                                    <Image src={img.url} alt={img.title || "Portfolio"} fill className="object-cover" />
+                                    <Image src={img.media_url} alt={img.title || "Portfolio"} fill className="object-cover" />
                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
                                         {img.title && (
                                             <p className="text-white text-xs text-center font-medium line-clamp-2">{img.title}</p>
@@ -400,31 +418,52 @@ export default function AdminPortfolioPage() {
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {videos.map((video) => {
-                                const vidId = extractYoutubeId(video.url);
+                                const vidId = extractYoutubeId(video.media_url);
+                                const isPlaying = playingVideoId === video.id;
                                 return (
                                     <div key={video.id} className="group bg-[#1a1a1a] rounded-xl border border-gray-800 overflow-hidden hover:border-red-500/30 transition-all">
                                         {vidId && (
                                             <div className="relative aspect-video">
-                                                <img
-                                                    src={`https://img.youtube.com/vi/${vidId}/hqdefault.jpg`}
-                                                    alt={video.title}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                                                    <Youtube className="w-10 h-10 text-red-500" />
-                                                </div>
+                                                {isPlaying ? (
+                                                    <iframe
+                                                        width="100%"
+                                                        height="100%"
+                                                        src={`https://www.youtube.com/embed/${vidId}?autoplay=1&modestbranding=1&rel=0`}
+                                                        title={video.title}
+                                                        frameBorder="0"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                        className="absolute inset-0 w-full h-full"
+                                                    />
+                                                ) : (
+                                                    <div
+                                                        className="absolute inset-0 cursor-pointer"
+                                                        onClick={() => setPlayingVideoId(video.id)}
+                                                    >
+                                                        <img
+                                                            src={video.thumbnail_url || `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`}
+                                                            alt={video.title}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                                            <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-2xl shadow-red-600/50">
+                                                                <Play className="w-8 h-8 text-white ml-1" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                         <div className="p-3 flex items-center justify-between gap-2">
                                             <div className="min-w-0">
                                                 <p className="text-white text-sm font-medium truncate">{video.title || "Untitled"}</p>
                                                 <a
-                                                    href={video.url}
+                                                    href={video.media_url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-xs text-gray-600 hover:text-orange-400 transition-colors truncate block"
                                                 >
-                                                    {video.url}
+                                                    {video.media_url}
                                                 </a>
                                             </div>
                                             <button

@@ -2659,3 +2659,53 @@ async def upload_portfolio_image(
     except Exception as e:
         print(f"Error uploading portfolio image: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/portfolio/upload-video")
+@limiter.limit("20/minute")
+async def upload_portfolio_video(
+    request: Request,
+    video_url: str = Form(...),
+    title: str = Form(...),
+    description: str = Form(""),
+    thumbnail_url: str = Form(""),
+    display_order: int = Form(0)
+):
+    """Admin: Add a YouTube video to portfolio_items."""
+    try:
+        # Validate video URL (basic check for YouTube)
+        if not video_url or not ("youtube.com" in video_url or "youtu.be" in video_url):
+            return {
+                "success": False,
+                "message": "Please provide a valid YouTube video URL"
+            }
+        
+        # Create portfolio item in database
+        item_data = {
+            "title": title,
+            "description": description,
+            "item_type": "video",
+            "media_url": video_url,
+            "thumbnail_url": thumbnail_url if thumbnail_url else None,
+            "display_order": display_order,
+            "is_active": True
+        }
+        
+        response = supabase.table("portfolio_items").insert(item_data).execute()
+        
+        if response.data:
+            # Clear cache
+            cache.pop("portfolio_items_all", None)
+            return {
+                "success": True,
+                "message": "Portfolio video added successfully",
+                "data": response.data[0]
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Failed to create portfolio item"
+            }
+    except Exception as e:
+        print(f"Error uploading portfolio video: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

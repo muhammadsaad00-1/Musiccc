@@ -199,6 +199,14 @@ export default function Header() {
                             About Us
                         </Link>
 
+                        {/* Testimonials */}
+                        <Link
+                            href="/testimonials"
+                            className="text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 font-medium transition-all duration-300"
+                        >
+                            Testimonials
+                        </Link>
+
                         {/* Contact Us */}
                         <Link
                             href="/contact"
@@ -319,6 +327,9 @@ export default function Header() {
                         </Link>
                         <Link href="/about" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
                             ℹ️ About Us
+                        </Link>
+                        <Link href="/testimonials" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
+                            ⭐ Testimonials
                         </Link>
                         <Link href="/contact" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
                             📞 Contact Us

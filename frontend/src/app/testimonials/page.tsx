@@ -31,22 +31,20 @@ function ReviewForm() {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/testimonials/submit`, {
+            // Create FormData as backend expects Form fields
+            const formDataToSend = new FormData();
+            formDataToSend.append('user_name', formData.name);
+            formDataToSend.append('rating', String(formData.rating));
+            formDataToSend.append('review', formData.review);
+
+            const response = await fetch(`${API_BASE_URL}/api/reviews`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: formData.name,
-                    role: formData.role,
-                    location: formData.location,
-                    rating: formData.rating,
-                    review: formData.review,
-                    type: 'client' // or 'artist' based on context
-                }),
+                body: formDataToSend,
             });
 
-            if (response.ok) {
+            const data = await response.json();
+
+            if (response.ok && data.success) {
                 // Reset and show success
                 setSubmitted(true);
                 setFormData({ name: "", role: "", location: "", rating: 5, review: "" });
@@ -54,11 +52,11 @@ function ReviewForm() {
                 // Hide success message after 5 seconds
                 setTimeout(() => setSubmitted(false), 5000);
             } else {
-                console.error('Failed to submit testimonial');
-                alert('Failed to submit testimonial. Please try again.');
+                console.error('Failed to submit review:', data.message);
+                alert(data.message || 'Failed to submit review. Please try again.');
             }
         } catch (error) {
-            console.error('Error submitting testimonial:', error);
+            console.error('Error submitting review:', error);
             alert('An error occurred. Please try again later.');
         } finally {
             setIsSubmitting(false);

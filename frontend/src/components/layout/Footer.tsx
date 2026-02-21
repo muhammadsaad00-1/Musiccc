@@ -95,6 +95,7 @@ export default function Footer() {
 
     const companyLinks = [
         { name: "About Us", href: "/about" },
+        { name: "Testimonials", href: "/testimonials" },
         { name: "Blog", href: "/blog" },
         { name: "Contact Us", href: "/contact" },
         { name: "Terms & Conditions", href: "/terms" },
@@ -167,6 +168,13 @@ export default function Footer() {
                             </div>
                         </div>
 
+                        {/* Leave a Review Button */}
+                        <Link 
+                            href="/testimonials"
+                            className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-1 transition-all"
+                        >
+                            Leave a Review
+                        </Link>
 
                         {/* Global Presence — inline in brand column */}
                         <div className="mt-8 pt-6 border-t border-gray-800/50">

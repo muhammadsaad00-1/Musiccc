@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { ArrowRight, ChevronRight, Disc } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 
 // Simple SVG logos for event/music industry companies
 const brands = [
@@ -71,11 +73,42 @@ const brands = [
   },
 ];
 
+interface ClientLogo {
+  id?: string;
+  name: string;
+  logo_url?: string;
+  logo?: React.ReactNode;
+  is_active?: boolean;
+  display_order?: number;
+}
+
 export default function ClientsMarquee() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [rotation, setRotation] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [backendClients, setBackendClients] = useState<ClientLogo[]>([]);
+  const [allBrands, setAllBrands] = useState<ClientLogo[]>(brands);
+
+  // Fetch backend client logos
+  useEffect(() => {
+    const fetchClientLogos = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/client-logos`);
+        if (response.ok) {
+          const data: ClientLogo[] = await response.json();
+          // Merge backend data with dummy data
+          const merged = [...brands, ...data];
+          setAllBrands(merged);
+          setBackendClients(data);
+        }
+      } catch (error) {
+        console.error('Error fetching client logos:', error);
+        // Keep dummy data if fetch fails
+      }
+    };
+    fetchClientLogos();
+  }, []);
 
   const handleNext = useCallback(() => {
     if (isAnimating) return;
@@ -85,13 +118,13 @@ export default function ClientsMarquee() {
 
     // Change logo halfway through rotation when it's moving fast/blurred
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % brands.length);
+      setCurrentIndex((prev) => (prev + 1) % allBrands.length);
     }, 250);
 
     setTimeout(() => {
       setIsAnimating(false);
     }, 500);
-  }, [isAnimating]);
+  }, [isAnimating, allBrands.length]);
 
   // Auto-rotation effect
   useEffect(() => {
@@ -104,7 +137,9 @@ export default function ClientsMarquee() {
     return () => clearInterval(interval);
   }, [handleNext, isPaused]);
 
-  const currentBrand = brands[currentIndex];
+  const currentBrand = allBrands[currentIndex];
+
+  if (!currentBrand) return null;
 
   return (
     <section className="py-24 bg-[#0a0a0b] overflow-hidden">
@@ -159,11 +194,28 @@ export default function ClientsMarquee() {
 
                 {/* Logo Content */}
                 <div
-                  className={`transition-opacity duration-200 ${isAnimating ? 'opacity-50 blur-sm' : 'opacity-100'}`}
+                  className={`transition-opacity duration-200 ${isAnimating ? 'opacity-50 blur-sm' : 'opacity-100'} flex items-center justify-center w-full h-full p-8`}
                 >
-                  <div className="text-gray-300 group-hover:text-orange-400 transition-colors duration-300 transform scale-100">
-                    {currentBrand.logo}
-                  </div>
+                  {currentBrand.logo_url ? (
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={currentBrand.logo_url}
+                        alt={currentBrand.name}
+                        fill
+                        className="object-contain group-hover:scale-110 transition-transform duration-300"
+                        sizes="(max-width: 768px) 208px, 350px"
+                        priority={currentIndex === 0}
+                      />
+                    </div>
+                  ) : currentBrand.logo ? (
+                    <div className="text-gray-300 group-hover:text-orange-400 transition-colors duration-300 transform scale-100">
+                      {currentBrand.logo}
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-white">{currentBrand.name}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Glossy Overlay */}
@@ -192,7 +244,7 @@ export default function ClientsMarquee() {
               {currentBrand.name}
             </h3>
             <div className="flex justify-center gap-2">
-              {brands.map((_, idx) => (
+              {allBrands.map((_, idx) => (
                 <div
                   key={idx}
                   className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-orange-500 w-6' : 'bg-gray-700'}`}
