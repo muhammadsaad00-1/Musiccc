@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { API_BASE_URL } from '@/lib/api';
 
-export default function ManageArtistsPage() {
+function ManageArtistsContent() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [artists, setArtists] = useState<any[]>([]);
@@ -634,5 +634,17 @@ export default function ManageArtistsPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function ManageArtistsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-[#0a0a0b]">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+      </div>
+    }>
+      <ManageArtistsContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -37,7 +37,7 @@ function transformPerformerToArtist(performer: any): Artist {
     };
 }
 
-export default function AllArtistsPage() {
+function AllArtistsContent() {
     const searchParams = useSearchParams();
     const [artists, setArtists] = useState<Artist[]>([]);
     const [loading, setLoading] = useState(true);
@@ -352,5 +352,17 @@ export default function AllArtistsPage() {
                 ]}
             />
         </div>
+    );
+}
+
+export default function AllArtistsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-[#0a0a0b]">
+                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+            </div>
+        }>
+            <AllArtistsContent />
+        </Suspense>
     );
 }

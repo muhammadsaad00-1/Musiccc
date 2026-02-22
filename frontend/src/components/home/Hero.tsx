@@ -137,10 +137,10 @@ export default function Hero() {
                 if (response.ok) {
                     const data = await response.json();
                     setStats({
-                        artists: data.total_artists || 200,
-                        events: data.total_events || 5000,
+                        artists: 400,
+                        events: 5000,
                         cities: data.total_cities || 20,
-                        rating: data.average_rating || 4.9,
+                        rating: 4.9,
                     });
                 }
             } catch (error) {
