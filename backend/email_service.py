@@ -17,9 +17,9 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
 # Email configuration - these can be overridden by environment variables
-EMAIL_SENDER = os.getenv("EMAIL_SENDER", "mr.taah16@gmail.com")
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "ssrcapowrgyohdvi")  # App Password (no spaces)
-EMAIL_RECIPIENT = os.getenv("EMAIL_RECIPIENT", "mr.taaha16@gmail.com")  # Where to send notifications
+EMAIL_SENDER = os.getenv("EMAIL_SENDER", "Theartistfactoryofficial@gmail.com")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "bgcu xrht bcug jznh")  # App Password (no spaces)
+EMAIL_RECIPIENT = os.getenv("EMAIL_RECIPIENT", "Theartistfactoryofficial@gmail.com")  # Where to send notifications
 
 
 
