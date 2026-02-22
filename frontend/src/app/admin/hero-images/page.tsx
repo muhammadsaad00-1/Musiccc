@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
-import { ImageIcon, Plus, Edit2, Trash2, Save, X, EyeOff, Loader2, Upload } from 'lucide-react';
+import { ImageIcon, Plus, Edit2, Trash2, Save, X, EyeOff, Loader2, Upload, ArrowLeft } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 
 interface HeroImage {
@@ -332,18 +333,27 @@ export default function AdminHeroImagesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0b] py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Hero Images Management</h1>
-                        <p className="text-gray-400">Manage carousel images for the homepage hero section</p>
+        <div className="min-h-screen bg-[#0a0a0b]">
+            {/* Header */}
+            <header className="bg-[#1a1a1a] border-b border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex items-center gap-4">
+                        <Link href="/admin" className="text-gray-400 hover:text-white">
+                            <ArrowLeft className="w-5 h-5" />
+                        </Link>
+                        <h1 className="text-2xl font-bold text-white">Manage Hero Images</h1>
                     </div>
+                </div>
+            </header>
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Actions Bar */}
+                <div className="flex justify-between items-center mb-6">
+                    <p className="text-gray-400">Manage carousel images for the homepage hero section</p>
                     {!showForm && (
                         <button
                             onClick={() => setShowForm(true)}
-                            className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity"
+                            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-pink-500/30 transition-all"
                         >
                             <Plus className="w-5 h-5" />
                             Add Hero Image
@@ -436,7 +446,7 @@ export default function AdminHeroImagesPage() {
                         ))}
                     </div>
                 )}
-            </div>
+            </main>
         </div>
     );
 }

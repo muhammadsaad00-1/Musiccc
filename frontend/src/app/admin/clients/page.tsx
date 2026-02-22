@@ -250,29 +250,27 @@ export default function ManageClientsPage() {
 
 
     return (
-        <div className="min-h-screen bg-[#0a0a0b] p-6">
+        <div className="min-h-screen bg-[#0a0a0b]">
             {/* Header */}
-            <div className="max-w-5xl mx-auto">
-                <div className="flex items-center gap-4 mb-8">
-                    <Link href="/admin" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Dashboard
-                    </Link>
-                </div>
-
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white mb-1 flex items-center gap-3">
-                            <Building2 className="w-8 h-8 text-orange-400" />
-                            Corporate Clients
-                        </h1>
-                        <p className="text-gray-400">Manage client logos shown in the &quot;Our Clients&quot; section.</p>
+            <header className="bg-[#1a1a1a] border-b border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex items-center gap-4">
+                        <Link href="/admin" className="text-gray-400 hover:text-white">
+                            <ArrowLeft className="w-5 h-5" />
+                        </Link>
+                        <h1 className="text-2xl font-bold text-white">Manage Client Logos</h1>
                     </div>
+                </div>
+            </header>
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="flex items-center justify-between mb-6">
+                    <p className="text-gray-400">Manage client logos shown in the &quot;Our Clients&quot; section</p>
                     <button
                         onClick={openAdd}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl hover:opacity-90 transition-all"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-pink-500/30 transition-all"
                     >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-5 h-5" />
                         Add Client
                     </button>
                 </div>
@@ -345,10 +343,9 @@ export default function ManageClientsPage() {
                         ))}
                     </div>
                 )}
-            </div>
 
-            {/* Modals */}
-            {showAddModal && (
+                {/* Modals */}
+                {showAddModal && (
                 <ClientForm
                     formData={formData}
                     setFormData={setFormData}
@@ -374,6 +371,7 @@ export default function ManageClientsPage() {
                     onClose={closeModals}
                 />
             )}
+        </main>
         </div>
     );
 }

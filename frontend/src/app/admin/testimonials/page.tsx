@@ -361,7 +361,7 @@ export default function ManageTestimonialsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0b] p-6">
+        <div className="min-h-screen bg-[#0a0a0b]">
             {/* Toast Notification */}
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border text-sm font-medium transition-all ${
@@ -378,28 +378,27 @@ export default function ManageTestimonialsPage() {
                 </div>
             )}
 
-            <div className="max-w-6xl mx-auto">
-                {/* Back link */}
-                <div className="mb-8">
-                    <Link href="/admin" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors w-fit">
-                        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-                    </Link>
-                </div>
-
-                {/* Page header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white mb-1 flex items-center gap-3">
-                            <Quote className="w-8 h-8 text-orange-400" />
-                            Artist Testimonials
-                        </h1>
-                        <p className="text-gray-400">Manage testimonials shown in the &quot;Artist Testimonials&quot; tab.</p>
+            {/* Header */}
+            <header className="bg-[#1a1a1a] border-b border-gray-800">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex items-center gap-4">
+                        <Link href="/admin" className="text-gray-400 hover:text-white">
+                            <ArrowLeft className="w-5 h-5" />
+                        </Link>
+                        <h1 className="text-2xl font-bold text-white">Manage Artist Testimonials</h1>
                     </div>
+                </div>
+            </header>
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Page header */}
+                <div className="flex items-center justify-between mb-6">
+                    <p className="text-gray-400">Manage testimonials from artists on the platform</p>
                     <button
                         onClick={openAdd}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl hover:opacity-90 transition-all"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-pink-500/30 transition-all"
                     >
-                        <Plus className="w-4 h-4" /> Add Testimonial
+                        <Plus className="w-5 h-5" /> Add Testimonial
                     </button>
                 </div>
 
@@ -465,7 +464,7 @@ export default function ManageTestimonialsPage() {
                         ))}
                     </div>
                 )}
-            </div>
+           
 
             {/* Modals */}
             {showAddModal && (
@@ -494,6 +493,7 @@ export default function ManageTestimonialsPage() {
                     onClose={closeModals}
                 />
             )}
+        </main>
         </div>
     );
 }
