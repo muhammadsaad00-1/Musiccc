@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Menu, X, Search, ChevronDown, Zap, Mic2, Music, Home, Star, Calendar, Info, Phone } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api';
+import { useCategories } from '@/lib/hooks';
 
 // Icon mapping for categories
 const categoryIcons: Record<string, string> = {
@@ -55,28 +55,21 @@ export default function Header() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [artistCategories, setArtistCategories] = useState<any[]>([]);
 
-    // Fetch categories from backend
+    // Use React Query hook to fetch categories
+    const { data: categories } = useCategories();
+
+    // Transform categories when data is fetched
     useEffect(() => {
-        async function fetchCategories() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/categories`);
-                if (response.ok) {
-                    const categories = await response.json();
-                    // Transform to include icon and hot flag
-                    const transformed = categories.map((cat: any) => ({
-                        name: cat.name,
-                        slug: cat.slug,
-                        icon: categoryIcons[cat.name] || categoryIcons[cat.name?.split(' ')[0]] || '🎵',
-                        hot: cat.artist_count > 10, // Mark as hot if has more than 10 artists
-                    }));
-                    setArtistCategories(transformed);
-                }
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-            }
+        if (categories) {
+            const transformed = categories.map((cat: any) => ({
+                name: cat.name,
+                slug: cat.slug,
+                icon: categoryIcons[cat.name] || categoryIcons[cat.name?.split(' ')[0]] || '🎵',
+                hot: cat.artist_count > 10, // Mark as hot if has more than 10 artists
+            }));
+            setArtistCategories(transformed);
         }
-        fetchCategories();
-    }, []);
+    }, [categories]);
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0b]/95 backdrop-blur-md border-b border-gray-800/50">

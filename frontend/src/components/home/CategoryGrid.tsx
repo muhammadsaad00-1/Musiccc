@@ -4,7 +4,7 @@ import { useState, useEffect, JSX } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Mic2, Music, Disc3, Sparkles, Users, Star, Heart, Zap, Loader2, ArrowRight } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api';
+import { useCategories } from '@/lib/hooks';
 
 // Icon mapping for categories
 const iconMap: Record<string, JSX.Element> = {
@@ -46,26 +46,9 @@ interface Category {
 }
 
 export default function CategoryGrid() {
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/categories`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setCategories(data.categories || data || []);
-                }
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCategories();
-    }, []);
+    // Use React Query hook
+    const { data: categoriesData, isLoading: loading } = useCategories();
+    const categories: Category[] = categoriesData || [];
 
     const getIcon = (name: string) => {
         return iconMap[name] || <Music className="w-8 h-8" />;

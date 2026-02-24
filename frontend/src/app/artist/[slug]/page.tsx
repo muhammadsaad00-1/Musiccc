@@ -166,9 +166,11 @@ export default function ArtistPage({ params }: ArtistPageProps) {
       try {
         // Fetch all performers to get a random selection
         // In a real app with many artists, we'd want a specific endpoint for this
-        const response = await fetch(`${API_BASE_URL}/performers`);
+        const response = await fetch(`${API_BASE_URL}/performers?limit=100`);
         if (response.ok) {
-          const allPerformers = await response.json();
+          const data = await response.json();
+          // Handle paginated response - data is in response.data
+          const allPerformers = data.data || data;
           // Filter out current artist
           const otherArtists = allPerformers.filter((p: any) => p.id !== artist.id);
 

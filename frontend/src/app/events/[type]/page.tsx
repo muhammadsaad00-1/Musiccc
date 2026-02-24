@@ -244,9 +244,11 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                 }
 
                 // Fetch all performers
-                const performersRes = await fetch(`${API_BASE_URL}/performers`);
+                const performersRes = await fetch(`${API_BASE_URL}/performers?limit=100`);
                 if (performersRes.ok) {
-                    const allPerformers = await performersRes.json();
+                    const data = await performersRes.json();
+                    // Handle paginated response - data is in response.data
+                    const allPerformers = data.data || data;
 
                     // Filter performers by relevant categories (fuzzy match, category is now an array)
                     const filtered = allPerformers

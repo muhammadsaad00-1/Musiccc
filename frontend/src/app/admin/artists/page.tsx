@@ -64,8 +64,10 @@ function ManageArtistsContent() {
   const fetchArtists = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/performers`);
-      const data = await response.json();
+      const response = await fetch(`${API_BASE_URL}/performers?limit=100`);
+      const result = await response.json();
+      // Handle paginated response - data is in result.data
+      const data = result.data || result;
       setArtists(data);
     } catch (error) {
       console.error("Failed to fetch artists:", error);

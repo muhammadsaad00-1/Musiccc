@@ -198,11 +198,13 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
         // 2. Fetch performers for this category
         const response = await fetch(
-          `${API_BASE_URL}/performers?category=${encodeURIComponent(queryName)}`,
+          `${API_BASE_URL}/performers?category=${encodeURIComponent(queryName)}&limit=100`,
         );
 
         if (response.ok) {
-          const backendPerformers = await response.json();
+          const result = await response.json();
+          // Handle paginated response - data is in result.data
+          const backendPerformers = result.data || result;
           const backendArtists = backendPerformers.map((p: any) =>
             transformPerformerToArtist(p, currentCategory!.id),
           );

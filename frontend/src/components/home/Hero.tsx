@@ -6,7 +6,7 @@ import Image from 'next/image';
 import SearchBar from '@/components/ui/SearchBar';
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 import { Mic2, Music, Star, MapPin, Sparkles, Users, Calendar, Award } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api';
+import { useHeroImages, useStats } from '@/lib/hooks';
 
 const categories = [
     { name: 'Singers', slug: 'singers', icon: '🎤' },
@@ -92,6 +92,10 @@ const fallbackHeroImages = [
 ];
 
 export default function Hero() {
+    // Use React Query hooks for data fetching
+    const { data: heroImagesData } = useHeroImages();
+    const { data: statsData } = useStats();
+    
     const [stats, setStats] = useState<Stats>({
         artists: 400,
         events: 5000,
@@ -101,56 +105,32 @@ export default function Hero() {
 
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [heroImages, setHeroImages] = useState<string[]>(fallbackHeroImages);
-    const [backendImages, setBackendImages] = useState<HeroImage[]>([]);
 
-    // Fetch hero images from backend
+    // Update hero images when data is fetched
     useEffect(() => {
-        const fetchHeroImages = async () => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/hero-images`);
-                if (response.ok) {
-                    const data: HeroImage[] = await response.json();
-                    if (data && data.length > 0) {
-                        setBackendImages(data);
-                        setHeroImages(data.map(img => img.image_url));
-                    }
-                }
-            } catch (error) {
-                console.log('Using fallback hero images');
-            }
-        };
-        fetchHeroImages();
-    }, []);
+        if (heroImagesData && heroImagesData.length > 0) {
+            setHeroImages(heroImagesData.map((img: HeroImage) => img.image_url));
+        }
+    }, [heroImagesData]);
+
+    // Update stats when data is fetched  
+    useEffect(() => {
+        if (statsData) {
+            setStats({
+                artists: 400,
+                events: 5000,
+                cities: statsData.total_cities || 20,
+                rating: 4.9,
+            });
+        }
+    }, [statsData]);
 
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
         }, 5000);
         return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        // Fetch real stats from backend
-        const fetchStats = async () => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/stats`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setStats({
-                        artists: 400,
-                        events: 5000,
-                        cities: data.total_cities || 20,
-                        rating: 4.9,
-                    });
-                }
-            } catch (error) {
-                // Keep default values
-                console.log('Using default stats');
-            }
-        };
-
-        fetchStats();
-    }, []);
+    }, [heroImages.length]);
 
     return (
         <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-[#0a0a0b] pt-20 lg:pt-0">

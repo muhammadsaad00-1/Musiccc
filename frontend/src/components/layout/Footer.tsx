@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Facebook, Instagram, Youtube, Linkedin, Heart } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api';
+import { useCategories } from '@/lib/hooks';
 
 // Simple TikTok icon component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -50,30 +50,21 @@ const categoryIcons: Record<string, string> = {
 
 
 export default function Footer() {
-
     const [categories, setCategories] = useState<any[]>([]);
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/categories`);
-                if (response.ok) {
-                    const data = await response.json();
-                    // Transform to include icon (matching Header logic)
-                    const transformed = data.map((cat: any) => ({
-                        name: cat.name,
-                        slug: cat.slug,
-                        icon: categoryIcons[cat.name] || categoryIcons[cat.name?.split(' ')[0]] || '🎵',
-                    }));
-                    setCategories(transformed);
-                }
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-            }
-        };
+    // Use React Query hook
+    const { data: categoriesData } = useCategories();
 
-        fetchCategories();
-    }, []);
+    useEffect(() => {
+        if (categoriesData) {
+            const transformed = categoriesData.map((cat: any) => ({
+                name: cat.name,
+                slug: cat.slug,
+                icon: categoryIcons[cat.name] || categoryIcons[cat.name?.split(' ')[0]] || '🎵',
+            }));
+            setCategories(transformed);
+        }
+    }, [categoriesData]);
 
 
     // Helper to slugify text

@@ -109,9 +109,11 @@ export default function AdminDashboard() {
 
     const fetchArtists = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/performers`);
-        const data = await response.json();
-        setArtistCount(data.length);
+        const response = await fetch(`${API_BASE_URL}/performers?limit=100`);
+        const result = await response.json();
+        // Handle paginated response - data is in result.data
+        const data = result.data || result;
+        setArtistCount(result.total || data.length);
         setRecentArtists(data.slice(0, 5));
       } catch (error) {
         console.error("Failed to fetch artists:", error);

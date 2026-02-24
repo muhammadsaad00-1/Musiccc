@@ -78,10 +78,12 @@ function AllArtistsContent() {
         async function fetchData() {
             setLoading(true);
             try {
-                // Fetch performers
-                const performersRes = await fetch(`${API_BASE_URL}/performers`);
+                // Fetch performers - API now returns paginated response
+                const performersRes = await fetch(`${API_BASE_URL}/performers?limit=100`);
                 if (performersRes.ok) {
-                    const backendPerformers = await performersRes.json();
+                    const response = await performersRes.json();
+                    // Handle paginated response - data is in response.data
+                    const backendPerformers = response.data || response;
                     const transformedArtists = backendPerformers.map((p: any) => transformPerformerToArtist(p));
                     setArtists(transformedArtists);
                 }

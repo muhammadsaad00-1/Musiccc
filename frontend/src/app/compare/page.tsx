@@ -50,9 +50,11 @@ export default function ComparePage() {
         async function fetchArtists() {
             setLoading(true);
             try {
-                const response = await fetch(`${API_BASE_URL}/performers`);
+                const response = await fetch(`${API_BASE_URL}/performers?limit=100`);
                 if (response.ok) {
-                    const performers = await response.json();
+                    const data = await response.json();
+                    // Handle paginated response - data is in response.data
+                    const performers = data.data || data;
                     const transformed = performers.map((p: any) => ({
                         id: p.id,
                         name: p.name,

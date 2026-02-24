@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Music } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { API_BASE_URL } from '@/lib/api';
+import { useCategories } from '@/lib/hooks';
 
 interface SearchBarProps {
     size?: 'default' | 'large';
@@ -17,23 +17,10 @@ export default function SearchBar({ size = 'default', showCategory = true, class
     const router = useRouter();
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('');
-    const [categories, setCategories] = useState<{ id: number; name: string; slug: string }[]>([]);
-
-    // Fetch categories from backend
-    useEffect(() => {
-        async function fetchCategories() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/categories`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setCategories(data || []);
-                }
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-            }
-        }
-        fetchCategories();
-    }, []);
+    
+    // Use React Query hook
+    const { data: categoriesData } = useCategories();
+    const categories = categoriesData || [];
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();

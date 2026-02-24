@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { ArrowRight, Star, Loader2, Sparkles, Music, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/api';
+import { usePerformers } from '@/lib/hooks';
 
 interface Artist {
     id: number;
@@ -19,49 +19,35 @@ interface Artist {
 }
 
 export default function FeaturedArtists() {
+    // Use React Query hook to fetch featured performers
+    const { data: performersData, isLoading: loading } = usePerformers({ limit: 50 });
+    
     const [allFeaturedArtists, setAllFeaturedArtists] = useState<Artist[]>([]);
     const [featuredArtists, setFeaturedArtists] = useState<Artist[]>([]);
-    const [loading, setLoading] = useState(true);
     const [displayIndex, setDisplayIndex] = useState(0);
 
     useEffect(() => {
-        const fetchFeaturedArtists = async () => {
-            try {
-                // Fetch more to allow rotation
-                const response = await fetch(`${API_BASE_URL}/performers`);
-                if (response.ok) {
-                    const data = await response.json();
+        if (performersData?.data) {
+            const artists = performersData.data.map((artist: any) => ({
+                id: artist.id,
+                name: artist.name,
+                slug: artist.slug || artist.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+                category: artist.category,
+                location: artist.locations?.[0] || artist.location || 'Pakistan',
+                image_url: artist.profile_image_url || artist.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
+                is_featured: artist.is_featured,
+                is_verified: artist.is_verified,
+            }));
 
-                    // Filter featured artists if possible, otherwise use a selection
-                    let artists = (data.performers || data || [])
-                        .map((artist: any) => ({
-                            id: artist.id,
-                            name: artist.name,
-                            slug: artist.slug || artist.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-                            category: artist.category,
-                            location: artist.locations?.[0] || artist.location || 'Pakistan',
-                            image_url: artist.profile_image_url || artist.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
-                            is_featured: artist.is_featured,
-                            is_verified: artist.is_verified,
-                        }));
+            // Prefer featured, but if not enough, use all
+            const featured = artists.filter((a: any) => a.is_featured);
+            const finalPool = featured.length >= 3 ? featured : artists;
 
-                    // Prefer featured, but if not enough, use all
-                    const featured = artists.filter((a: any) => a.is_featured);
-                    const finalPool = featured.length >= 3 ? featured : artists;
-
-                    setAllFeaturedArtists(finalPool);
-                    // Explicitly slice 5 for the new constellation layout
-                    setFeaturedArtists(finalPool.slice(0, 5));
-                }
-            } catch (error) {
-                console.error('Error fetching featured artists:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchFeaturedArtists();
-    }, []);
+            setAllFeaturedArtists(finalPool);
+            // Explicitly slice 5 for the new constellation layout
+            setFeaturedArtists(finalPool.slice(0, 5));
+        }
+    }, [performersData]);
 
     // Rotation logic
     const handleNext = () => {

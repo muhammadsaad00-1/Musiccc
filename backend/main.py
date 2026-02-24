@@ -24,8 +24,17 @@ load_dotenv()
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
-# Initialize cache (maxsize=1000 items, TTL=300 seconds = 5 minutes)
-cache = TTLCache(maxsize=1000, ttl=300)
+# Initialize separate caches with different TTLs for different data types
+performers_cache = TTLCache(maxsize=500, ttl=1800)  # 30 minutes
+categories_cache = TTLCache(maxsize=100, ttl=3600)  # 1 hour
+events_cache = TTLCache(maxsize=200, ttl=1800)      # 30 minutes
+packages_cache = TTLCache(maxsize=200, ttl=1800)    # 30 minutes
+reviews_cache = TTLCache(maxsize=200, ttl=900)      # 15 minutes
+stats_cache = TTLCache(maxsize=10, ttl=300)         # 5 minutes
+general_cache = TTLCache(maxsize=500, ttl=300)      # 5 minutes (for other endpoints)
+
+# Legacy cache variable for backward compatibility
+cache = general_cache
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -40,27 +49,23 @@ def get_cache_key(prefix: str, **kwargs) -> str:
 # Cache invalidation helpers
 def invalidate_performers_cache():
     """Invalidate all performer-related cache entries"""
-    keys_to_remove = [k for k in cache.keys() if k.startswith(('performers_', 'cities_'))]
-    for key in keys_to_remove:
-        cache.pop(key, None)
+    performers_cache.clear()
 
 def invalidate_events_cache():
     """Invalidate all event-related cache entries"""
-    keys_to_remove = [k for k in cache.keys() if k.startswith('events_')]
-    for key in keys_to_remove:
-        cache.pop(key, None)
+    events_cache.clear()
 
 def invalidate_reviews_cache():
     """Invalidate all review-related cache entries"""
-    keys_to_remove = [k for k in cache.keys() if k.startswith('reviews_')]
-    for key in keys_to_remove:
-        cache.pop(key, None)
+    reviews_cache.clear()
 
 def invalidate_packages_cache():
     """Invalidate all package-related cache entries"""
-    keys_to_remove = [k for k in cache.keys() if k.startswith('packages_')]
-    for key in keys_to_remove:
-        cache.pop(key, None)
+    packages_cache.clear()
+
+def invalidate_categories_cache():
+    """Invalidate all category-related cache entries"""
+    categories_cache.clear()
 
 app = FastAPI()
 app.state.limiter = limiter
@@ -74,6 +79,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add GZip compression middleware
+from fastapi.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Helper function to ensure storage bucket exists
 def ensure_bucket_exists(bucket_name: str):
@@ -537,24 +546,56 @@ async def create_performer(
 
 @app.get("/performers")
 @limiter.limit("100/minute")
-def get_performers(request: Request, category: str = None):
+def get_performers(
+    request: Request, 
+    category: str = None, 
+    page: int = 1,
+    limit: int = 20,
+    search: str = None,
+    featured: bool = None
+):
     # Generate cache key
-    cache_key = get_cache_key("performers", category=category)
+    cache_key = get_cache_key("performers", category=category, page=page, limit=limit, search=search, featured=featured)
     
     # Check cache
-    if cache_key in cache:
-        return cache[cache_key]
+    if cache_key in performers_cache:
+        return performers_cache[cache_key]
     
     try:
-        query = supabase.table("performers").select("*")
+        # Calculate offset
+        offset = (page - 1) * limit
+        
+        # Select all fields (use * for now since exact schema fields vary)
+        query = supabase.table("performers").select("*", count="exact")
+        
         if category:
             query = query.contains("category", [category])
+        
+        if search:
+            query = query.ilike("name", f"%{search}%")
+        
+        if featured is not None:
+            query = query.eq("featured", featured)
+        
+        # Apply pagination
+        query = query.range(offset, offset + limit - 1)
+        
         response = query.execute()
         
-        # Store in cache
-        cache[cache_key] = response.data
+        # Build response with pagination metadata
+        import math
+        result = {
+            "data": response.data,
+            "total": response.count,
+            "page": page,
+            "limit": limit,
+            "totalPages": math.ceil(response.count / limit) if response.count else 0
+        }
         
-        return response.data
+        # Store in cache
+        performers_cache[cache_key] = result
+        
+        return result
     except Exception as e:
         raise
 
@@ -869,21 +910,20 @@ def get_events(request: Request):
     cache_key = "events_all"
     
     # Check cache
-    if cache_key in cache:
-        return cache[cache_key]
+    if cache_key in events_cache:
+        return events_cache[cache_key]
     
     try:
-        # Get all events
-        events_response = supabase.table("events").select("*").execute()
-        events = []
+        # Get all events with performers in a single query using Supabase relationships
+        # This avoids the N+1 query problem
+        events_response = supabase.table("events").select(
+            "*, event_performers(performer_id, performers(*))"
+        ).execute()
         
+        events = []
         for event in events_response.data:
-            # Get performers for this event through the junction table
-            event_performers_response = supabase.table("event_performers").select(
-                "performers(*)"
-            ).eq("event_id", event["id"]).execute()
-            
-            performers = [ep["performers"] for ep in event_performers_response.data]
+            # Extract performers from the nested structure
+            performers = [ep["performers"] for ep in event.get("event_performers", []) if ep.get("performers")]
             
             events.append({
                 "id": event["id"],
@@ -895,7 +935,7 @@ def get_events(request: Request):
                 "performers": performers
             })
         
-        cache[cache_key] = events
+        events_cache[cache_key] = events
         
         return events
     except Exception as e:
@@ -1025,30 +1065,35 @@ def delete_event(request: Request, event_id: str):
 @limiter.limit("100/minute")
 def get_categories(request: Request):
     """
-    Get all categories with artist counts.
+    Get all categories with artist counts (optimized - no N+1).
     """
     cache_key = "categories_all"
     
     # Check cache
-    if cache_key in cache:
-        return cache[cache_key]
+    if cache_key in categories_cache:
+        return categories_cache[cache_key]
     
     try:
-        # Get all categories
+        # Get all categories with minimal fields
         response = supabase.table("categories").select("*").execute()
         categories = response.data
         
-        # Calculate artist counts for each category
-        # This might be expensive if we have many categories, 
-        # but for now it's fine as categories are usually few (< 20)
+        # Get all performers once
+        all_performers = supabase.table("performers").select("category").execute()
+        
+        # Count artists per category in Python (avoid N+1 queries)
+        category_counts = {}
+        for performer in all_performers.data:
+            performer_categories = performer.get("category", [])
+            if isinstance(performer_categories, list):
+                for cat in performer_categories:
+                    category_counts[cat] = category_counts.get(cat, 0) + 1
+        
+        # Add counts to categories
         for category in categories:
-            # Count performers in this category
-            # Note: storing category name in performers table is not ideal normalization,
-            # but that's how the current schema seems to work based on create_performer
-            count_response = supabase.table("performers").select("id", count="exact").contains("category", [category["name"]]).execute()
-            category["artist_count"] = count_response.count
+            category["artist_count"] = category_counts.get(category["name"], 0)
             
-        cache[cache_key] = categories
+        categories_cache[cache_key] = categories
         return categories
     except Exception as e:
         print(f"Error fetching categories: {e}")
@@ -1482,16 +1527,18 @@ async def create_package(
 @app.get("/packages")
 @limiter.limit("100/minute")
 def get_packages(request: Request, event_type: str = None, is_active: bool = None):
-    """Get all packages with their associated performers"""
+    """Get all packages with their associated performers (optimized - no N+1)"""
     cache_key = get_cache_key("packages_all", event_type=event_type, is_active=is_active)
     
     # Check cache
-    if cache_key in cache:
-        return cache[cache_key]
+    if cache_key in packages_cache:
+        return packages_cache[cache_key]
     
     try:
-        # Get all packages
-        query = supabase.table("packages").select("*")
+        # Get all packages with performers in a single query using Supabase relationships
+        query = supabase.table("packages").select(
+            "*, package_performers(performer_id, performers(*))"
+        )
         
         if event_type:
             query = query.eq("event_type", event_type)
@@ -1503,12 +1550,8 @@ def get_packages(request: Request, event_type: str = None, is_active: bool = Non
         packages = []
         
         for package in packages_response.data:
-            # Get performers for this package through the junction table
-            package_performers_response = supabase.table("package_performers").select(
-                "performers(*)"
-            ).eq("package_id", package["id"]).execute()
-            
-            performers = [pp["performers"] for pp in package_performers_response.data]
+            # Extract performers from the nested structure
+            performers = [pp["performers"] for pp in package.get("package_performers", []) if pp.get("performers")]
             
             packages.append({
                 "id": package["id"],
@@ -1525,7 +1568,7 @@ def get_packages(request: Request, event_type: str = None, is_active: bool = Non
                 "performers": performers
             })
         
-        cache[cache_key] = packages
+        packages_cache[cache_key] = packages
         
         return packages
     except Exception as e:
