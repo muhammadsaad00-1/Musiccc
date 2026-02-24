@@ -139,7 +139,10 @@ export default function ManageClientsPage() {
             setLoading(true);
             const res = await fetch(`${API_BASE_URL}/admin/client-logos`);
             if (!res.ok) throw new Error('Failed to fetch clients');
-            setClients(await res.json());
+            const result = await res.json();
+            // Handle both paginated and non-paginated responses
+            const data = result.data || result;
+            setClients(data);
         } catch (err) {
             setError('Failed to load clients');
             console.error(err);

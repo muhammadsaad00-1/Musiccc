@@ -89,7 +89,9 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/requirements`);
-        const data = await response.json();
+        const result = await response.json();
+        // Handle both paginated and non-paginated responses
+        const data = result.data || result;
 
         const stats = {
           total: data.length,
@@ -125,7 +127,9 @@ export default function AdminDashboard() {
     const fetchCategories = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/categories`);
-        const data = await response.json();
+        const result = await response.json();
+        // Handle both paginated and non-paginated responses
+        const data = result.data || result;
         setCategoryCount(data.length);
       } catch (error) {
         console.error("Failed to fetch categories:", error);

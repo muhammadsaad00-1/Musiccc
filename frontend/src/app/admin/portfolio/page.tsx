@@ -76,7 +76,9 @@ export default function AdminPortfolioPage() {
         try {
             const res = await fetch(`${API_BASE_URL}/api/portfolio`);
             if (res.ok) {
-                const data: PortfolioItem[] = await res.json();
+                const result = await res.json();
+                // Handle both paginated and non-paginated responses
+                const data: PortfolioItem[] = result.data || result;
                 setImages(data.filter((item) => item.item_type === "image"));
                 setVideos(data.filter((item) => item.item_type === "video"));
             }

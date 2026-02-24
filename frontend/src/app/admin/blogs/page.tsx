@@ -44,7 +44,9 @@ export default function ManageBlogsPage() {
             setLoading(true);
             const response = await fetch(`${API_BASE_URL}/blogs?limit=100`);
             if (!response.ok) throw new Error('Failed to fetch blogs');
-            const data = await response.json();
+            const result = await response.json();
+            // Handle both paginated and non-paginated responses
+            const data = result.data || result;
             setBlogs(data);
         } catch (err) {
             console.error('Error fetching blogs:', err);

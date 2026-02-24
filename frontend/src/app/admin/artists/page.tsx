@@ -54,7 +54,9 @@ function ManageArtistsContent() {
   const fetchCategories = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/categories`);
-      const data = await response.json();
+      const result = await response.json();
+      // Handle both paginated and non-paginated responses
+      const data = result.data || result;
       setCategories(data);
     } catch (error) {
       console.error("Failed to fetch categories:", error);

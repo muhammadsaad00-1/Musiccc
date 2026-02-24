@@ -79,7 +79,9 @@ export default function InquiriesPage() {
           ? `${API_BASE_URL}/api/requirements`
           : `${API_BASE_URL}/api/requirements?status=${filter}`;
       const response = await fetch(url);
-      const data = await response.json();
+      const result = await response.json();
+      // Handle both paginated and non-paginated responses
+      const data = result.data || result;
       setRequirements(data);
     } catch (error) {
       console.error("Failed to fetch requirements:", error);

@@ -231,7 +231,10 @@ export default function ManageTestimonialsPage() {
             setLoading(true);
             const res = await fetch(`${API_BASE_URL}/admin/artist-testimonials`);
             if (!res.ok) throw new Error('Failed to fetch');
-            setTestimonials(await res.json());
+            const result = await res.json();
+            // Handle both paginated and non-paginated responses
+            const data = result.data || result;
+            setTestimonials(data);
         } catch (err) {
             setError('Failed to load testimonials');
             console.error(err);

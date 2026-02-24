@@ -35,7 +35,9 @@ export default function ManageCategoriesPage() {
             setLoading(true);
             const response = await fetch(`${API_BASE_URL}/categories`);
             if (!response.ok) throw new Error('Failed to fetch categories');
-            const data = await response.json();
+            const result = await response.json();
+            // Handle both paginated and non-paginated responses
+            const data = result.data || result;
             setCategories(data);
         } catch (err) {
             console.error('Error fetching categories:', err);

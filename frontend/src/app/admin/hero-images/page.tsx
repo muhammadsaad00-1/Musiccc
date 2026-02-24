@@ -223,7 +223,9 @@ export default function AdminHeroImagesPage() {
             });
 
             if (response.ok) {
-                const data = await response.json();
+                const result = await response.json();
+                // Handle both paginated and non-paginated responses
+                const data = result.data || result;
                 setImages(data);
             }
         } catch (error) {
