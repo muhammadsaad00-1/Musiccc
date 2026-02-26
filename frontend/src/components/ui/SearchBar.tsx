@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Music } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCategories } from '@/lib/hooks';
+import type { Category } from '@/types';
 
 interface SearchBarProps {
     size?: 'default' | 'large';
@@ -76,7 +77,7 @@ export default function SearchBar({ size = 'default', showCategory = true, class
                             style={{ minWidth: '120px' }}
                         >
                             <option value="" className="bg-[#1a1a1a] text-gray-500">Category</option>
-                            {categories.map((cat) => (
+                            {categories.map((cat: Category) => (
                                 <option key={cat.id} value={cat.slug || cat.name} className="bg-[#1a1a1a] text-white">
                                     {cat.name}
                                 </option>
