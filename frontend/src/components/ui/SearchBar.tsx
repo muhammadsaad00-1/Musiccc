@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Search, Music } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCategories } from '@/lib/hooks';
@@ -19,9 +19,9 @@ export default function SearchBar({ size = 'default', showCategory = true, class
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('');
     
-    // Use React Query hook
-    const { data: categoriesData } = useCategories();
-    const categories = categoriesData || [];
+    // Use React Query hook with error handling
+    const { data: categoriesData, isLoading } = useCategories();
+    const categories = Array.isArray(categoriesData) ? categoriesData : [];
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
