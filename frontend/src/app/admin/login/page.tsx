@@ -146,8 +146,6 @@ export default function AdminLogin() {
               )}
             </button>
           </form>
-
-  
         </div>
 
         {/* Back to Site */}
