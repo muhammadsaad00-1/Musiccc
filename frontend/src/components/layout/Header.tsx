@@ -230,7 +230,8 @@ export default function Header() {
                     {/* Mobile Menu Button */}
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="lg:hidden p-2 text-gray-400"
+                        className="lg:hidden p-2.5 text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:border-orange-500/40 hover:text-white transition-all"
+                        aria-label="Toggle navigation menu"
                     >
                         {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </button>
@@ -239,19 +240,19 @@ export default function Header() {
 
             {/* Mobile Menu */}
             {isMenuOpen && (
-                <div className="lg:hidden bg-[#1a1a1a] border-t border-gray-800 animate-slideDown max-h-[80vh] overflow-y-auto">
-                    <div className="px-4 py-4 space-y-4">
+                <div className="lg:hidden border-t border-white/10 animate-slideDown max-h-[85vh] overflow-y-auto bg-gradient-to-b from-[#111113] via-[#141416] to-[#0f0f10] backdrop-blur-xl">
+                    <div className="px-4 py-5 space-y-4">
                         {/* Home */}
                         <Link
                             href="/"
-                            className="block py-2 text-white font-medium"
+                            className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white/5 border border-white/10 text-white font-semibold"
                             onClick={() => setIsMenuOpen(false)}
                         >
-                            🏠 Home
+                            <Home className="w-4 h-4 text-orange-400" /> Home
                         </Link>
 
                         {/* Artists */}
-                        <div className="pb-4 border-b border-gray-800">
+                        <div className="p-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02]">
                             <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                 <Mic2 className="w-3 h-3" /> Artists
                             </p>
@@ -260,7 +261,7 @@ export default function Header() {
                                     <Link
                                         key={category.slug}
                                         href={`/artists/${category.slug}`}
-                                        className="flex items-center gap-2 text-gray-300 hover:text-white py-1.5 text-sm"
+                                        className="flex items-center gap-2 text-gray-200 hover:text-white py-2 px-2 rounded-lg bg-black/20 hover:bg-gradient-to-r hover:from-orange-500/20 hover:to-pink-500/20 transition-all text-sm border border-transparent hover:border-orange-400/30"
                                         onClick={() => setIsMenuOpen(false)}
                                     >
                                         <span>{category.icon}</span>
@@ -274,7 +275,7 @@ export default function Header() {
                         </div>
 
                         {/* Events */}
-                        <div className="pb-4 border-b border-gray-800">
+                        <div className="p-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02]">
                             <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                 <Calendar className="w-3 h-3" /> Events
                             </p>
@@ -283,27 +284,7 @@ export default function Header() {
                                     <Link
                                         key={event.slug}
                                         href={`/events/${event.slug}`}
-                                        className="flex items-center gap-2 text-gray-300 hover:text-white py-1.5 text-sm"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        <span>{event.icon}</span>
-                                        {event.name}
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Events */}
-                        <div className="pb-4 border-b border-gray-800">
-                            <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                <Calendar className="w-3 h-3" /> Events
-                            </p>
-                            <div className="grid grid-cols-2 gap-2">
-                                {eventTypes.map((event) => (
-                                    <Link
-                                        key={event.slug}
-                                        href={`/events/${event.slug}`}
-                                        className="flex items-center gap-2 text-gray-300 hover:text-white py-1.5 text-sm"
+                                        className="flex items-center gap-2 text-gray-200 hover:text-white py-2 px-2 rounded-lg bg-black/20 hover:bg-gradient-to-r hover:from-orange-500/20 hover:to-pink-500/20 transition-all text-sm border border-transparent hover:border-orange-400/30"
                                         onClick={() => setIsMenuOpen(false)}
                                     >
                                         <span>{event.icon}</span>
@@ -314,27 +295,27 @@ export default function Header() {
                         </div>
 
                         {/* Quick Links */}
-                        <Link href="/post-requirement" className="flex items-center gap-2 py-2 text-yellow-400 font-medium" onClick={() => setIsMenuOpen(false)}>
+                        <Link href="/post-requirement" className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 font-semibold" onClick={() => setIsMenuOpen(false)}>
                             <Zap className="w-4 h-4" />
                             Express Booking
                         </Link>
-                        <Link href="/about" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
-                            ℹ️ About Us
+                        <Link href="/about" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-gray-300 bg-white/5 border border-white/10 hover:text-white hover:border-orange-500/30 transition-all font-medium" onClick={() => setIsMenuOpen(false)}>
+                            <Info className="w-4 h-4 text-orange-400" /> About Us
                         </Link>
-                        <Link href="/testimonials" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
-                            ⭐ Testimonials
+                        <Link href="/testimonials" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-gray-300 bg-white/5 border border-white/10 hover:text-white hover:border-orange-500/30 transition-all font-medium" onClick={() => setIsMenuOpen(false)}>
+                            <Star className="w-4 h-4 text-orange-400" /> Testimonials
                         </Link>
-                        <Link href="/contact" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
-                            📞 Contact Us
+                        <Link href="/contact" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-gray-300 bg-white/5 border border-white/10 hover:text-white hover:border-orange-500/30 transition-all font-medium" onClick={() => setIsMenuOpen(false)}>
+                            <Phone className="w-4 h-4 text-orange-400" /> Contact Us
                         </Link>
-                        <Link href="/blog" className="block py-2 text-gray-300 font-medium" onClick={() => setIsMenuOpen(false)}>
-                            📰 Blog
+                        <Link href="/blog" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-gray-300 bg-white/5 border border-white/10 hover:text-white hover:border-orange-500/30 transition-all font-medium" onClick={() => setIsMenuOpen(false)}>
+                            <Music className="w-4 h-4 text-orange-400" /> Blog
                         </Link>
 
                         {/* CTA */}
                         <Link
                             href="/post-requirement"
-                            className="block w-full text-center px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+                            className="block w-full text-center px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition-all"
                             onClick={() => setIsMenuOpen(false)}
                         >
                             Express Booking

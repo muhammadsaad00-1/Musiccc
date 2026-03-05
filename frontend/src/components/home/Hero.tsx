@@ -133,7 +133,7 @@ export default function Hero() {
     }, [heroImages.length]);
 
     return (
-        <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-[#0a0a0b] pt-20 lg:pt-0">
+        <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-[#0a0a0b] pt-24 pb-10 sm:pb-12 lg:pt-0 lg:pb-0">
             {/* Background Effects */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-900/20 rounded-full blur-[120px]" />
@@ -143,34 +143,39 @@ export default function Hero() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
                 <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
                     {/* Left Content (now Right on Desktop) */}
-                    <div className="text-left space-y-8 lg:order-2 lg:col-span-7">
+                    <div className="text-left space-y-5 sm:space-y-6 lg:space-y-8 lg:order-2 lg:col-span-7">
                         {/* Badge */}
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full backdrop-blur-md">
+                        <div className="inline-flex max-w-full items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full backdrop-blur-md">
                             <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                            <span className="text-sm text-gray-300 font-medium">#1 Artist Booking Platform in Pakistan</span>
+                            <span className="text-xs sm:text-sm text-gray-300 font-medium truncate">#1 Artist Booking Platform in Pakistan</span>
                         </div>
 
                         {/* Heading */}
-                        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight">
+                        <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight">
                             Book <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600">Top Artists</span><br />
                             For Your Event
                         </h1>
 
                         {/* Tagline */}
-                        <p className="text-lg sm:text-xl font-semibold italic text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 -mt-4">
+                        <p className="text-base sm:text-xl font-semibold italic text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 -mt-2 sm:-mt-4">
                             Bringing stars to your event!
                         </p>
 
                         {/* Subtitle */}
-                        <p className="text-lg text-gray-400 max-w-xl leading-relaxed">
+                        <p className="text-[15px] sm:text-base lg:text-lg text-gray-400 max-w-none sm:max-w-xl leading-7 sm:leading-relaxed">
                             From soulful <strong>Qawwals</strong> to high-energy <strong>Live Bands</strong>, we connect you with Pakistan&apos;s finest talent for weddings, corporate events, and concerts.
                         </p>
 
                         {/* Search Bar - Wider */}
                         <div className="w-full relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                            <div className="relative bg-[#0a0a0b] rounded-xl">
-                                <SearchBar size="large" />
+                            <div className="relative bg-[#0a0a0b] rounded-xl p-1">
+                                <div className="sm:hidden">
+                                    <SearchBar size="default" showCategory={false} className="w-full" />
+                                </div>
+                                <div className="hidden sm:block">
+                                    <SearchBar size="large" className="w-full" />
+                                </div>
                             </div>
                         </div>
 
@@ -178,13 +183,13 @@ export default function Hero() {
                         <div className="flex flex-col sm:flex-row gap-4 pt-4">
                             <Link
                                 href="/post-requirement"
-                                className="px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-1 transition-all text-center"
+                                className="px-6 sm:px-8 py-3.5 sm:py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-1 transition-all text-center"
                             >
                                 Book An Artist
                             </Link>
                             <Link
                                 href="/artists"
-                                className="px-8 py-4 bg-[#1a1a1a] text-white font-bold rounded-xl border border-gray-800 hover:bg-[#252525] hover:border-gray-700 transition-all text-center flex items-center justify-center gap-2"
+                                className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#1a1a1a] text-white font-bold rounded-xl border border-gray-800 hover:bg-[#252525] hover:border-gray-700 transition-all text-center flex items-center justify-center gap-2"
                             >
                                 <Users className="w-5 h-5 text-gray-400" />
                                 Find All Artists
@@ -192,23 +197,21 @@ export default function Hero() {
                         </div>
 
                         {/* Quick Stats Row */}
-                        <div className="flex items-center gap-8 pt-6 border-t border-white/5">
+                        <div className="grid grid-cols-3 gap-3 sm:gap-8 pt-5 sm:pt-6 border-t border-white/5">
                             <div>
-                                <div className="text-2xl font-bold text-white"><AnimatedCounter end={stats.artists} duration={2000} suffix="+" /></div>
-                                <div className="text-sm text-gray-500">Artists</div>
+                                <div className="text-xl sm:text-2xl font-bold text-white"><AnimatedCounter end={stats.artists} duration={2000} suffix="+" /></div>
+                                <div className="text-xs sm:text-sm text-gray-500">Artists</div>
                             </div>
-                            <div className="w-px h-8 bg-white/10" />
                             <div>
-                                <div className="text-2xl font-bold text-white"><AnimatedCounter end={stats.events} duration={2500} suffix="+" /></div>
-                                <div className="text-sm text-gray-500">Events</div>
+                                <div className="text-xl sm:text-2xl font-bold text-white"><AnimatedCounter end={stats.events} duration={2500} suffix="+" /></div>
+                                <div className="text-xs sm:text-sm text-gray-500">Events</div>
                             </div>
-                            <div className="w-px h-8 bg-white/10" />
                             <div>
-                                <div className="text-2xl font-bold text-white flex items-center gap-1">
+                                <div className="text-xl sm:text-2xl font-bold text-white flex items-center gap-1">
                                     <AnimatedCounter end={stats.rating} decimals={1} duration={1500} />
                                     <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                                 </div>
-                                <div className="text-sm text-gray-500">Rating</div>
+                                <div className="text-xs sm:text-sm text-gray-500">Rating</div>
                             </div>
                         </div>
 
@@ -217,15 +220,15 @@ export default function Hero() {
                     </div>
 
                     {/* Right Image (now Left on Desktop) */}
-                    <div className="relative lg:h-[800px] flex items-end justify-center lg:justify-start lg:order-1 lg:col-span-5">
+                    <div className="relative h-[280px] sm:h-[460px] lg:h-[800px] flex items-end justify-center lg:justify-start lg:order-1 lg:col-span-5">
                         {/* Main Character Image */}
-                        <div className="relative z-10 w-full max-w-lg aspect-[3/4] lg:aspect-auto lg:h-[90%]">
+                        <div className="relative z-10 w-full max-w-[280px] sm:max-w-lg h-full lg:aspect-auto lg:h-[90%]">
                             <Image
                                 key={currentImageIndex}
                                 src={heroImages[currentImageIndex]}
                                 alt="Featured Artist"
                                 fill
-                                className="object-cover rounded-t-3xl lg:rounded-t-[3rem] shadow-2xl shadow-orange-900/20 animate-in fade-in duration-700"
+                                className="object-cover rounded-3xl lg:rounded-t-[3rem] shadow-2xl shadow-orange-900/20 animate-in fade-in duration-700"
                                 priority
                             />
 
@@ -260,7 +263,7 @@ export default function Hero() {
                         </div>
 
                         {/* Background Splashes behind image */}
-                        <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-tr from-orange-600/20 to-pink-600/20 rounded-full blur-[100px] -z-10" />
+                        <div className="absolute top-1/4 right-0 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-gradient-to-tr from-orange-600/20 to-pink-600/20 rounded-full blur-[100px] -z-10" />
                     </div>
                 </div>
             </div>
