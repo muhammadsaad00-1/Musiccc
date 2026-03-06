@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -12,6 +12,7 @@ import {
   Loader2,
   X,
   Upload,
+  GripVertical,
 } from "lucide-react";
 import { API_BASE_URL } from '@/lib/api';
 
@@ -24,6 +25,11 @@ function ManageArtistsContent() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [reordering, setReordering] = useState(false);
+
+  // Drag state
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -55,7 +61,6 @@ function ManageArtistsContent() {
     try {
       const response = await fetch(`${API_BASE_URL}/categories`);
       const result = await response.json();
-      // Handle both paginated and non-paginated responses
       const data = result.data || result;
       setCategories(data);
     } catch (error) {
@@ -68,8 +73,9 @@ function ManageArtistsContent() {
     try {
       const response = await fetch(`${API_BASE_URL}/performers?limit=100`);
       const result = await response.json();
-      // Handle paginated response - data is in result.data
       const data = result.data || result;
+      // Sort by display_order client-side as well
+      data.sort((a: any, b: any) => (a.display_order || 999) - (b.display_order || 999));
       setArtists(data);
     } catch (error) {
       console.error("Failed to fetch artists:", error);
@@ -78,9 +84,85 @@ function ManageArtistsContent() {
     }
   };
 
-  const filteredArtists = artists.filter((artist) =>
-    artist.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredArtists = searchQuery
+    ? artists.filter((artist) =>
+      artist.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
+    : artists;
+
+  // ─── Drag-and-Drop Handlers ───
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    // Make the drag image slightly transparent
+    const row = e.currentTarget as HTMLElement;
+    row.style.opacity = "0.5";
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    const row = e.currentTarget as HTMLElement;
+    row.style.opacity = "1";
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    // Reorder the local array
+    const newArtists = [...artists];
+    const [draggedItem] = newArtists.splice(dragIndex, 1);
+    newArtists.splice(dropIndex, 0, draggedItem);
+
+    // Assign sequential display_order values (1, 2, 3, ...)
+    const orders = newArtists.map((artist, idx) => ({
+      id: artist.id,
+      display_order: idx + 1,
+    }));
+
+    // Update local state immediately for snappy UX
+    const updatedArtists = newArtists.map((artist, idx) => ({
+      ...artist,
+      display_order: idx + 1,
+    }));
+    setArtists(updatedArtists);
+    setDragIndex(null);
+    setDragOverIndex(null);
+
+    // Send to backend
+    setReordering(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/performers/reorder`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orders }),
+      });
+      const result = await response.json();
+      if (!result.success) {
+        alert(result.message || "Failed to save order");
+        await fetchArtists(); // Revert on failure
+      }
+    } catch (error) {
+      console.error("Failed to reorder:", error);
+      alert("Failed to save order");
+      await fetchArtists(); // Revert on failure
+    } finally {
+      setReordering(false);
+    }
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this artist?")) return;
@@ -111,14 +193,12 @@ function ManageArtistsContent() {
     try {
       const formDataToSend = new FormData();
 
-      // Add text fields
       formDataToSend.append("name", formData.name);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("category", JSON.stringify(formData.category));
       if (formData.youtube_url)
         formDataToSend.append("youtube_url", formData.youtube_url);
 
-      // Add arrays as JSON strings
       const genres = formData.genres
         .split(",")
         .map((g) => g.trim())
@@ -137,7 +217,6 @@ function ManageArtistsContent() {
         .filter(Boolean);
       formDataToSend.append("popular_songs", JSON.stringify(songs));
 
-      // Add images
       if (profileImage) formDataToSend.append("image", profileImage);
       if (headerImage) formDataToSend.append("header_image", headerImage);
       galleryImages.forEach((img) =>
@@ -214,7 +293,18 @@ function ManageArtistsContent() {
             <Link href="/admin" className="text-gray-400 hover:text-white">
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <h1 className="text-2xl font-bold text-white">Manage Artists</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Manage Artists</h1>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Drag rows to reorder • Changes save automatically
+              </p>
+            </div>
+            {reordering && (
+              <div className="flex items-center gap-2 ml-4 px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full">
+                <Loader2 className="w-3.5 h-3.5 text-orange-400 animate-spin" />
+                <span className="text-xs text-orange-400">Saving order...</span>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -252,13 +342,18 @@ function ManageArtistsContent() {
               <table className="w-full">
                 <thead className="bg-[#0f0f10]">
                   <tr>
+                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+
+                    </th>
+                    <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                      #
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Artist
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Category
                     </th>
-
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
@@ -268,9 +363,34 @@ function ManageArtistsContent() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
-                  {filteredArtists.map((artist) => {
+                  {filteredArtists.map((artist, index) => {
+                    const isDragOver = dragOverIndex === index;
+                    const isDragging = dragIndex === index;
                     return (
-                      <tr key={artist.id} className="hover:bg-[#2a2a2a]">
+                      <tr
+                        key={artist.id}
+                        draggable={!searchQuery}
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDrop={(e) => handleDrop(e, index)}
+                        className={`transition-colors ${isDragging
+                            ? "opacity-50 bg-orange-500/5"
+                            : isDragOver
+                              ? "bg-orange-500/10 border-t-2 border-t-orange-500"
+                              : "hover:bg-[#2a2a2a]"
+                          } ${!searchQuery ? "cursor-grab active:cursor-grabbing" : ""}`}
+                      >
+                        <td className="px-2 py-4 text-center">
+                          {!searchQuery && (
+                            <GripVertical className="w-4 h-4 text-gray-600 mx-auto" />
+                          )}
+                        </td>
+                        <td className="px-3 py-4 text-center">
+                          <span className="text-xs font-mono text-gray-500">
+                            {artist.display_order || index + 1}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <img
@@ -414,8 +534,6 @@ function ManageArtistsContent() {
                           <p className="text-xs text-red-400 mt-1">Select at least one category</p>
                         )}
                       </div>
-
-                      {/* Price and Locations removed as per requirements */}
                     </div>
 
                     <div>

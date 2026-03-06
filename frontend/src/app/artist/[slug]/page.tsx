@@ -486,7 +486,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
               </div>
 
               {/* Video Playlist Sidebar (Right — 1/3 width) */}
-              <div className="bg-[#141414] max-h-[400px] lg:max-h-none overflow-y-auto custom-scrollbar">
+              <div className="bg-[#141414] max-h-[400px] lg:max-h-[500px] overflow-y-auto custom-scrollbar">
                 <div className="p-3 border-b border-gray-800 sticky top-0 bg-[#141414] z-10">
                   <p className="text-sm text-gray-400 font-medium">
                     {artist.youtubeVideos.length} Videos

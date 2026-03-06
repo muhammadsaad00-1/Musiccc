@@ -458,6 +458,13 @@ async def create_performer(
     videos_list = json.loads(videos) if videos else []
     popular_songs_list = json.loads(popular_songs) if popular_songs else []
 
+    # Auto-assign display_order as MAX + 1
+    try:
+        max_order_resp = supabase.table("performers").select("display_order").order("display_order", desc=True).limit(1).execute()
+        next_order = (max_order_resp.data[0]["display_order"] or 0) + 1 if max_order_resp.data and max_order_resp.data[0].get("display_order") is not None else 1
+    except Exception:
+        next_order = 1
+
     # First, insert performer without image URLs to get the generated UUID
     insert_response = supabase.table("performers").insert({
         "name": name,
@@ -467,7 +474,8 @@ async def create_performer(
         "youtube_url": youtube_url,
         "genres": genres_list,
         "videos": videos_list,
-        "popular_songs": popular_songs_list
+        "popular_songs": popular_songs_list,
+        "display_order": next_order
     }).execute()
     
     performer_id = insert_response.data[0]["id"]
@@ -576,6 +584,9 @@ def get_performers(
         
         if featured is not None:
             query = query.eq("featured", featured)
+        
+        # Sort by display_order (admin-controlled ranking), then by name as fallback
+        query = query.order("display_order", desc=False, nullsfirst=False)
         
         # Apply pagination
         query = query.range(offset, offset + limit - 1)
@@ -729,6 +740,7 @@ async def update_performer(
     genres: str = Form(None),
     videos: str = Form(None),
     popular_songs: str = Form(None),
+    display_order: int = Form(None),
     image: Optional[UploadFile] = File(None),
     header_image: Optional[UploadFile] = File(None),
     gallery_images: Optional[list[UploadFile]] = File(None)
@@ -754,6 +766,8 @@ async def update_performer(
         update_data["videos"] = json.loads(videos)
     if popular_songs:
         update_data["popular_songs"] = json.loads(popular_songs)
+    if display_order is not None:
+        update_data["display_order"] = display_order
     
     # Get performer name for proper file naming
     performer_response = supabase.table("performers").select("name").eq("id", id).execute()
@@ -824,6 +838,32 @@ def delete_performer(request: Request, id: str):
     
     return {"message": "Performer deleted"}
 
+
+@app.post("/admin/performers/reorder")
+@limiter.limit("30/minute")
+async def reorder_performers(request: Request):
+    """
+    Batch-update display_order for performers.
+    Accepts: {"orders": [{"id": "...", "display_order": 1}, ...]}
+    """
+    try:
+        body = await request.json()
+        orders = body.get("orders", [])
+        
+        if not orders:
+            return {"success": False, "message": "orders list is required"}
+        
+        for item in orders:
+            supabase.table("performers").update(
+                {"display_order": item["display_order"]}
+            ).eq("id", item["id"]).execute()
+        
+        invalidate_performers_cache()
+        
+        return {"success": True, "message": "Order updated"}
+    except Exception as e:
+        print(f"Error reordering performers: {e}")
+        return {"success": False, "message": str(e)}
 
 
 @app.post("/admin/events")

@@ -48,12 +48,31 @@ export default function BlogDetailPage({ params }: BlogPageProps) {
                         setBlog(null);
                     } else {
                         setBlog(data);
-                        // Fetch related blogs
-                        const relatedResponse = await fetch(`${API_BASE_URL}/blogs?category=${encodeURIComponent(data.category)}&limit=4`);
-                        if (relatedResponse.ok) {
-                            const related = await relatedResponse.json();
-                            setRelatedBlogs(related.filter((b: BlogPost) => b.id !== data.id).slice(0, 3));
+                        // Fetch related blogs — same category first, fill from all if needed
+                        let relatedItems: BlogPost[] = [];
+                        try {
+                            const relatedResponse = await fetch(`${API_BASE_URL}/blogs?category=${encodeURIComponent(data.category)}&limit=10`);
+                            if (relatedResponse.ok) {
+                                const related = await relatedResponse.json();
+                                relatedItems = related.filter((b: BlogPost) => b.id !== data.id);
+                            }
+                        } catch { }
+
+                        // If we have fewer than 3, fetch all blogs to fill remaining slots
+                        if (relatedItems.length < 3) {
+                            try {
+                                const allResponse = await fetch(`${API_BASE_URL}/blogs?limit=20`);
+                                if (allResponse.ok) {
+                                    const allBlogs = await allResponse.json();
+                                    const existingIds = new Set([data.id, ...relatedItems.map((b: BlogPost) => b.id)]);
+                                    const extras = allBlogs.filter((b: BlogPost) => !existingIds.has(b.id));
+                                    relatedItems = [...relatedItems, ...extras].slice(0, 3);
+                                }
+                            } catch { }
+                        } else {
+                            relatedItems = relatedItems.slice(0, 3);
                         }
+                        setRelatedBlogs(relatedItems);
                     }
                 } else {
                     setBlog(null);
