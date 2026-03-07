@@ -241,22 +241,37 @@ export default function CategoryGrid() {
                     })}
                 </div>
 
-                <div className="lg:hidden grid grid-cols-2 gap-4 mt-8 relative">
+                <div className="lg:hidden mt-8 relative">
                     {/* Atmospheric glow for mobile */}
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(249,115,22,0.05)_0%,_transparent_70%)] pointer-events-none" />
 
-                    {categories.slice(0, 6).map((category) => (
-                        <Link
-                            key={category.id}
-                            href={`/artists/${category.slug || category.name.toLowerCase()}`}
-                            className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800 flex flex-col items-center text-center gap-3 active:scale-95 transition-transform"
-                        >
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/10 to-pink-500/10 flex items-center justify-center text-orange-400">
-                                {getIcon(category.name)}
-                            </div>
-                            <span className="text-white font-medium text-sm">{category.name}</span>
-                        </Link>
-                    ))}
+                    <div className="grid grid-cols-3 gap-4">
+                        {categories.slice(0, 6).map((category) => (
+                            <Link
+                                key={category.id}
+                                href={`/artists/${category.slug || category.name.toLowerCase()}`}
+                                className="flex flex-col items-center text-center gap-2 active:scale-95 transition-transform"
+                            >
+                                <div className="relative w-[72px] h-[72px] rounded-full overflow-hidden border-2 border-gray-700 shadow-lg bg-[#1a1a1a]">
+                                    {category.image_url ? (
+                                        <img
+                                            src={category.image_url}
+                                            alt={category.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-orange-500/10 to-pink-500/10 flex items-center justify-center text-orange-400">
+                                            {getIcon(category.name)}
+                                        </div>
+                                    )}
+                                </div>
+                                <span className="text-white font-medium text-xs leading-tight">{category.name}</span>
+                                {isHot(category.name) && (
+                                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                )}
+                            </Link>
+                        ))}
+                    </div>
                 </div>
 
                 {/* View All Button */}
