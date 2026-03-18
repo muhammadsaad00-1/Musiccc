@@ -179,6 +179,7 @@ export default function Footer() {
                                     { code: 'us', name: 'USA' },
                                     { code: 'gb', name: 'UK' },
                                     { code: 'ca', name: 'Canada' },
+                                    { code: 'sa', name: 'Saudi Arabia' },
                                 ].map((country) => (
                                     <div key={country.name} className="flex flex-col items-center gap-1 group cursor-pointer">
                                         <div className="w-10 h-7 rounded overflow-hidden border border-gray-700/50 group-hover:border-orange-500/40 transition-all duration-200 group-hover:scale-110 shadow-lg relative">

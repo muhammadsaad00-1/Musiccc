@@ -269,7 +269,7 @@ async def submit_requirement(
     budget: str = Form(None),
     artistType: str = Form(...),
     name: str = Form(...),
-    email: str = Form(...),
+    email: Optional[str] = Form(None),
     phone: str = Form(...),
     message: str = Form(None),
     event_name: str = Form("Custom"),
@@ -1186,9 +1186,9 @@ async def create_category(
                 # Continue even if image upload fails
         
         # Invalidate cache
-        if "categories_all" in cache:
-            del cache["categories_all"]
-            
+        if "categories_all" in categories_cache:
+            del categories_cache["categories_all"]
+
         return {"success": True, "message": "Category created", "data": response.data[0]}
         
     except Exception as e:
@@ -1231,11 +1231,11 @@ async def update_category(
                 supabase.table("categories").update({"image_url": image_url}).eq("id", id).execute()
             except Exception as upload_error:
                 print(f"Category image upload error: {upload_error}")
-        
+
         # Invalidate cache
-        if "categories_all" in cache:
-            del cache["categories_all"]
-            
+        if "categories_all" in categories_cache:
+            del categories_cache["categories_all"]
+
         return {"success": True, "message": "Category updated"}
         
     except Exception as e:
@@ -1247,11 +1247,11 @@ async def update_category(
 def delete_category(request: Request, id: str):
     try:
         supabase.table("categories").delete().eq("id", id).execute()
-        
+
         # Invalidate cache
-        if "categories_all" in cache:
-            del cache["categories_all"]
-            
+        if "categories_all" in categories_cache:
+            del categories_cache["categories_all"]
+
         return {"success": True, "message": "Category deleted"}
     except Exception as e:
         print(f"Error deleting category: {e}")
@@ -2265,9 +2265,10 @@ async def update_hero_image(
     title: str = Form(""),
     subtitle: str = Form(""),
     display_order: int = Form(0),
-    is_active: bool = Form(True)
+    is_active: bool = Form(True),
+    image: UploadFile = File(None)
 ):
-    """Admin: Update a hero image (text fields only, not the image itself)."""
+    """Admin: Update a hero image (text fields and optionally the image itself)."""
     try:
         update_data = {
             "title": title if title else None,
@@ -2275,14 +2276,45 @@ async def update_hero_image(
             "display_order": display_order,
             "is_active": is_active
         }
-        
+
+        # If a new image is provided, upload it
+        if image:
+            # Validate file type
+            if not image.content_type or not image.content_type.startswith("image/"):
+                return {
+                    "success": False,
+                    "message": "Only image files are allowed"
+                }
+
+            # Generate unique filename
+            ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
+            filename = f"hero_{datetime.now().timestamp()}_{secrets.token_hex(8)}.{ext}"
+
+            # Upload to Supabase Storage
+            file_bytes = await image.read()
+            upload_response = supabase.storage.from_("hero-images").upload(
+                filename,
+                file_bytes,
+                {"content-type": image.content_type}
+            )
+
+            if hasattr(upload_response, 'error') and upload_response.error:
+                return {
+                    "success": False,
+                    "message": f"Failed to upload image: {upload_response.error}"
+                }
+
+            # Get public URL
+            public_url = supabase.storage.from_("hero-images").get_public_url(filename)
+            update_data["image_url"] = public_url
+
         response = (
             supabase.table("hero_images")
             .update(update_data)
             .eq("id", image_id)
             .execute()
         )
-        
+
         if response.data:
             # Clear cache
             cache.pop("hero_images_all", None)

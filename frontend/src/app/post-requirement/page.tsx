@@ -210,9 +210,11 @@ export default function PostRequirementPage() {
             let budgetRange = "";
             if (data.pricing < 50000) budgetRange = "under-50k";
             else if (data.pricing < 100000) budgetRange = "50k-100k";
-            else if (data.pricing < 300000) budgetRange = "100k-300k";
+            else if (data.pricing < 200000) budgetRange = "100k-200k";
+            else if (data.pricing < 300000) budgetRange = "200k-300k";
             else if (data.pricing < 500000) budgetRange = "300k-500k";
-            else budgetRange = "500k+";
+            else if (data.pricing < 900000) budgetRange = "500k-900k";
+            else budgetRange = "900k+";
 
             setFormData((prev) => ({
               ...prev,
@@ -247,9 +249,12 @@ export default function PostRequirementPage() {
   }, []);
 
   // Filtered cities based on search
-  const filteredCities = cities.filter((city) =>
-    city.toLowerCase().includes(citySearch.toLowerCase())
-  );
+  const filteredCities = [
+    ...cities.filter((city) =>
+      city.toLowerCase().includes(citySearch.toLowerCase())
+    ),
+    "Other"
+  ];
 
   // Fetch categories from backend
   useEffect(() => {
@@ -276,9 +281,11 @@ export default function PostRequirementPage() {
   const budgetOptions = [
     { range: "Under 50K", label: "Budget-friendly", value: "under-50k" },
     { range: "50K - 100K", label: "Standard", value: "50k-100k" },
-    { range: "100K - 300K", label: "Premium", value: "100k-300k" },
-    { range: "300K - 500K", label: "Luxury", value: "300k-500k" },
-    { range: "500K+", label: "Celebrity", value: "500k+" },
+    { range: "100K - 200k", label: "Premium", value: "100k-200k" },
+    { range: "200K - 300K", label: "Luxury", value: "200k-300k" },
+    { range: "300K - 500K", label: "Celebrity", value: "300k-500k" },
+    { range: "500K-900k", label: "Ultra Luxury", value: "500k-900k" },
+    { range: "900K+", label: "Exclusive", value: "900k+" },
   ];
 
   const handleChange = (
@@ -615,7 +622,7 @@ export default function PostRequirementPage() {
                       <MapPin className="w-4 h-4 text-orange-400" />
                       City <span className="text-pink-400">*</span>
                     </label>
-                    <div className="relative" ref={cityDropdownRef}>
+                    <div className="relative z-[10000]" ref={cityDropdownRef}>
                       {/* Hidden input to satisfy form validation */}
                       <input
                         type="hidden"
@@ -651,7 +658,7 @@ export default function PostRequirementPage() {
                       />
                       {/* Dropdown list */}
                       {isCityDropdownOpen && (
-                        <div className="absolute z-50 mt-2 w-full max-h-60 overflow-y-auto bg-[#0f0f10] border-2 border-gray-800 rounded-2xl shadow-2xl shadow-black/50">
+                        <div className="absolute z-[9999] mt-2 w-full max-h-60 overflow-y-auto bg-[#0f0f10] border-2 border-gray-800 rounded-2xl shadow-2xl shadow-black/50">
                           {filteredCities.length > 0 ? (
                             filteredCities.map((city) => (
                               <button
@@ -927,14 +934,14 @@ export default function PostRequirementPage() {
                   <div className="group">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
                       <Mail className="w-4 h-4 text-blue-400" />
-                      Email <span className="text-pink-400">*</span>
+                      Email 
                     </label>
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      required
+                      
                       placeholder="you@email.com"
                       className="w-full px-5 py-4 bg-[#0a0a0b]/80 border-2 border-gray-800 rounded-2xl text-white placeholder-gray-600 focus:ring-0 focus:border-blue-500/50 transition-all duration-300 hover:border-gray-700"
                     />
@@ -1012,7 +1019,7 @@ export default function PostRequirementPage() {
                     disabled={
                       isLoading ||
                       !formData.name ||
-                      !formData.email ||
+                      
                       !formData.phone
                     }
                     className="flex-1 py-4 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white font-semibold rounded-2xl hover:shadow-2xl hover:shadow-green-500/30 hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1037,7 +1044,7 @@ export default function PostRequirementPage() {
 
         {/* Enhanced Trust indicators */}
         <div className="mt-10 text-center">
-          <div className="inline-flex flex-wrap items-center justify-center gap-4 sm:gap-6 px-6 py-4 bg-[#111113]/60 backdrop-blur-sm rounded-2xl border border-gray-800/50">
+          <div className="inline-flex flex-wrap items-center justify-center gap-4 sm:gap-6 px-6 py-4 bg-[#111113]/60 rounded-2xl border border-gray-800/50">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
                 <Zap className="w-4 h-4 text-green-400" />

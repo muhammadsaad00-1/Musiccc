@@ -13,8 +13,10 @@ import {
   X,
   Upload,
   GripVertical,
+  Image as ImageIcon,
 } from "lucide-react";
 import { API_BASE_URL } from '@/lib/api';
+import ImageCropper from '@/components/ui/ImageCropper';
 
 function ManageArtistsContent() {
   const searchParams = useSearchParams();
@@ -46,6 +48,14 @@ function ManageArtistsContent() {
   const [headerImage, setHeaderImage] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+
+  // Image Cropper State
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string>('');
+  const [cropType, setCropType] = useState<'profile' | 'header' | 'gallery'>('profile');
+  const profileInputRef = useRef<HTMLInputElement>(null);
+  const headerInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchArtists();
@@ -188,6 +198,13 @@ function ManageArtistsContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate profile image for new artists
+    if (!showEditModal && !profileImage) {
+      alert('Please upload a profile image');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -282,6 +299,45 @@ function ManageArtistsContent() {
       popular_songs: artist.popular_songs?.join(", ") || "",
     });
     setShowEditModal(true);
+  };
+
+  // ─── Image Cropper Handlers ───
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'header' | 'gallery') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageToCrop(reader.result as string);
+      setCropType(type);
+      setCropperOpen(true);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset the input value so the same file can be selected again
+    e.target.value = '';
+  };
+
+  const handleCropComplete = (croppedBlob: Blob) => {
+    // Convert blob to File
+    const fileName = `cropped-${Date.now()}.jpg`;
+    const croppedFile = new File([croppedBlob], fileName, { type: 'image/jpeg' });
+
+    if (cropType === 'profile') {
+      setProfileImage(croppedFile);
+    } else if (cropType === 'header') {
+      setHeaderImage(croppedFile);
+    } else if (cropType === 'gallery') {
+      setGalleryImages(prev => [...prev, croppedFile]);
+    }
+
+    setCropperOpen(false);
+    setImageToCrop('');
+  };
+
+  const handleCropCancel = () => {
+    setCropperOpen(false);
+    setImageToCrop('');
   };
 
   return (
@@ -660,19 +716,37 @@ function ManageArtistsContent() {
                           )}
                         </label>
                         <div className="flex items-center justify-center w-full">
-                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed rounded-lg cursor-pointer bg-[#0a0a0b] hover:bg-gray-800 hover:border-orange-500 transition-all group">
-                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                              <Upload className="w-8 h-8 mb-2 text-gray-500 group-hover:text-orange-500" />
-                              <p className="text-xs text-gray-500 group-hover:text-gray-400">{profileImage ? profileImage.name : "Upload Profile"}</p>
-                            </div>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              required={!showEditModal}
-                              className="hidden"
-                              onChange={(e) => setProfileImage(e.target.files?.[0] || null)}
-                            />
-                          </label>
+                          <div
+                            onClick={() => profileInputRef.current?.click()}
+                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed rounded-lg cursor-pointer bg-[#0a0a0b] hover:bg-gray-800 hover:border-orange-500 transition-all group relative overflow-hidden"
+                          >
+                            {profileImage ? (
+                              <>
+                                <img
+                                  src={URL.createObjectURL(profileImage)}
+                                  alt="Preview"
+                                  className="absolute inset-0 w-full h-full object-cover opacity-50"
+                                />
+                                <div className="relative z-10 flex flex-col items-center">
+                                  <ImageIcon className="w-6 h-6 mb-1 text-green-400" />
+                                  <p className="text-xs text-green-400 font-medium">Image Selected</p>
+                                  <p className="text-xs text-gray-500 mt-1">Click to change</p>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                <Upload className="w-8 h-8 mb-2 text-gray-500 group-hover:text-orange-500" />
+                                <p className="text-xs text-gray-500 group-hover:text-gray-400">Upload Profile</p>
+                              </div>
+                            )}
+                          </div>
+                          <input
+                            ref={profileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageSelect(e, 'profile')}
+                          />
                         </div>
                       </div>
 
@@ -681,18 +755,37 @@ function ManageArtistsContent() {
                           Header Image
                         </label>
                         <div className="flex items-center justify-center w-full">
-                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed rounded-lg cursor-pointer bg-[#0a0a0b] hover:bg-gray-800 hover:border-orange-500 transition-all group">
-                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                              <Upload className="w-8 h-8 mb-2 text-gray-500 group-hover:text-orange-500" />
-                              <p className="text-xs text-gray-500 group-hover:text-gray-400">{headerImage ? headerImage.name : "Upload Header"}</p>
-                            </div>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => setHeaderImage(e.target.files?.[0] || null)}
-                            />
-                          </label>
+                          <div
+                            onClick={() => headerInputRef.current?.click()}
+                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed rounded-lg cursor-pointer bg-[#0a0a0b] hover:bg-gray-800 hover:border-orange-500 transition-all group relative overflow-hidden"
+                          >
+                            {headerImage ? (
+                              <>
+                                <img
+                                  src={URL.createObjectURL(headerImage)}
+                                  alt="Preview"
+                                  className="absolute inset-0 w-full h-full object-cover opacity-50"
+                                />
+                                <div className="relative z-10 flex flex-col items-center">
+                                  <ImageIcon className="w-6 h-6 mb-1 text-green-400" />
+                                  <p className="text-xs text-green-400 font-medium">Image Selected</p>
+                                  <p className="text-xs text-gray-500 mt-1">Click to change</p>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                <Upload className="w-8 h-8 mb-2 text-gray-500 group-hover:text-orange-500" />
+                                <p className="text-xs text-gray-500 group-hover:text-gray-400">Upload Header</p>
+                              </div>
+                            )}
+                          </div>
+                          <input
+                            ref={headerInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageSelect(e, 'header')}
+                          />
                         </div>
                       </div>
 
@@ -701,20 +794,51 @@ function ManageArtistsContent() {
                           Gallery Images
                         </label>
                         <div className="flex items-center justify-center w-full">
-                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed rounded-lg cursor-pointer bg-[#0a0a0b] hover:bg-gray-800 hover:border-orange-500 transition-all group">
+                          <div
+                            onClick={() => galleryInputRef.current?.click()}
+                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed rounded-lg cursor-pointer bg-[#0a0a0b] hover:bg-gray-800 hover:border-orange-500 transition-all group"
+                          >
                             <div className="flex flex-col items-center justify-center pt-5 pb-6">
                               <Upload className="w-8 h-8 mb-2 text-gray-500 group-hover:text-orange-500" />
-                              <p className="text-xs text-gray-500 group-hover:text-gray-400">{galleryImages.length > 0 ? `${galleryImages.length} files` : "Upload Gallery"}</p>
+                              <p className="text-xs text-gray-500 group-hover:text-gray-400">
+                                {galleryImages.length > 0 ? `${galleryImages.length} file${galleryImages.length > 1 ? 's' : ''} selected` : "Upload Gallery"}
+                              </p>
+                              {galleryImages.length > 0 && (
+                                <p className="text-xs text-green-400 mt-1">Click to add more</p>
+                              )}
                             </div>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              multiple
-                              className="hidden"
-                              onChange={(e) => setGalleryImages(Array.from(e.target.files || []))}
-                            />
-                          </label>
+                          </div>
+                          <input
+                            ref={galleryInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageSelect(e, 'gallery')}
+                          />
                         </div>
+                        {galleryImages.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {galleryImages.map((img, idx) => (
+                              <div key={idx} className="relative group">
+                                <img
+                                  src={URL.createObjectURL(img)}
+                                  alt={`Gallery ${idx + 1}`}
+                                  className="w-16 h-16 object-cover rounded-lg border border-gray-700"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setGalleryImages(galleryImages.filter((_, i) => i !== idx));
+                                  }}
+                                  className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X className="w-3 h-3 text-white" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -753,6 +877,17 @@ function ManageArtistsContent() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Image Cropper Modal */}
+        {cropperOpen && (
+          <ImageCropper
+            image={imageToCrop}
+            onCropComplete={handleCropComplete}
+            onCancel={handleCropCancel}
+            aspectRatio={cropType === 'profile' ? 1 : cropType === 'header' ? 16 / 9 : 4 / 3}
+            cropShape={cropType === 'profile' ? 'round' : 'rect'}
+          />
         )}
       </main>
     </div>

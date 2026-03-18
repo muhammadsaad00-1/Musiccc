@@ -23,6 +23,7 @@ export default function ManageCategoriesPage() {
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -70,6 +71,22 @@ export default function ManageCategoriesPage() {
         }
     };
 
+    const handleEdit = (category: Category) => {
+        setEditingCategory(category);
+        setFormData({
+            name: category.name,
+            description: category.description || '',
+            image: null
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setEditingCategory(null);
+        setFormData({ name: '', description: '', image: null });
+    };
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setFormData({ ...formData, image: e.target.files[0] });
@@ -89,8 +106,14 @@ export default function ManageCategoriesPage() {
                 data.append('image', formData.image);
             }
 
-            const response = await fetch(`${API_BASE_URL}/admin/categories`, {
-                method: 'POST',
+            const url = editingCategory
+                ? `${API_BASE_URL}/admin/categories/${editingCategory.id}`
+                : `${API_BASE_URL}/admin/categories`;
+
+            const method = editingCategory ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
                 body: data,
             });
 
@@ -98,17 +121,16 @@ export default function ManageCategoriesPage() {
                 const result = await response.json();
                 if (result.success) {
                     await fetchCategories(); // Refresh list
-                    setFormData({ name: '', description: '', image: null });
-                    setIsModalOpen(false);
+                    handleCloseModal();
                 } else {
-                    alert('Failed to create category: ' + result.message);
+                    alert(`Failed to ${editingCategory ? 'update' : 'create'} category: ` + result.message);
                 }
             } else {
-                alert('Failed to create category');
+                alert(`Failed to ${editingCategory ? 'update' : 'create'} category`);
             }
         } catch (error) {
-            console.error('Error creating category:', error);
-            alert('Error creating category');
+            console.error(`Error ${editingCategory ? 'updating' : 'creating'} category:`, error);
+            alert(`Error ${editingCategory ? 'updating' : 'creating'} category`);
         } finally {
             setIsSubmitting(false);
         }
@@ -169,7 +191,9 @@ export default function ManageCategoriesPage() {
                                         </div>
                                     </div>
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button className="p-2 text-gray-400 hover:text-orange-400 hover:bg-[#2a2a2a] rounded-lg transition-colors">
+                                        <button
+                                            onClick={() => handleEdit(category)}
+                                            className="p-2 text-gray-400 hover:text-orange-400 hover:bg-[#2a2a2a] rounded-lg transition-colors">
                                             <Edit2 className="w-4 h-4" />
                                         </button>
                                         <button onClick={() => handleDelete(category.id)} className="p-2 text-gray-400 hover:text-red-400 hover:bg-[#2a2a2a] rounded-lg transition-colors">
@@ -205,13 +229,15 @@ export default function ManageCategoriesPage() {
                 )}
             </main>
 
-            {/* Add Category Modal */}
+            {/* Add/Edit Category Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                     <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden">
                         <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-white">Add New Category</h2>
-                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white">
+                            <h2 className="text-xl font-bold text-white">
+                                {editingCategory ? 'Edit Category' : 'Add New Category'}
+                            </h2>
+                            <button onClick={handleCloseModal} className="text-gray-400 hover:text-white">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -241,6 +267,21 @@ export default function ManageCategoriesPage() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-1">Cover Image</label>
+                                {editingCategory?.image_url && !formData.image && (
+                                    <div className="mb-3 p-3 bg-[#0a0a0b] border border-gray-800 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                            <img
+                                                src={editingCategory.image_url}
+                                                alt="Current"
+                                                className="w-16 h-16 rounded-lg object-cover"
+                                            />
+                                            <div className="flex-1">
+                                                <p className="text-sm text-gray-400">Current Image</p>
+                                                <p className="text-xs text-gray-600 mt-1">Upload a new image to replace</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                                 <div
                                     onClick={() => fileInputRef.current?.click()}
                                     className="border-2 border-dashed border-gray-800 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-orange-500/50 hover:bg-white/5 transition-all group"
@@ -253,7 +294,9 @@ export default function ManageCategoriesPage() {
                                     ) : (
                                         <>
                                             <Upload className="w-8 h-8 text-gray-500 mb-2 group-hover:text-orange-500 transition-colors" />
-                                            <p className="text-sm text-gray-400">Click to upload image</p>
+                                            <p className="text-sm text-gray-400">
+                                                {editingCategory?.image_url ? 'Upload new image' : 'Click to upload image'}
+                                            </p>
                                             <p className="text-xs text-gray-600 mt-1">JPG, PNG up to 5MB</p>
                                         </>
                                     )}
@@ -270,7 +313,7 @@ export default function ManageCategoriesPage() {
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="button"
-                                    onClick={() => setIsModalOpen(false)}
+                                    onClick={handleCloseModal}
                                     className="flex-1 px-4 py-2 bg-[#2a2a2a] text-white rounded-lg hover:bg-[#3a3a3a] transition-colors font-medium">
                                     Cancel
                                 </button>
@@ -281,10 +324,10 @@ export default function ManageCategoriesPage() {
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="w-4 h-4 animate-spin" />
-                                            Saving...
+                                            {editingCategory ? 'Updating...' : 'Saving...'}
                                         </>
                                     ) : (
-                                        'Create Category'
+                                        editingCategory ? 'Update Category' : 'Create Category'
                                     )}
                                 </button>
                             </div>

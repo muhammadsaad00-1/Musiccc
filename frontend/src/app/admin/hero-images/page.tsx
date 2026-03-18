@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ImageIcon, Plus, Edit2, Trash2, Save, X, EyeOff, Loader2, Upload, ArrowLeft } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
+import ImageCropper from '@/components/ui/ImageCropper';
 
 interface HeroImage {
     id: string;
@@ -25,7 +26,8 @@ function HeroImageForm({
     onCancel,
     isSubmitting,
     imageFile,
-    setImageFile
+    setImageFile,
+    onImageSelect
 }: {
     formData: Partial<HeroImage>;
     setFormData: (data: Partial<HeroImage>) => void;
@@ -34,40 +36,68 @@ function HeroImageForm({
     isSubmitting: boolean;
     imageFile: File | null;
     setImageFile: (file: File | null) => void;
+    onImageSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
-    const [preview, setPreview] = useState<string | null>(null);
-
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setImageFile(file);
-            setPreview(URL.createObjectURL(file));
-        }
-    };
+    const imageInputRef = useRef<HTMLInputElement>(null);
 
     return (
         <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-white mb-4">
-                {formData.id ? 'Edit Hero Image Details' : 'Upload New Hero Image'}
+                {formData.id ? 'Edit Hero Image' : 'Upload New Hero Image'}
             </h3>
             <div className="space-y-4">
-                {/* Image Upload - Only for new images */}
-                {!formData.id && (
-                    <div>
-                        <label className="text-sm text-gray-400 block mb-2">Hero Image*</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileSelect}
-                            className="w-full bg-[#111] text-white px-4 py-2 rounded-lg border border-gray-700 focus:border-orange-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-orange-500/20 file:text-orange-400"
-                        />
-                        {preview && (
-                            <div className="mt-3 relative aspect-[21/9] w-full rounded-lg overflow-hidden">
-                                <Image src={preview} alt="Preview" fill className="object-cover" />
+                {/* Image Upload/Preview */}
+                <div>
+                    <label className="text-sm text-gray-400 block mb-2">
+                        Hero Image{!formData.id && '*'}
+                        {formData.id && ' (click to replace)'}
+                    </label>
+
+                    {/* Show current image when editing */}
+                    {formData.id && formData.image_url && !imageFile && (
+                        <div className="mb-3 relative aspect-[21/9] w-full rounded-lg overflow-hidden border border-gray-700">
+                            <Image src={formData.image_url} alt="Current" fill className="object-cover" />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <p className="text-white text-sm">Click below to replace image</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Upload button */}
+                    <div
+                        onClick={() => imageInputRef.current?.click()}
+                        className="border-2 border-dashed border-gray-700 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-orange-500/50 hover:bg-white/5 transition-all group relative overflow-hidden"
+                    >
+                        {imageFile ? (
+                            <>
+                                <img
+                                    src={URL.createObjectURL(imageFile)}
+                                    alt="Preview"
+                                    className="absolute inset-0 w-full h-full object-cover opacity-50"
+                                />
+                                <div className="relative z-10 flex flex-col items-center">
+                                    <ImageIcon className="w-6 h-6 mb-1 text-green-400" />
+                                    <p className="text-xs text-green-400 font-medium">New Image Selected</p>
+                                    <p className="text-xs text-gray-500 mt-1">Click to change</p>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center">
+                                <Upload className="w-8 h-8 mb-2 text-gray-500 group-hover:text-orange-500 transition-colors" />
+                                <p className="text-xs text-gray-500 group-hover:text-gray-400">
+                                    {formData.id ? 'Upload new image to replace' : 'Click to upload image'}
+                                </p>
                             </div>
                         )}
                     </div>
-                )}
+                    <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={onImageSelect}
+                        className="hidden"
+                    />
+                </div>
 
                 {/* Title */}
                 <div>
@@ -164,6 +194,10 @@ export default function AdminHeroImagesPage() {
     });
     const [adminUsername, setAdminUsername] = useState("");
 
+    // Image Cropper State
+    const [cropperOpen, setCropperOpen] = useState(false);
+    const [imageToCrop, setImageToCrop] = useState<string>('');
+
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -240,13 +274,18 @@ export default function AdminHeroImagesPage() {
         try {
             const token = sessionStorage.getItem("adminAccessToken");
             const formBody = new FormData();
-            
+
             if (formData.id) {
-                // Update existing image (text fields only)
+                // Update existing image
                 formBody.append('title', formData.title || '');
                 formBody.append('subtitle', formData.subtitle || '');
                 formBody.append('display_order', String(formData.display_order || 0));
                 formBody.append('is_active', String(formData.is_active ?? true));
+
+                // Add new image if selected
+                if (imageFile) {
+                    formBody.append('image', imageFile);
+                }
 
                 const response = await fetch(`${API_BASE_URL}/api/admin/hero-images/${formData.id}`, {
                     method: 'PUT',
@@ -259,6 +298,7 @@ export default function AdminHeroImagesPage() {
                     alert(result.message);
                     setShowForm(false);
                     setFormData({ display_order: 0, is_active: true });
+                    setImageFile(null);
                     fetchImages();
                 } else {
                     alert(result.message || 'Update failed');
@@ -300,8 +340,39 @@ export default function AdminHeroImagesPage() {
         }
     };
 
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            setImageToCrop(reader.result as string);
+            setCropperOpen(true);
+        };
+        reader.readAsDataURL(file);
+
+        // Reset the input value so the same file can be selected again
+        e.target.value = '';
+    };
+
+    const handleCropComplete = (croppedBlob: Blob) => {
+        // Convert blob to File
+        const fileName = `hero-image-${Date.now()}.jpg`;
+        const croppedFile = new File([croppedBlob], fileName, { type: 'image/jpeg' });
+
+        setImageFile(croppedFile);
+        setCropperOpen(false);
+        setImageToCrop('');
+    };
+
+    const handleCropCancel = () => {
+        setCropperOpen(false);
+        setImageToCrop('');
+    };
+
     const handleEdit = (image: HeroImage) => {
         setFormData(image);
+        setImageFile(null); // Reset image file when editing
         setShowForm(true);
     };
 
@@ -374,6 +445,7 @@ export default function AdminHeroImagesPage() {
                             isSubmitting={isSubmitting}
                             imageFile={imageFile}
                             setImageFile={setImageFile}
+                            onImageSelect={handleImageSelect}
                         />
                     </div>
                 )}
@@ -449,6 +521,17 @@ export default function AdminHeroImagesPage() {
                     </div>
                 )}
             </main>
+
+            {/* Image Cropper Modal */}
+            {cropperOpen && (
+                <ImageCropper
+                    image={imageToCrop}
+                    onCropComplete={handleCropComplete}
+                    onCancel={handleCropCancel}
+                    aspectRatio={21 / 9}
+                    cropShape="rect"
+                />
+            )}
         </div>
     );
 }

@@ -12,6 +12,7 @@ import HowItWorks from '@/components/home/HowItWorks';
 import WhatsAppCTAGrid from '@/components/home/WhatsAppCTAGrid';
 import CTASection from '@/components/home/CTASection';
 import SplashScreen from '@/components/ui/SplashScreen';
+import FloatingWhatsAppButton from '@/components/home/FloatingWhatsAppButton';
 import { useCategories, usePerformers, useHeroImages, useStats } from '@/lib/hooks';
 
 export default function Home() {
@@ -67,7 +68,10 @@ export default function Home() {
       <HowItWorks />
       <CTASection />
       <WhatsAppCTAGrid />
-      
+
+      {/* Floating WhatsApp Button */}
+      <FloatingWhatsAppButton />
+
       <style jsx>{`
         @keyframes fadeIn {
           from {

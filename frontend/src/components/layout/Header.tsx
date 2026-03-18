@@ -47,7 +47,6 @@ const eventTypes = [
     { name: 'Concert', slug: 'concert', icon: '🎭' },
     { name: 'Corporate Event', slug: 'corporate', icon: '🏢' },
     { name: 'Private Party', slug: 'private-party', icon: '🎉' },
-    { name: 'Milad/Religious', slug: 'milad', icon: '🕌' },
 ];
 
 export default function Header() {
@@ -74,18 +73,18 @@ export default function Header() {
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0b]/95 backdrop-blur-md border-b border-gray-800/50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16 lg:h-20">
+                <div className="flex items-center justify-between h-24 lg:h-26">
                     {/* Logo */}
                     <Link href="/" className="flex items-center space-x-2">
                         <Image
                             src="/logo-taf.png"
                             alt="The Artist Factory"
-                            width={64}
-                            height={64}
-                            className="w-16 h-16 object-contain"
+                            width={96}
+                            height={96}
+                            className="w-24 h-24 object-contain"
                         />
                         <div className="hidden sm:block">
-                            <span className="text-xl font-bold text-white">The Artist Factory</span>
+                            <span className="text-2xl font-bold text-white">The Artist Factory</span>
                             <span className="block text-[10px] text-orange-400 -mt-1 tracking-wide italic font-medium">Bringing stars to your event!</span>
                         </div>
                     </Link>
