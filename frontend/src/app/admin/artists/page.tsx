@@ -49,10 +49,10 @@ function ManageArtistsContent() {
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
 
-  // Image Cropper State
+  // Image Cropper State — only used for profile & header
   const [cropperOpen, setCropperOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string>('');
-  const [cropType, setCropType] = useState<'profile' | 'header' | 'gallery'>('profile');
+  const [cropType, setCropType] = useState<'profile' | 'header'>('profile');
   const profileInputRef = useRef<HTMLInputElement>(null);
   const headerInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -104,7 +104,6 @@ function ManageArtistsContent() {
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDragIndex(index);
     e.dataTransfer.effectAllowed = "move";
-    // Make the drag image slightly transparent
     const row = e.currentTarget as HTMLElement;
     row.style.opacity = "0.5";
   };
@@ -132,18 +131,15 @@ function ManageArtistsContent() {
       return;
     }
 
-    // Reorder the local array
     const newArtists = [...artists];
     const [draggedItem] = newArtists.splice(dragIndex, 1);
     newArtists.splice(dropIndex, 0, draggedItem);
 
-    // Assign sequential display_order values (1, 2, 3, ...)
     const orders = newArtists.map((artist, idx) => ({
       id: artist.id,
       display_order: idx + 1,
     }));
 
-    // Update local state immediately for snappy UX
     const updatedArtists = newArtists.map((artist, idx) => ({
       ...artist,
       display_order: idx + 1,
@@ -152,7 +148,6 @@ function ManageArtistsContent() {
     setDragIndex(null);
     setDragOverIndex(null);
 
-    // Send to backend
     setReordering(true);
     try {
       const response = await fetch(`${API_BASE_URL}/admin/performers/reorder`, {
@@ -163,12 +158,12 @@ function ManageArtistsContent() {
       const result = await response.json();
       if (!result.success) {
         alert(result.message || "Failed to save order");
-        await fetchArtists(); // Revert on failure
+        await fetchArtists();
       }
     } catch (error) {
       console.error("Failed to reorder:", error);
       alert("Failed to save order");
-      await fetchArtists(); // Revert on failure
+      await fetchArtists();
     } finally {
       setReordering(false);
     }
@@ -180,9 +175,7 @@ function ManageArtistsContent() {
     try {
       const response = await fetch(
         `${API_BASE_URL}/admin/performers/${id}`,
-        {
-          method: "DELETE",
-        },
+        { method: "DELETE" },
       );
 
       if (response.ok) {
@@ -199,7 +192,6 @@ function ManageArtistsContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate profile image for new artists
     if (!showEditModal && !profileImage) {
       alert('Please upload a profile image');
       return;
@@ -216,29 +208,18 @@ function ManageArtistsContent() {
       if (formData.youtube_url)
         formDataToSend.append("youtube_url", formData.youtube_url);
 
-      const genres = formData.genres
-        .split(",")
-        .map((g) => g.trim())
-        .filter(Boolean);
+      const genres = formData.genres.split(",").map((g) => g.trim()).filter(Boolean);
       formDataToSend.append("genres", JSON.stringify(genres));
 
-      const videos = formData.videos
-        .split(",")
-        .map((v) => v.trim())
-        .filter(Boolean);
+      const videos = formData.videos.split(",").map((v) => v.trim()).filter(Boolean);
       formDataToSend.append("videos", JSON.stringify(videos));
 
-      const songs = formData.popular_songs
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
+      const songs = formData.popular_songs.split(",").map((s) => s.trim()).filter(Boolean);
       formDataToSend.append("popular_songs", JSON.stringify(songs));
 
       if (profileImage) formDataToSend.append("image", profileImage);
       if (headerImage) formDataToSend.append("header_image", headerImage);
-      galleryImages.forEach((img) =>
-        formDataToSend.append("gallery_images", img),
-      );
+      galleryImages.forEach((img) => formDataToSend.append("gallery_images", img));
 
       const url = showEditModal
         ? `${API_BASE_URL}/admin/performers/${selectedArtist.id}`
@@ -246,10 +227,7 @@ function ManageArtistsContent() {
 
       const method = showEditModal ? "PUT" : "POST";
 
-      const response = await fetch(url, {
-        method,
-        body: formDataToSend,
-      });
+      const response = await fetch(url, { method, body: formDataToSend });
 
       if (response.ok) {
         await fetchArtists();
@@ -301,8 +279,13 @@ function ManageArtistsContent() {
     setShowEditModal(true);
   };
 
-  // ─── Image Cropper Handlers ───
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'header' | 'gallery') => {
+  // ─── Image Handlers ───────────────────────────────────────────────────────
+  // Profile & Header → open cropper
+  // Gallery → add files directly, no cropping
+  const handleCroppedImageSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: 'profile' | 'header',
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -314,12 +297,18 @@ function ManageArtistsContent() {
     };
     reader.readAsDataURL(file);
 
-    // Reset the input value so the same file can be selected again
+    // Reset so the same file can be re-selected
+    e.target.value = '';
+  };
+
+  const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setGalleryImages(prev => [...prev, ...files]);
     e.target.value = '';
   };
 
   const handleCropComplete = (croppedBlob: Blob) => {
-    // Convert blob to File
     const fileName = `cropped-${Date.now()}.jpg`;
     const croppedFile = new File([croppedBlob], fileName, { type: 'image/jpeg' });
 
@@ -327,8 +316,6 @@ function ManageArtistsContent() {
       setProfileImage(croppedFile);
     } else if (cropType === 'header') {
       setHeaderImage(croppedFile);
-    } else if (cropType === 'gallery') {
-      setGalleryImages(prev => [...prev, croppedFile]);
     }
 
     setCropperOpen(false);
@@ -398,24 +385,12 @@ function ManageArtistsContent() {
               <table className="w-full">
                 <thead className="bg-[#0f0f10]">
                   <tr>
-                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
-
-                    </th>
-                    <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                      #
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Artist
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10" />
+                    <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-12">#</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artist</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
@@ -450,19 +425,13 @@ function ManageArtistsContent() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <img
-                              src={
-                                artist.profile_image_url || "/placeholder.png"
-                              }
+                              src={artist.profile_image_url || "/placeholder.png"}
                               alt={artist.name}
                               className="w-10 h-10 rounded-full object-cover"
                             />
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-white">
-                                {artist.name}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                ID: {artist.id.slice(0, 8)}
-                              </div>
+                              <div className="text-sm font-medium text-white">{artist.name}</div>
+                              <div className="text-sm text-gray-500">ID: {artist.id.slice(0, 8)}</div>
                             </div>
                           </div>
                         </td>
@@ -475,7 +444,6 @@ function ManageArtistsContent() {
                             ))}
                           </div>
                         </td>
-
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="px-2 py-1 text-xs font-medium bg-green-500/20 text-green-400 rounded-full">
                             Active
@@ -547,9 +515,7 @@ function ManageArtistsContent() {
                           type="text"
                           required
                           value={formData.name}
-                          onChange={(e) =>
-                            setFormData({ ...formData, name: e.target.value })
-                          }
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
                           placeholder="Artist Name"
                         />
@@ -565,8 +531,8 @@ function ManageArtistsContent() {
                               <label
                                 key={cat.id}
                                 className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${formData.category.includes(cat.name)
-                                  ? 'bg-orange-500/20 border border-orange-500/40'
-                                  : 'bg-[#1a1a1b] border border-gray-800 hover:border-gray-600'
+                                    ? 'bg-orange-500/20 border border-orange-500/40'
+                                    : 'bg-[#1a1a1b] border border-gray-800 hover:border-gray-600'
                                   }`}
                               >
                                 <input
@@ -593,15 +559,11 @@ function ManageArtistsContent() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-1.5">
-                        Description
-                      </label>
+                      <label className="block text-sm font-medium text-gray-400 mb-1.5">Description</label>
                       <textarea
                         rows={3}
                         value={formData.description}
-                        onChange={(e) =>
-                          setFormData({ ...formData, description: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
                         placeholder="Bio or details about the artist..."
                       />
@@ -613,36 +575,21 @@ function ManageArtistsContent() {
                     <h3 className="text-lg font-semibold text-white border-b border-gray-800 pb-2">Socials & Media</h3>
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
-                          Instagram URL
-                        </label>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">Instagram URL</label>
                         <input
                           type="url"
                           value={formData.instagram_url}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              instagram_url: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
                           className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
                           placeholder="https://instagram.com/..."
                         />
                       </div>
-
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
-                          YouTube Channel URL
-                        </label>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">YouTube Channel URL</label>
                         <input
                           type="url"
                           value={formData.youtube_url}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              youtube_url: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
                           className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
                           placeholder="https://youtube.com/..."
                         />
@@ -656,9 +603,7 @@ function ManageArtistsContent() {
                         type="text"
                         placeholder="https://youtube.com/watch?v=..., ..."
                         value={formData.videos}
-                        onChange={(e) =>
-                          setFormData({ ...formData, videos: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, videos: e.target.value })}
                         className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
@@ -669,51 +614,38 @@ function ManageArtistsContent() {
                     <h3 className="text-lg font-semibold text-white border-b border-gray-800 pb-2">Tags</h3>
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
-                          Genres (comma-separated)
-                        </label>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">Genres (comma-separated)</label>
                         <input
                           type="text"
                           placeholder="Pop, Rock, Jazz"
                           value={formData.genres}
-                          onChange={(e) =>
-                            setFormData({ ...formData, genres: e.target.value })
-                          }
+                          onChange={(e) => setFormData({ ...formData, genres: e.target.value })}
                           className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
                         />
                       </div>
-
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
-                          Popular Songs (comma-separated)
-                        </label>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">Popular Songs (comma-separated)</label>
                         <input
                           type="text"
                           placeholder="Song 1, Song 2"
                           value={formData.popular_songs}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              popular_songs: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setFormData({ ...formData, popular_songs: e.target.value })}
                           className="w-full px-4 py-2 bg-[#0a0a0b] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
                         />
                       </div>
                     </div>
                   </div>
 
-
                   {/* Section: Images */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-white border-b border-gray-800 pb-2">Images</h3>
                     <div className="grid md:grid-cols-3 gap-4">
+
+                      {/* Profile Image — cropper enabled */}
                       <div>
                         <label className="block text-sm font-medium text-gray-400 mb-1.5">
                           Profile Image{" "}
-                          {!showEditModal && (
-                            <span className="text-red-400">*</span>
-                          )}
+                          {!showEditModal && <span className="text-red-400">*</span>}
                         </label>
                         <div className="flex items-center justify-center w-full">
                           <div
@@ -745,15 +677,14 @@ function ManageArtistsContent() {
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            onChange={(e) => handleImageSelect(e, 'profile')}
+                            onChange={(e) => handleCroppedImageSelect(e, 'profile')}
                           />
                         </div>
                       </div>
 
+                      {/* Header Image — cropper enabled */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
-                          Header Image
-                        </label>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">Header Image</label>
                         <div className="flex items-center justify-center w-full">
                           <div
                             onClick={() => headerInputRef.current?.click()}
@@ -784,15 +715,14 @@ function ManageArtistsContent() {
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            onChange={(e) => handleImageSelect(e, 'header')}
+                            onChange={(e) => handleCroppedImageSelect(e, 'header')}
                           />
                         </div>
                       </div>
 
+                      {/* Gallery Images — NO cropper, multi-select directly */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1.5">
-                          Gallery Images
-                        </label>
+                        <label className="block text-sm font-medium text-gray-400 mb-1.5">Gallery Images</label>
                         <div className="flex items-center justify-center w-full">
                           <div
                             onClick={() => galleryInputRef.current?.click()}
@@ -801,7 +731,9 @@ function ManageArtistsContent() {
                             <div className="flex flex-col items-center justify-center pt-5 pb-6">
                               <Upload className="w-8 h-8 mb-2 text-gray-500 group-hover:text-orange-500" />
                               <p className="text-xs text-gray-500 group-hover:text-gray-400">
-                                {galleryImages.length > 0 ? `${galleryImages.length} file${galleryImages.length > 1 ? 's' : ''} selected` : "Upload Gallery"}
+                                {galleryImages.length > 0
+                                  ? `${galleryImages.length} file${galleryImages.length > 1 ? 's' : ''} selected`
+                                  : "Upload Gallery"}
                               </p>
                               {galleryImages.length > 0 && (
                                 <p className="text-xs text-green-400 mt-1">Click to add more</p>
@@ -812,8 +744,9 @@ function ManageArtistsContent() {
                             ref={galleryInputRef}
                             type="file"
                             accept="image/*"
+                            multiple
                             className="hidden"
-                            onChange={(e) => handleImageSelect(e, 'gallery')}
+                            onChange={handleGallerySelect}
                           />
                         </div>
                         {galleryImages.length > 0 && (
@@ -840,6 +773,7 @@ function ManageArtistsContent() {
                           </div>
                         )}
                       </div>
+
                     </div>
                   </div>
                 </form>
@@ -879,13 +813,13 @@ function ManageArtistsContent() {
           </div>
         )}
 
-        {/* Image Cropper Modal */}
+        {/* Image Cropper Modal — profile & header only */}
         {cropperOpen && (
           <ImageCropper
             image={imageToCrop}
             onCropComplete={handleCropComplete}
             onCancel={handleCropCancel}
-            aspectRatio={cropType === 'profile' ? 1 : cropType === 'header' ? 16 / 9 : 4 / 3}
+            aspectRatio={cropType === 'profile' ? 1 : 16 / 9}
             cropShape={cropType === 'profile' ? 'round' : 'rect'}
           />
         )}
