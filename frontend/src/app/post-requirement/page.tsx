@@ -208,13 +208,14 @@ export default function PostRequirementPage() {
 
             // Map budget based on pricing
             let budgetRange = "";
-            if (data.pricing < 50000) budgetRange = "under-50k";
-            else if (data.pricing < 100000) budgetRange = "50k-100k";
-            else if (data.pricing < 200000) budgetRange = "100k-200k";
-            else if (data.pricing < 300000) budgetRange = "200k-300k";
-            else if (data.pricing < 500000) budgetRange = "300k-500k";
-            else if (data.pricing < 900000) budgetRange = "500k-900k";
-            else budgetRange = "900k+";
+            if (data.pricing < 100000) budgetRange = "100K-200K";        // fallback to Basic
+            else if (data.pricing < 200000) budgetRange = "100K-200K";   // Basic
+            else if (data.pricing < 300000) budgetRange = "200k-300k";   // Standard
+            else if (data.pricing < 500000) budgetRange = "300k-500k";   // Premium
+            else if (data.pricing < 700000) budgetRange = "500k-700k";   // Luxury
+            else if (data.pricing < 1000000) budgetRange = "700k-1M";    // Ultra Luxury
+            else if (data.pricing < 2000000) budgetRange = "1M+";        // Celebrity
+            else budgetRange = "2M+";                                     // Exclusive
 
             setFormData((prev) => ({
               ...prev,
@@ -279,13 +280,13 @@ export default function PostRequirementPage() {
   };
 
   const budgetOptions = [
-    { range: "Under 50K", label: "Budget-friendly", value: "under-50k" },
-    { range: "50K - 100K", label: "Standard", value: "50k-100k" },
-    { range: "100K - 200k", label: "Premium", value: "100k-200k" },
-    { range: "200K - 300K", label: "Luxury", value: "200k-300k" },
-    { range: "300K - 500K", label: "Celebrity", value: "300k-500k" },
-    { range: "500K-900k", label: "Ultra Luxury", value: "500k-900k" },
-    { range: "900K+", label: "Exclusive", value: "900k+" },
+    { range: "100K-200K", label: "Basic", value: "100K-200K" },
+    { range: "200K - 300K", label: "Standard", value: "200k-300k" },
+    { range: "300K - 500k", label: "Premium", value: "300k-500k" },
+    { range: "500K - 700K", label: "Luxury", value: "500k-700k" },
+    { range: "700K - 1M", label: "Ultra Luxury", value: "700k-1M" },
+    { range: "1M+", label: "Celebrity", value: "1M+" },
+    { range: "2M+", label: "Exclusive", value: "2M+" },
   ];
 
   const handleChange = (
@@ -670,8 +671,8 @@ export default function PostRequirementPage() {
                                   setIsCityDropdownOpen(false);
                                 }}
                                 className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.eventLocation === city
-                                    ? "bg-gradient-to-r from-orange-500/20 to-pink-500/20 text-orange-400 font-medium"
-                                    : "text-gray-300 hover:bg-[#1a1a1a] hover:text-white"
+                                  ? "bg-gradient-to-r from-orange-500/20 to-pink-500/20 text-orange-400 font-medium"
+                                  : "text-gray-300 hover:bg-[#1a1a1a] hover:text-white"
                                   } first:rounded-t-2xl last:rounded-b-2xl`}
                               >
                                 {city}
@@ -934,14 +935,14 @@ export default function PostRequirementPage() {
                   <div className="group">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
                       <Mail className="w-4 h-4 text-blue-400" />
-                      Email 
+                      Email
                     </label>
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      
+
                       placeholder="you@email.com"
                       className="w-full px-5 py-4 bg-[#0a0a0b]/80 border-2 border-gray-800 rounded-2xl text-white placeholder-gray-600 focus:ring-0 focus:border-blue-500/50 transition-all duration-300 hover:border-gray-700"
                     />
@@ -1019,7 +1020,7 @@ export default function PostRequirementPage() {
                     disabled={
                       isLoading ||
                       !formData.name ||
-                      
+
                       !formData.phone
                     }
                     className="flex-1 py-4 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white font-semibold rounded-2xl hover:shadow-2xl hover:shadow-green-500/30 hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed"
