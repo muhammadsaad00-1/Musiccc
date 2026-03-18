@@ -81,7 +81,6 @@ export default function Footer() {
         { name: "Corporate Events", slug: "corporate" },
         { name: "Private Parties", slug: "private-party" },
         { name: "Concerts", slug: "concert" },
-        { name: "Milad & Religious", slug: "milad" }
     ];
 
     const companyLinks = [
@@ -160,7 +159,7 @@ export default function Footer() {
                         </div>
 
                         {/* Leave a Review Button */}
-                        <Link 
+                        <Link
                             href="/testimonials"
                             className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-1 transition-all"
                         >
