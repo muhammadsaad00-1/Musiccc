@@ -47,6 +47,7 @@ const eventTypes = [
     { name: 'Concert', slug: 'concert', icon: '🎭' },
     { name: 'Corporate Event', slug: 'corporate', icon: '🏢' },
     { name: 'Private Party', slug: 'private-party', icon: '🎉' },
+    { name: 'Luxury / Resort / Cruise', slug: 'luxury-resort-cruise', icon: '🛳️' },
 ];
 
 export default function Header() {

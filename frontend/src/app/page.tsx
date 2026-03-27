@@ -1,18 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import Hero from '@/components/home/Hero';
 import FeaturedArtists from '@/components/home/FeaturedArtists';
 import ClientsMarquee from '@/components/home/ClientsMarquee';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
-import OurClients from '@/components/home/OurClients';
 import HowItWorks from '@/components/home/HowItWorks';
 import WhatsAppCTAGrid from '@/components/home/WhatsAppCTAGrid';
 import CTASection from '@/components/home/CTASection';
 import SplashScreen from '@/components/ui/SplashScreen';
 import FloatingWhatsAppButton from '@/components/home/FloatingWhatsAppButton';
+import EventHighlights from '@/components/home/EventHighlights';
+import InstagramShowcase from '@/components/home/InstagramShowcase';
 import { useCategories, usePerformers, useHeroImages, useStats } from '@/lib/hooks';
 
 export default function Home() {
@@ -62,12 +62,13 @@ export default function Home() {
       {/* Testimonials — Clients & Artists */}
       <TestimonialsSection />
 
-      {/* Our Corporate Clients */}
-      {/* <OurClients /> */}
+      {/* Portfolio/Event highlights live on homepage */}
+      <EventHighlights />
 
       <HowItWorks />
       <CTASection />
       <WhatsAppCTAGrid />
+      <InstagramShowcase />
 
       {/* Floating WhatsApp Button */}
       <FloatingWhatsAppButton />

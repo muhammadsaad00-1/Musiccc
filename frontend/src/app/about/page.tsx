@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 import TestimonialsSection from "@/components/home/TestimonialsSection";
-import PortfolioGrid from "@/components/home/PortfolioGrid";
 import {
     CheckCircle,
     Star,
@@ -25,6 +24,33 @@ import {
     Award,
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
+
+interface AboutProfile {
+    founder_name?: string;
+    founder_title?: string;
+    founder_bio?: string;
+    image_url?: string;
+    instagram_url?: string;
+    primary_cta_text?: string;
+    primary_cta_link?: string;
+    secondary_cta_text?: string;
+    secondary_cta_link?: string;
+}
+
+const defaultAboutProfile: AboutProfile = {
+    founder_name: "Abubakar Javed",
+    founder_title: "Founder, The Artist Factory",
+    founder_bio: `With formal training from Berklee College of Music and ACCA qualification from London, Abubakar combines creative direction with financial and operational discipline.
+
+As former Music Producer and Project Director at Lahore Arts Council, he launched Alhamra Unplugged and helped elevate live studio production standards in Pakistan.
+
+Today, through The Artist Factory, he leads a curated network of 1,000+ professional artists and provides complete entertainment solutions from artist booking to full production management.`,
+    primary_cta_text: "Book Artists",
+    primary_cta_link: "/artists",
+    secondary_cta_text: "Request a Custom Event Proposal",
+    secondary_cta_link: "/post-requirement",
+    instagram_url: "https://www.instagram.com/theartistfactoryofficial",
+};
 
 // ─── YouTube helper ────────────────────────────────────────────
 function extractYoutubeId(url: string): string | null {
@@ -420,12 +446,30 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 export default function AboutPage() {
     // Auto-cycle neon effect for "Why Choose Us" cards
     const [activeNeonIndex, setActiveNeonIndex] = useState(0);
+    const [aboutProfile, setAboutProfile] = useState<AboutProfile>(defaultAboutProfile);
 
     useEffect(() => {
         const interval = setInterval(() => {
             setActiveNeonIndex((prev) => (prev + 1) % whyChooseUs.length);
         }, 3000);
         return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        const fetchAboutProfile = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/about-profile`);
+                if (!response.ok) return;
+                const data = await response.json();
+                if (data) {
+                    setAboutProfile((prev) => ({ ...prev, ...data }));
+                }
+            } catch (error) {
+                console.error('Failed to fetch about profile:', error);
+            }
+        };
+
+        fetchAboutProfile();
     }, []);
 
     return (
@@ -460,13 +504,21 @@ export default function AboutPage() {
                         {/* Founder Photo */}
                         <div className="relative min-h-[420px] lg:min-h-[560px]">
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center">
-                                {/* Placeholder — replace src with real founder photo */}
-                                <div className="flex flex-col items-center gap-4 text-center p-12">
-                                    <div className="w-48 h-48 rounded-full bg-gradient-to-br from-orange-500/30 to-pink-600/30 flex items-center justify-center border-4 border-orange-500/20">
-                                        <Users className="w-24 h-24 text-orange-400/40" />
+                                {aboutProfile.image_url ? (
+                                    <Image
+                                        src={aboutProfile.image_url}
+                                        alt={aboutProfile.founder_name || 'Founder'}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex flex-col items-center gap-4 text-center p-12">
+                                        <div className="w-48 h-48 rounded-full bg-gradient-to-br from-orange-500/30 to-pink-600/30 flex items-center justify-center border-4 border-orange-500/20">
+                                            <Users className="w-24 h-24 text-orange-400/40" />
+                                        </div>
+                                        
                                     </div>
-                                    <p className="text-gray-600 text-sm">(Founder photo placeholder)</p>
-                                </div>
+                                )}
                             </div>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#1a1a1a]/20 hidden lg:block" />
                         </div>
@@ -477,26 +529,17 @@ export default function AboutPage() {
                                 👤 Our Founder
                             </span>
                             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-1">
-                                Abubakar Javed
+                                {aboutProfile.founder_name}
                             </h2>
-                            <p className="text-orange-400 font-medium mb-6">Founder, The Artist Factory</p>
+                            <p className="text-orange-400 font-medium mb-6">{aboutProfile.founder_title}</p>
 
                             <div className="space-y-4 max-h-[380px] overflow-y-auto custom-scrollbar pr-2">
                                 <p className="text-gray-300 text-lg leading-relaxed italic border-l-2 border-orange-500/40 pl-4">
                                     &ldquo;I build entertainment infrastructure designed for scale, precision, and global standards.&rdquo;
                                 </p>
-                                <p className="text-gray-400 leading-relaxed">
-                                    With formal training from the <span className="text-white font-medium">Berklee College of Music</span> and an <span className="text-white font-medium">ACCA qualification from London</span>, Abubakar combines creative direction with financial and operational discipline — ensuring every production is both artistically powerful and professionally executed.
-                                </p>
-                                <p className="text-gray-400 leading-relaxed">
-                                    As former <span className="text-white font-medium">Music Producer and Project Director at the Lahore Arts Council</span>, he launched <em>Alhamra Unplugged</em>, elevating live studio production standards in Pakistan.
-                                </p>
-                                <p className="text-gray-400 leading-relaxed">
-                                    Over the years, he has collaborated with artists including <span className="text-white font-medium">Abrar-ul-Haq, Hadiqa Kiani, Javed Bashir, and Qurat-ul-Ain Balouch</span> — delivering music production for films, multinational campaigns, diplomatic missions, and high-profile corporate events.
-                                </p>
-                                <p className="text-gray-400 leading-relaxed">
-                                    Today, through <span className="text-white font-medium">The Artist Factory</span>, we manage a curated network of <span className="text-orange-400 font-semibold">1,000+ professional artists</span> across all major genres and provide complete entertainment solutions — from artist booking and contract structuring to full production management.
-                                </p>
+                                {aboutProfile.founder_bio?.split('\n\n').map((paragraph, index) => (
+                                    <p key={index} className="text-gray-400 leading-relaxed">{paragraph}</p>
+                                ))}
                             </div>
 
                             {/* CTA Buttons */}
@@ -504,22 +547,24 @@ export default function AboutPage() {
                                 <p className="text-white font-semibold text-sm mb-4">Plan an Event That Performs</p>
                                 <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                                     <a
-                                        href="/artists"
+                                        href={aboutProfile.primary_cta_link || '/artists'}
                                         className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-pink-600 text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-orange-500/20 transition-all hover:scale-105"
                                     >
-                                        🎤 Book Artists
+                                        🎤 {aboutProfile.primary_cta_text || 'Book Artists'}
                                     </a>
                                     <a
-                                        href="/post-requirement"
+                                        href={aboutProfile.secondary_cta_link || '/post-requirement'}
                                         className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 text-white text-sm font-medium rounded-xl hover:bg-white/10 hover:border-white/20 transition-all"
                                     >
-                                        📋 Request a Custom Event Proposal
+                                        📋 {aboutProfile.secondary_cta_text || 'Request a Custom Event Proposal'}
                                     </a>
                                     <a
-                                        href="/contact"
+                                        href={aboutProfile.instagram_url || '/contact'}
+                                        target={aboutProfile.instagram_url ? '_blank' : undefined}
+                                        rel={aboutProfile.instagram_url ? 'noopener noreferrer' : undefined}
                                         className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 text-gray-300 text-sm font-medium rounded-xl hover:bg-white/10 hover:border-white/20 transition-all"
                                     >
-                                        🎬 Speak to Our Production Team
+                                        🎬 Visit Instagram
                                     </a>
                                 </div>
                                 <p className="text-orange-400 text-xs mt-4 font-medium italic">Let&apos;s build something unforgettable.</p>
@@ -671,9 +716,6 @@ export default function AboutPage() {
                     </div>
                 </div>
             </section>
-
-            {/* ══ PORTFOLIO (dynamic) ════════════════════════════════════ */}
-            <PortfolioGrid bgClass="bg-[#0f0f10]" />
 
             {/* ══ TESTIMONIALS ══════════════════════════════════════════ */}
             <TestimonialsSection bgClass="bg-[#0a0a0b]" />

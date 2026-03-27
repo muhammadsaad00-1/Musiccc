@@ -23,6 +23,16 @@ interface BackendEvent {
     performers: any[];
 }
 
+async function safeFetchJson<T>(url: string): Promise<T | null> {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        return (await response.json()) as T;
+    } catch {
+        return null;
+    }
+}
+
 // Hero background images for each event type
 const eventHeroImages: Record<string, string[]> = {
     wedding: [
@@ -89,6 +99,11 @@ const eventConfigs: Record<string, { name: string; description: string; icon: st
         description: "Exclusive entertainment for intimate gatherings and celebrations",
         icon: "🎉"
     },
+    "luxury-resort-cruise": {
+        name: "Luxury / Resort / Cruise",
+        description: "Bespoke entertainment curation for destination resorts, luxury venues, and cruise experiences.",
+        icon: "🛳️"
+    },
 };
 
 export default function EventTypePage({ params }: EventTypePageProps) {
@@ -118,9 +133,8 @@ export default function EventTypePage({ params }: EventTypePageProps) {
 
             try {
                 // Try to fetch from backend
-                const response = await fetch(`${API_BASE_URL}/events`);
-                if (response.ok) {
-                    const backendEvents: BackendEvent[] = await response.json();
+                const backendEvents = await safeFetchJson<BackendEvent[]>(`${API_BASE_URL}/events`);
+                if (backendEvents && Array.isArray(backendEvents)) {
                     const createSlug = (name: string) => {
                         return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
                     };
@@ -177,7 +191,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                     await fetchRelevantArtistsForEvent(type);
                 }
             } catch (error) {
-                console.error('Failed to fetch event:', error);
+                // Keep the page usable even when backend is temporarily unavailable.
                 if (eventConfig) {
                     setEvent({
                         name: eventConfig.name,
@@ -204,6 +218,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                     'corporate': ['singer', 'dj', 'musician', 'anchor', 'band', 'qawwal'],
                     'birthday': ['singer', 'dj', 'comedian', 'dancer', 'musician', 'bhangra', 'qawwal'],
                     'private-party': ['singer', 'dj', 'musician', 'band', 'bhangra', 'qawwal'],
+                    'luxury-resort-cruise': ['singer', 'dj', 'live band', 'band', 'musician', 'classical', 'anchor', 'qawwal'],
                 };
 
                 const relevantKeywords = eventCategoryMap[eventType] || ['singer', 'dj', 'musician'];
@@ -217,9 +232,8 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                 };
 
                 // Fetch categories from backend
-                const categoriesRes = await fetch(`${API_BASE_URL}/categories`);
-                if (categoriesRes.ok) {
-                    const allCategories = await categoriesRes.json();
+                const allCategories = await safeFetchJson<any[]>(`${API_BASE_URL}/categories`);
+                if (allCategories && Array.isArray(allCategories)) {
                     // Filter categories that match event type keywords
                     const filteredCategories = allCategories.filter((cat: any) =>
                         matchesKeywords(cat.name)
@@ -233,9 +247,8 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                 }
 
                 // Fetch all performers
-                const performersRes = await fetch(`${API_BASE_URL}/performers?limit=100`);
-                if (performersRes.ok) {
-                    const data = await performersRes.json();
+                const data = await safeFetchJson<any>(`${API_BASE_URL}/performers?limit=100`);
+                if (data) {
                     // Handle paginated response - data is in response.data
                     const allPerformers = data.data || data;
 
@@ -263,7 +276,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                     setRelevantArtists(filtered);
                 }
             } catch (error) {
-                console.error('Error fetching relevant artists:', error);
+                // Silent fallback: keep static event page visible even without artist data.
             }
         };
 

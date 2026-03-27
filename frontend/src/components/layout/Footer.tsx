@@ -80,6 +80,7 @@ export default function Footer() {
         { name: "Mehendi Events", slug: "mehendi" },
         { name: "Corporate Events", slug: "corporate" },
         { name: "Private Parties", slug: "private-party" },
+        { name: "Luxury / Resort / Cruise", slug: "luxury-resort-cruise" },
         { name: "Concerts", slug: "concert" },
     ];
 
