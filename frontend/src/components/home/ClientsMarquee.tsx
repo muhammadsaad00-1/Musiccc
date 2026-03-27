@@ -2,82 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { ArrowRight, ChevronRight, Disc } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
-
-// Simple SVG logos for event/music industry companies
-const brands = [
-  {
-    name: 'Coke Studio',
-    logo: (
-      <svg viewBox="0 0 120 40" className="w-64 h-24 fill-current">
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-lg" style={{ fontFamily: 'system-ui' }}>COKE STUDIO</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Nescafe Basement',
-    logo: (
-      <svg viewBox="0 0 120 40" className="w-64 h-24 fill-current">
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-xs" style={{ fontFamily: 'system-ui' }}>NESCAFÉ BASEMENT</text>
-      </svg>
-    )
-  },
-  {
-    name: 'HUM TV',
-    logo: (
-      <svg viewBox="0 0 80 40" className="w-48 h-24 fill-current">
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-lg" style={{ fontFamily: 'system-ui' }}>HUM TV</text>
-      </svg>
-    )
-  },
-  {
-    name: 'ARY Digital',
-    logo: (
-      <svg viewBox="0 0 100 40" className="w-56 h-24 fill-current">
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-base" style={{ fontFamily: 'system-ui' }}>ARY DIGITAL</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Geo TV',
-    logo: (
-      <svg viewBox="0 0 80 40" className="w-40 h-24 fill-current">
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-lg" style={{ fontFamily: 'system-ui' }}>GEO</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Jazz',
-    logo: (
-      <svg viewBox="0 0 80 40" className="w-40 h-24 fill-current">
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-lg" style={{ fontFamily: 'system-ui' }}>JAZZ</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Pepsi',
-    logo: (
-      <svg viewBox="0 0 80 40" className="w-40 h-24 fill-current">
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-lg" style={{ fontFamily: 'system-ui' }}>PEPSI</text>
-      </svg>
-    )
-  },
-  {
-    name: 'Velo Sound Station',
-    logo: (
-      <svg viewBox="0 0 120 40" className="w-64 h-24 fill-current">
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="font-bold text-[10px]" style={{ fontFamily: 'system-ui' }}>VELO SOUND STATION</text>
-      </svg>
-    )
-  },
-];
 
 interface ClientLogo {
   id?: string;
   name: string;
   logo_url?: string;
-  logo?: React.ReactNode;
   is_active?: boolean;
   display_order?: number;
 }
@@ -87,8 +18,7 @@ export default function ClientsMarquee() {
   const [rotation, setRotation] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [backendClients, setBackendClients] = useState<ClientLogo[]>([]);
-  const [allBrands, setAllBrands] = useState<ClientLogo[]>(brands);
+  const [allBrands, setAllBrands] = useState<ClientLogo[]>([]);
 
   // Fetch backend client logos
   useEffect(() => {
@@ -97,21 +27,34 @@ export default function ClientsMarquee() {
         const response = await fetch(`${API_BASE_URL}/api/client-logos`);
         if (response.ok) {
           const data: ClientLogo[] = await response.json();
-          // Merge backend data with dummy data
-          const merged = [...brands, ...data];
-          setAllBrands(merged);
-          setBackendClients(data);
+          // Use only backend data
+          setAllBrands(data);
         }
       } catch (error) {
         console.error('Error fetching client logos:', error);
-        // Keep dummy data if fetch fails
       }
     };
     fetchClientLogos();
   }, []);
 
+  const handlePrev = useCallback(() => {
+    if (isAnimating || allBrands.length === 0) return;
+
+    setIsAnimating(true);
+    setRotation(prev => prev - 360); // Spin backwards
+
+    // Change logo halfway through rotation
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev === 0 ? allBrands.length - 1 : prev - 1));
+    }, 250);
+
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 500);
+  }, [isAnimating, allBrands.length]);
+
   const handleNext = useCallback(() => {
-    if (isAnimating) return;
+    if (isAnimating || allBrands.length === 0) return;
 
     setIsAnimating(true);
     setRotation(prev => prev + 360);
@@ -128,14 +71,14 @@ export default function ClientsMarquee() {
 
   // Auto-rotation effect
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || allBrands.length === 0) return;
 
     const interval = setInterval(() => {
       handleNext();
     }, 5000); // Rotate every 5 seconds
 
     return () => clearInterval(interval);
-  }, [handleNext, isPaused]);
+  }, [handleNext, isPaused, allBrands.length]);
 
   const currentBrand = allBrands[currentIndex];
 
@@ -207,10 +150,6 @@ export default function ClientsMarquee() {
                         priority={currentIndex === 0}
                       />
                     </div>
-                  ) : currentBrand.logo ? (
-                    <div className="text-gray-300 group-hover:text-orange-400 transition-colors duration-300 transform scale-100">
-                      {currentBrand.logo}
-                    </div>
                   ) : (
                     <div className="text-center">
                       <p className="text-2xl font-bold text-white">{currentBrand.name}</p>
@@ -222,6 +161,15 @@ export default function ClientsMarquee() {
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
               </div>
             </div>
+
+            {/* "Previous" Button Overlaid */}
+            <button
+              onClick={handlePrev}
+              className="absolute top-1/2 -left-8 md:-left-24 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-[#1a1a1a] border border-gray-700 rounded-full flex items-center justify-center hover:bg-orange-600 hover:border-orange-500 hover:text-white transition-all duration-300 shadow-xl group/btn active:scale-95 z-20"
+              aria-label="Previous Client"
+            >
+              <ArrowLeft className="w-8 h-8 text-gray-400 group-hover/btn:text-white transition-colors" />
+            </button>
 
             {/* "Play/Next" Button Overlaid or nearby */}
             <button

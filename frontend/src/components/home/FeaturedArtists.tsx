@@ -88,10 +88,10 @@ export default function FeaturedArtists() {
     if (featuredArtists.length === 0) return null;
 
     return (
-        <section className="relative pt-24 pb-24 bg-[#050508] overflow-hidden">
+        <section className="relative pt-24 pb-24 bg-gradient-to-b from-[#0a0a0b] to-[#050508] overflow-hidden">
             {/* Space Background */}
             <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-[#050508] to-[#050508]" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent" />
                 <div className="absolute top-[10%] left-[5%] w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-[150px] animate-pulse-slow" />
                 <div className="absolute bottom-[10%] right-[5%] w-[900px] h-[900px] bg-orange-600/5 rounded-full blur-[180px] animate-pulse-slow delay-2000" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-white/5 to-transparent rotate-12 pointer-events-none" />

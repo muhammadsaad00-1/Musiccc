@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Plus, ArrowLeft, Edit2, Trash2, Loader2, X, Upload } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
-// import { mockCategories } from '@/lib/mockData'; // Removed mock data
 
 interface Category {
     id: number;

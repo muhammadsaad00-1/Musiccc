@@ -26,7 +26,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased bg-[#0a0a0b] text-white`} suppressHydrationWarning>
         <Providers>
           <Header />
-          <main className="pt-16 lg:pt-20">
+          <main className="pt-24 lg:pt-[104px]">
             {children}
           </main>
           <Footer />
