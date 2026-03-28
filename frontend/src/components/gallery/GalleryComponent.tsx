@@ -11,6 +11,7 @@ interface PortfolioItem {
   description?: string;
   media_type: 'image' | 'video' | 'youtube';
   media_url?: string;
+  thumbnail_url?: string;
   youtube_url?: string;
   thumbnail_url?: string;
   location?: string;

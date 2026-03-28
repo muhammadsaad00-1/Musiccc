@@ -14,6 +14,7 @@ const eventIcons: { [key: string]: React.ReactNode } = {
     birthday: <PartyPopper className="w-8 h-8" />,
     mehendi: <Sparkles className="w-8 h-8" />,
     concert: <Music className="w-8 h-8" />,
+    'luxury-resort-cruise': <Sparkles className="w-8 h-8" />,
 };
 
 interface Event {
@@ -52,6 +53,19 @@ export default function EventsPage() {
     const createSlug = (name: string) => {
         return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     };
+
+    const fallbackLuxuryEvent: Event = {
+        id: 'luxury-resort-cruise',
+        name: 'Luxury / Resort / Cruise',
+        description: 'Premium curated performances for destination resorts, private yachts, and luxury celebrations.',
+        event_recommendations: 'Singers, DJs, live bands, classical ensembles, and premium emcees.',
+        pricing: 0,
+        header_image_url: 'https://images.unsplash.com/photo-1473116763249-2faaef81ccda?auto=format&fit=crop&w=1200&q=80',
+        performers: [],
+    };
+
+    const hasLuxury = backendEvents.some((event) => createSlug(event.name) === 'luxury-resort-cruise');
+    const displayEvents = hasLuxury ? backendEvents : [...backendEvents, fallbackLuxuryEvent];
 
     return (
         <div className="min-h-screen bg-[#0a0a0b]">
@@ -96,10 +110,10 @@ export default function EventsPage() {
                         <div className="flex items-center justify-center py-20">
                             <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
                         </div>
-                    ) : backendEvents.length > 0 ? (
+                    ) : displayEvents.length > 0 ? (
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {/* Events from API */}
-                            {backendEvents.map((event) => (
+                            {displayEvents.map((event) => (
                                 <Link
                                     key={event.id}
                                     href={`/events/${createSlug(event.name)}`}

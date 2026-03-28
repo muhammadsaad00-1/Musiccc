@@ -2383,6 +2383,115 @@ def delete_hero_image(request: Request, image_id: str):
 
 
 # ============================================
+# ABOUT PROFILE ENDPOINTS
+# ============================================
+
+@app.get("/api/about-profile")
+@limiter.limit("100/minute")
+def get_about_profile(request: Request):
+    """Get single About profile record for the public website."""
+    cache_key = "about_profile_single"
+    if cache_key in cache:
+        return cache[cache_key]
+
+    try:
+        response = (
+            supabase.table("about_profile")
+            .select("*")
+            .order("updated_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        data = response.data[0] if response.data else None
+        cache[cache_key] = data
+        return data
+    except Exception as e:
+        # Graceful fallback so frontend can still render defaults when table is not ready.
+        print(f"Error fetching about profile: {e}")
+        return None
+
+
+@app.put("/api/admin/about-profile")
+@limiter.limit("20/minute")
+async def upsert_about_profile(
+    request: Request,
+    founder_name: str = Form(...),
+    founder_title: str = Form(""),
+    founder_bio: str = Form(...),
+    instagram_url: str = Form(""),
+    primary_cta_text: str = Form(""),
+    primary_cta_link: str = Form(""),
+    secondary_cta_text: str = Form(""),
+    secondary_cta_link: str = Form(""),
+    image: UploadFile = File(None)
+):
+    """Create or update single About profile record for admin."""
+    try:
+        existing = (
+            supabase.table("about_profile")
+            .select("id,image_url")
+            .order("updated_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+
+        record_id = existing.data[0]["id"] if existing.data else None
+        image_url = existing.data[0].get("image_url") if existing.data else None
+
+        if image and image.filename:
+            ensure_bucket_exists("about-profile")
+            ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
+            safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", founder_name.lower().replace(" ", "_"))
+            filename = f"about_{record_id or int(datetime.now().timestamp())}_{safe_name}.{ext}"
+
+            file_bytes = await image.read()
+            supabase.storage.from_("about-profile").upload(
+                filename,
+                file_bytes,
+                {"upsert": "true", "content-type": image.content_type or "image/jpeg"}
+            )
+            image_url = supabase.storage.from_("about-profile").get_public_url(filename)
+
+        payload = {
+            "founder_name": founder_name,
+            "founder_title": founder_title if founder_title else None,
+            "founder_bio": founder_bio,
+            "instagram_url": instagram_url if instagram_url else None,
+            "primary_cta_text": primary_cta_text if primary_cta_text else None,
+            "primary_cta_link": primary_cta_link if primary_cta_link else None,
+            "secondary_cta_text": secondary_cta_text if secondary_cta_text else None,
+            "secondary_cta_link": secondary_cta_link if secondary_cta_link else None,
+            "image_url": image_url,
+            "updated_at": datetime.now().isoformat()
+        }
+
+        if record_id:
+            response = (
+                supabase.table("about_profile")
+                .update(payload)
+                .eq("id", record_id)
+                .execute()
+            )
+        else:
+            payload["created_at"] = datetime.now().isoformat()
+            response = supabase.table("about_profile").insert(payload).execute()
+
+        cache.pop("about_profile_single", None)
+
+        if response.data:
+            return {
+                "success": True,
+                "message": "About profile updated successfully",
+                "data": response.data[0]
+            }
+
+        return {"success": False, "message": "Failed to update about profile"}
+    except Exception as e:
+        print(f"Error upserting about profile: {e}")
+        return {"success": False, "message": "An error occurred while saving about profile"}
+
+
+# ============================================
 # CLIENT LOGOS ENDPOINTS
 # ============================================
 

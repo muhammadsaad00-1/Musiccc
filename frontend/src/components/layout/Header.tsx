@@ -49,6 +49,7 @@ const eventTypes = [
     { name: 'Birthday Party', slug: 'birthday', icon: '🎂' },
     { name: 'Luxury Resort', slug: 'resort-event', icon: '🛳️' },
     { name: 'Private Party', slug: 'private-party', icon: '🎉' },
+    { name: 'Luxury / Resort / Cruise', slug: 'luxury-resort-cruise', icon: '🛳️' },
 ];
 
 export default function Header() {
