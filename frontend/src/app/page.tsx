@@ -60,6 +60,7 @@ export default function Home() {
 
       <ClientsMarquee />
       <TestimonialsSection />
+      <HomeGallerySection />
 
       {/* Our Corporate Clients */}
       {/* <OurClients /> */}
