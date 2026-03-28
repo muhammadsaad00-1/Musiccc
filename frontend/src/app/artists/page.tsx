@@ -109,18 +109,22 @@ function AllArtistsContent() {
     const filteredArtists = (() => {
         let result = [...artists];
 
-        // Search filter
+        // Search filter (Matches based on name simply as requested)
         if (searchQuery) {
-            const query = searchQuery.toLowerCase();
             result = result.filter(artist =>
-                artist.name.toLowerCase().includes(query) ||
-                artist.short_bio?.toLowerCase().includes(query)
+                artist.name.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
 
-        // Category filter
+        // Category filter (Handles artists with multiple categories)
         if (categoryFilter) {
-            result = result.filter(artist => String(artist.category_id) === categoryFilter);
+            result = result.filter(artist => {
+                const cats = Array.isArray(artist.category_id) 
+                    ? artist.category_id 
+                    : [String(artist.category_id)];
+                
+                return cats.some(c => String(c).toLowerCase() === categoryFilter.toLowerCase());
+            });
         }
 
         return result;
