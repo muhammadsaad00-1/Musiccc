@@ -12,6 +12,7 @@ import {
 import Pagination from '@/components/ui/Pagination';
 import { Artist } from '@/types';
 import { API_BASE_URL } from '@/lib/api';
+import EventBannerCarousel from '@/components/home/EventBannerCarousel';
 
 // Hero background images
 const heroImages = [
@@ -233,6 +234,11 @@ function AllArtistsContent() {
                     ))}
                 </div>
             </section>
+
+            {/* Event Banners Carousel - Placed right below the hero banner */}
+            <div className="bg-[#0a0a0b] py-4 border-b border-gray-800/50">
+                <EventBannerCarousel />
+            </div>
 
             {/* Search and Category Filter */}
             <section className="py-8 border-b border-gray-800/50 sticky top-16 lg:top-20 z-30 bg-[#0a0a0b]/95 backdrop-blur-md">

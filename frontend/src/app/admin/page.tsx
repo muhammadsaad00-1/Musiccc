@@ -17,6 +17,7 @@ import {
   Building2,
   Quote,
   ImageIcon,
+  Megaphone,
 } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
@@ -385,6 +386,18 @@ export default function AdminDashboard() {
               <ImageIcon className="w-5 h-5" />
             </div>
             <h3 className="font-semibold text-white mb-1">Hero Images</h3>
+            <p className="text-xs text-gray-500">Homepage Carousel</p>
+          </Link>
+
+          <Link
+            href="/admin/event-banners"
+            className="bg-[#1a1a1a] rounded-xl border border-gray-800 p-4 hover:border-gray-700 hover:bg-[#222] transition-all group relative"
+          >
+            <ArrowUpRight className="absolute top-3 right-3 w-4 h-4 text-gray-600 group-hover:text-orange-500 transition-colors" />
+            <div className="w-10 h-10 bg-cyan-500/10 text-cyan-400 rounded-lg flex items-center justify-center mb-3 group-hover:bg-cyan-500/20 transition-colors">
+              <Megaphone className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-white mb-1">Event Banners</h3>
             <p className="text-xs text-gray-500">Homepage Carousel</p>
           </Link>
         </div>

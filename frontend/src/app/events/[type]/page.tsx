@@ -7,6 +7,9 @@ import { ArrowLeft, ArrowRight, Loader2, Calendar, Users, CheckCircle, MapPin, M
 import { useState, useEffect, use } from 'react';
 import ArtistCard from '@/components/artists/ArtistCard';
 import FAQSection from '@/components/ui/FAQSection';
+import PerformerCarousel from '@/components/events/PerformerCarousel';
+import HowItWorks from '@/components/home/HowItWorks';
+import CTASection from '@/components/home/CTASection';
 import { API_BASE_URL } from '@/lib/api';
 
 interface EventTypePageProps {
@@ -50,6 +53,16 @@ const eventHeroImages: Record<string, string[]> = {
         "https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&q=80",
         "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&q=80"
     ],
+    "college-event": [
+        "https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1525926472895-3ab76af430f8?auto=format&fit=crop&q=80"
+    ],
+    "resort-event": [
+        "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1599839619722-39751411ea63?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80"
+    ],
     default: [
         "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80",
         "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80",
@@ -81,13 +94,23 @@ const eventConfigs: Record<string, { name: string; description: string; icon: st
     },
     birthday: {
         name: "Birthday Party",
-        description: "Make every birthday celebration special with talented performers",
+        description: "Make every birthday celebration special with talented performers and engaging artist acts",
         icon: "🎂"
     },
     "private-party": {
         name: "Private Party",
         description: "Exclusive entertainment for intimate gatherings and celebrations",
         icon: "🎉"
+    },
+    "college-event": {
+        name: "College Event",
+        description: "High-energy performances, DJs, and bands perfect for university fests and campus parties",
+        icon: "🎓"
+    },
+    "resort-event": {
+        name: "Luxury Cruise & Resort Event",
+        description: "Premium, sophisticated entertainment tailored for destination weddings, cruises, and resort galas",
+        icon: "🛳️"
     },
 };
 
@@ -196,56 +219,25 @@ export default function EventTypePage({ params }: EventTypePageProps) {
         // Function to fetch relevant artists and categories for event type
         const fetchRelevantArtistsForEvent = async (eventType: string) => {
             try {
-                // Map event types to relevant category keywords (used for fuzzy matching)
-                const eventCategoryMap: Record<string, string[]> = {
-                    'wedding': ['singer', 'dj', 'musician', 'dancer', 'photographer', 'band', 'live band', 'bhangra', 'qawwal'],
-                    'mehendi': ['singer', 'dancer', 'dj', 'musician', 'bhangra', 'band', 'qawwal'],
-                    'concert': ['singer', 'musician', 'dj', 'band', 'live band', 'qawwal', 'bhangra', 'punjabi'],
-                    'corporate': ['singer', 'dj', 'musician', 'anchor', 'band', 'qawwal'],
-                    'birthday': ['singer', 'dj', 'comedian', 'dancer', 'musician', 'bhangra', 'qawwal'],
-                    'private-party': ['singer', 'dj', 'musician', 'band', 'bhangra', 'qawwal'],
-                };
-
-                const relevantKeywords = eventCategoryMap[eventType] || ['singer', 'dj', 'musician'];
-
-                // Helper: check if a category name matches any keyword (fuzzy)
-                const matchesKeywords = (categoryName: string) => {
-                    const lower = categoryName.toLowerCase();
-                    return relevantKeywords.some(keyword =>
-                        lower.includes(keyword) || keyword.includes(lower)
-                    );
-                };
-
-                // Fetch categories from backend
+                // Fetch ALL categories from backend (Unfiltered as requested)
                 const categoriesRes = await fetch(`${API_BASE_URL}/categories`);
                 if (categoriesRes.ok) {
                     const allCategories = await categoriesRes.json();
-                    // Filter categories that match event type keywords
-                    const filteredCategories = allCategories.filter((cat: any) =>
-                        matchesKeywords(cat.name)
-                    );
-                    setRelevantCategories(filteredCategories);
+                    setRelevantCategories(allCategories);
 
                     // Set initial active category if available
-                    if (filteredCategories.length > 0) {
-                        setActiveCategory(filteredCategories[0].name.toLowerCase());
+                    if (allCategories.length > 0) {
+                        setActiveCategory(allCategories[0].name.toLowerCase());
                     }
                 }
 
-                // Fetch all performers
-                const performersRes = await fetch(`${API_BASE_URL}/performers?limit=100`);
+                // Fetch performers (Grouped by category in carousel)
+                const performersRes = await fetch(`${API_BASE_URL}/performers?limit=300`);
                 if (performersRes.ok) {
                     const data = await performersRes.json();
-                    // Handle paginated response - data is in response.data
                     const allPerformers = data.data || data;
 
-                    // Filter performers by relevant categories (fuzzy match, category is now an array)
-                    const filtered = allPerformers
-                        .filter((p: any) => {
-                            const cats = Array.isArray(p.category) ? p.category : [p.category || ''];
-                            return cats.some((c: string) => matchesKeywords(c));
-                        })
-                        .slice(0, 12) // Limit to 12 artists
+                    const transformed = allPerformers
                         .map((performer: any) => ({
                             id: performer.id,
                             name: performer.name,
@@ -260,7 +252,7 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                             is_featured: false,
                         }));
 
-                    setRelevantArtists(filtered);
+                    setRelevantArtists(transformed);
                 }
             } catch (error) {
                 console.error('Error fetching relevant artists:', error);
@@ -377,111 +369,14 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                 </div>
             </section>
 
-            {/* Artists Grouped by Category */}
-            <section className="py-20 bg-[#0a0a0b]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Section Header */}
-                    <div className="text-center mb-16">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 rounded-full text-orange-400 text-sm font-medium mb-6 border border-orange-500/20">
-                            <Star className="w-4 h-4" />
-                            <span>Recommended Talent</span>
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                            Best for <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">{event.name}s</span>
-                        </h2>
-                        <p className="text-gray-400 max-w-2xl mx-auto">
-                            Handpicked performers specialized in {event.name.toLowerCase()} entertainment.
-                            Choose a category to explore our top choices.
-                        </p>
-                    </div>
+            {/* Pick Your Performer Component */}
+            <PerformerCarousel
+                eventName={event.name}
+                categories={relevantCategories}
+                artists={relevantArtists}
+            />
 
-                    {relevantCategories.length > 0 && (
-                        <div className="mb-12">
-                            {/* Category Selection Buttons */}
-                            <div className="flex flex-wrap justify-center gap-3 mb-12">
-                                {relevantCategories.map((category) => {
-                                    const isActive = activeCategory === category.name.toLowerCase();
-                                    return (
-                                        <button
-                                            key={category.id}
-                                            onClick={() => setActiveCategory(category.name.toLowerCase())}
-                                            className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all border ${isActive
-                                                ? 'bg-gradient-to-r from-orange-500 to-pink-600 border-transparent text-white shadow-lg shadow-orange-500/20'
-                                                : 'bg-[#1a1a1a] border-gray-800 text-gray-400 hover:border-gray-600 hover:text-white'
-                                                }`}
-                                        >
-                                            {category.name}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Artist Grid for Selected Category */}
-                            <div className="min-h-[400px]">
-                                {(() => {
-                                    const currentCategory = activeCategory;
-                                    const categoryArtists = relevantArtists.filter((artist) => {
-                                        const cats = Array.isArray(artist.category_id)
-                                            ? artist.category_id
-                                            : [artist.category_id || ''];
-                                        return cats.some((c: string) => {
-                                            const artCat = c.toLowerCase();
-                                            return currentCategory && (
-                                                artCat === currentCategory ||
-                                                currentCategory.includes(artCat) ||
-                                                artCat.includes(currentCategory)
-                                            );
-                                        });
-                                    });
-
-                                    if (categoryArtists.length > 0) {
-                                        return (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                                {categoryArtists.map((artist) => (
-                                                    <ArtistCard key={artist.id} artist={artist} />
-                                                ))}
-                                            </div>
-                                        );
-                                    }
-
-                                    return (
-                                        <div className="text-center py-20 bg-[#141414] rounded-3xl border border-gray-800/50">
-                                            <p className="text-gray-500">No {activeCategory} listed for this event type yet.</p>
-                                        </div>
-                                    );
-                                })()}
-                            </div>
-                        </div>
-                    )}
-
-                    {!relevantCategories.length && relevantArtists.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                            {relevantArtists.map((artist) => (
-                                <ArtistCard key={artist.id} artist={artist} />
-                            ))}
-                        </div>
-                    )}
-
-                    {!relevantArtists.length && !loading && (
-                        <div className="text-center py-20 bg-[#1a1a1a]/50 rounded-3xl border border-gray-800/50">
-                            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center">
-                                <Music className="w-10 h-10 text-orange-400" />
-                            </div>
-                            <h3 className="text-xl font-semibold text-white mb-2">No Artists Listed Yet</h3>
-                            <p className="text-gray-500 mb-8 max-w-md mx-auto">
-                                We're working on adding amazing artists for {event.name} events.
-                            </p>
-                            <Link
-                                href="/post-requirement"
-                                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg hover:shadow-pink-500/30 transition-all"
-                            >
-                                Post Your Requirement
-                                <ArrowRight className="w-5 h-5" />
-                            </Link>
-                        </div>
-                    )}
-                </div>
-            </section>
+            <HowItWorks />
 
             {/* Looking for Something Else? CTA Section */}
             <section className="py-16 lg:py-20 relative overflow-hidden">
@@ -525,32 +420,56 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                 </div>
             </section>
 
+            <CTASection />
+
             {/* FAQs Section */}
             <FAQSection
                 title="Event Questions?"
                 subtitle={`Everything you need to know about booking entertainment for ${event.name} events`}
-                faqs={[
-                    {
-                        question: `What types of artists are best for a ${event.name.toLowerCase()}?`,
-                        answer: `For ${event.name.toLowerCase()} events, we recommend singers, musicians, and performers who specialize in this type of celebration. Contact us for personalized recommendations based on your specific requirements.`
-                    },
-                    {
-                        question: "How far in advance should I book?",
-                        answer: "We recommend booking at least 2-4 weeks before your event. For popular artists or peak wedding season, booking 1-2 months in advance is ideal."
-                    },
-                    {
-                        question: "Can artists travel to my event location?",
-                        answer: "Yes! Most artists are willing to travel across Pakistan. Travel arrangements and any additional costs will be discussed during the booking process."
-                    },
-                    {
-                        question: "What if I need multiple artists?",
-                        answer: "We can help you book multiple artists for your event. Contact us with your requirements and we'll create a custom package for you."
-                    },
-                    {
-                        question: "How do payments work?",
-                        answer: "Typically, a booking advance is required to confirm, with the remaining amount paid on the event day. Specific terms vary by artist."
-                    }
-                ]}
+                faqs={
+                    type === 'wedding' ? [
+                        { question: "How far in advance should I book singers or live bands for a wedding?", answer: "Wedding dates follow heavy seasonal peaks (e.g., winter). We highly recommend booking 3 to 6 months in advance to secure top-tier Qawwals, Live Bands, and Singers before their calendars fill up." },
+                        { question: "Can the artist customize their setlist for the Baraat or Rukhsati?", answer: "Absolutely. Once booked, you can connect with the artist directly via WhatsApp to discuss specific songs for entry moments, couple dances, or background routines." },
+                        { question: "Who provides the sound and stage equipment?", answer: "It depends on the artist's tier. Popular Live Bands and Qawwals typically bring their own sound technicians (and sometimes basic gear), but the core PA system, stage, and lighting are usually the responsibility of your marquee or event planner. We can help clarify this in your booking chat." },
+                        { question: "How does the payment and deposit work?", answer: "Artists generally require a 30% to 50% non-refundable advance deposit to block the date. The remaining balance is typically paid in cash prior to the performance on the day of the event." },
+                        { question: "What if the event gets delayed on the day?", answer: "Pakistani weddings often run late. Most artists have a specific time-block they commit to (e.g., 2-3 hours). If expectations stretch beyond this due to extreme delays, they may charge overtime. It is best to communicate a realistic timeline upfront." }
+                    ] : type === 'corporate' ? [
+                        { question: "Are the artists equipped for formal corporate environments?", answer: "Yes. For corporate events, we filter for Anchors/Emcees, Comedians, and Musicians who specialize in professional, family-friendly, and brand-appropriate entertainment." },
+                        { question: "Do you issue official invoices for corporate records?", answer: "Yes, once booking terms are finalized directly with the management, official invoices and NTN details can be provided for your company's finance department." },
+                        { question: "How long do performances typically last at annual dinners?", answer: "Set lengths vary. Anchors manage the entire 3-4 hour flow, Comedians typically perform a tight 30-45 minute set, and Live Bands perform in blocks of 45-60 minutes depending on the agenda." },
+                        { question: "Can the comedian or host incorporate our company's inside jokes?", answer: "Definitely. Most corporate entertainers prefer receiving a brief prior to the event so they can tailor their script, acknowledge VIPs, and include safe, relatable company anecdotes." },
+                        { question: "What are the technical requirements for a corporate booking?", answer: "You will receive a technical rider detailing the artist's required microphones (collar vs handheld), monitor speakers, plugging requirements, and lighting suggestions to ensure seamless execution." }
+                    ] : type === 'concert' ? [
+                        { question: "Can you handle ticketing and venue management as well?", answer: "The Artist Factory platform specifically connects you with the talent. Venue booking, ticketing, and event security are handled by the organizers, though our team can refer you to trusted production partners." },
+                        { question: "What is the typical backstage and hospitality requirement (Rider)?", answer: "A-list artists require a detailed hospitality rider including dedicated green rooms, specific refreshments, security protocols, and sometimes travel/accommodation. This is negotiated alongside their performance fee." },
+                        { question: "Do concert artists bring their own entire sound setup?", answer: "No. Artists bring their instruments and a dedicated sound engineer. The organizer must rent a line-array PA system, backline monitors, and lighting rigs according to the 'Tech Rider' provided by the artist's team." },
+                        { question: "How do we handle travel and accommodation for out-of-city artists?", answer: "If the artist is traveling from Lahore/Karachi/Islamabad, the organizer is responsible for business/economy class flights, 4-star+ hotel accommodations, and dedicated local transport for the artist and their entire crew." }
+                    ] : type === 'mehendi' ? [
+                        { question: "Who are the most popular performers for a Mehendi?", answer: "Mehendis are high-energy events! DJs, Dhol players, Bhangra artists, and upbeat Live Bands are the top choices to keep the dance floor packed." },
+                        { question: "Can the DJ coordinate with our family dance performances?", answer: "Yes. You can share your pre-mixed dance tracks via USB or cloud link before the event. The DJ will cue them up exactly according to your family's dance sequence." },
+                        { question: "Is there a limit to how late the performer can play?", answer: "This largely depends on your venue and local city ordinances (which often enforce strict 10 PM or 11 PM curfews for loud music). Artists will perform up until the venue cuts the power." },
+                        { question: "Do the artists require a stage?", answer: "While DJs can work from a corner console, Live Bands, Dhol players, and Singers require a slightly elevated stage (even 1-2 feet high) so the crowd can see them and to prevent equipment damage from dancing guests." }
+                    ] : type === 'birthday' ? [
+                        { question: "What entertainment works best for adult vs kid birthdays?", answer: "For adults, acoustic singers, private DJs, or Ghazal artists create a great vibe. For kids, magicians, jugglers, face painters, and interactive emcees are much more suitable." },
+                        { question: "Can the singer perform the 'Happy Birthday' song during the cake cutting?", answer: "Of course! Just coordinate the exact timing with them before they start their set so they can integrate it seamlessly into the celebration." },
+                        { question: "Is the pricing different for smaller, private house parties?", answer: "Yes, many artists offer a scaled-down 'acoustic' or 'unplugged' rate for smaller gatherings of 30-50 people that require less intense sound equipment." }
+                    ] : type === 'college-event' ? [
+                        { question: "Do you offer special packages or discounts for university/college budgets?", answer: "We understand that student councils and university societies work within specific budgets. Contact our management team directly; we frequently negotiate student-friendly terms with rising/indie artists and DJs tailored for campus events." },
+                        { question: "What is the process for booking a high-profile headliner for a college fest?", answer: "Headliners typically require a 2-4 month advance booking during peak fest seasons (Feb-Apr). The process involves selecting an artist, signing a mutual contract between the booking agency and the student organizing committee, and paying a non-refundable advance." },
+                        { question: "Who provides the tech rider equipment for college grounds?", answer: "The university's organizing committee is strictly responsible for securing the staging, trussing, line array sound systems, and backline instruments required in the artist's tech rider. The artist only provides their performance and sound engineer." },
+                        { question: "How is campus security generally handled for large artists?", answer: "The artist's rider specifies security requirements. You must arrange for a dedicated green room and an official human barricade (bouncer team) to escort the artist from their vehicle directly to the stage to ensure safety in massive student crowds." }
+                    ] : type === 'resort-event' ? [
+                        { question: "Do artists travel for destination weddings or cruise bookings?", answer: "Absolutely. Many of our premium artists frequently travel for destination events, both domestically (e.g., Bhurban, Hunza) and internationally (e.g., UAE, Turkiye) for resort galas and closed cruise celebrations." },
+                        { question: "Who covers the travel and accommodation for a resort event?", answer: "For out-of-city/international destination events, the client is responsible for booking and covering the flights (Business/Economy), local travel, 4/5-star accommodation, and meals for the artist and their entire designated crew." },
+                        { question: "Can the performances be split into multiple smaller sets throughout the weekend?", answer: "Yes, many resort bookings operate on a 'weekend package' basis, where a musician performs a relaxed acoustic set for a welcome brunch, and a full band/DJ set for the main gala night. This must be detailed in the initial booking contract." },
+                        { question: "Are passports and visas handled by your team for international cruises?", answer: "We provide the artists' official passport details, but the client must facilitate and sponsor the visa applications (including expedited processing fees) well in advance of the travel date." }
+                    ] : [ // default fallback for private party / other
+                        { question: "How does the booking process work?", answer: `Find an artist you like, click 'Contact Us', and you will be directed to WhatsApp to speak instantly with booking management to finalize dates and pricing for your ${event.name.toLowerCase()}.` },
+                        { question: "Are prices negotiable?", answer: "Prices listed are base estimates. Final pricing depends on your exact location, event duration, peak season demand, and required sound equipment." },
+                        { question: "Is an advance payment required?", answer: "Yes, standard industry practice requires a 30-50% advance to block the artist's calendar. Dates are not reserved until the deposit is cleared." },
+                        { question: "Can artists perform acoustic sets for smaller crowds?", answer: "Many singers and musicians offer stripped-down acoustic sets perfect for private dinners and intimate gatherings. Just ask during your inquiry!" }
+                    ]
+                }
             />
         </div>
     );

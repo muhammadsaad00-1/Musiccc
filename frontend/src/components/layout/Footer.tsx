@@ -79,8 +79,11 @@ export default function Footer() {
         { name: "Wedding Events", slug: "wedding" },
         { name: "Mehendi Events", slug: "mehendi" },
         { name: "Corporate Events", slug: "corporate" },
-        { name: "Private Parties", slug: "private-party" },
+        { name: "College Fests", slug: "college-event" },
         { name: "Concerts", slug: "concert" },
+        { name: "Birthday Parties", slug: "birthday" },
+        { name: "Luxury Cruise & Resort", slug: "resort-event" },
+        { name: "Private Parties", slug: "private-party" },
     ];
 
     const companyLinks = [
@@ -215,7 +218,7 @@ export default function Footer() {
                                     </li>
                                 ))}
                                 <li>
-                                    <Link href="/artists" className="text-base font-semibold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-2 mt-2">
+                                    <Link href="/categories" className="text-base font-semibold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-2 mt-2">
                                         View All Categories →
                                     </Link>
                                 </li>

@@ -2831,3 +2831,202 @@ async def upload_portfolio_video(
     except Exception as e:
         print(f"Error uploading portfolio video: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ═══════════════════════════════════════════════════════════════════
+# EVENT BANNERS ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════
+
+@app.get("/api/event-banners")
+async def get_active_event_banners():
+    """Public: Get all active event banners for the homepage carousel."""
+    try:
+        cache_key = "event_banners_active"
+        if cache_key in cache:
+            return cache[cache_key]
+
+        response = supabase.table("event_banners") \
+            .select("*") \
+            .eq("is_active", True) \
+            .order("display_order", desc=False) \
+            .execute()
+
+        result = {"success": True, "data": response.data or []}
+        cache[cache_key] = result
+        return result
+    except Exception as e:
+        print(f"Error fetching event banners: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/admin/event-banners")
+@limiter.limit("30/minute")
+async def get_all_event_banners(request: Request):
+    """Admin: Get all event banners (active + inactive)."""
+    try:
+        response = supabase.table("event_banners") \
+            .select("*") \
+            .order("display_order", desc=False) \
+            .execute()
+
+        return {"success": True, "data": response.data or []}
+    except Exception as e:
+        print(f"Error fetching admin event banners: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/event-banners")
+@limiter.limit("20/minute")
+async def create_event_banner(
+    request: Request,
+    image: UploadFile = File(...),
+    title: str = Form(...),
+    whatsapp_message: str = Form(...),
+    display_order: int = Form(0)
+):
+    """Admin: Create a new event banner with background image upload."""
+    import time as _time
+    try:
+        ensure_bucket_exists("event-banners")
+
+        if not image.content_type or not image.content_type.startswith("image/"):
+            return {"success": False, "message": "Only image files are allowed"}
+
+        file_bytes = await image.read()
+        ext = image.filename.split(".")[-1] if image.filename and "." in image.filename else "jpg"
+        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", title.lower().replace(" ", "_"))
+        filename = f"banner_{sanitized}_{int(_time.time())}.{ext}"
+
+        supabase.storage.from_("event-banners").upload(
+            filename,
+            file_bytes,
+            {"upsert": "true"}
+        )
+
+        bg_image_url = supabase.storage.from_("event-banners").get_public_url(filename)
+
+        banner_data = {
+            "title": title,
+            "bg_image_url": bg_image_url,
+            "whatsapp_message": whatsapp_message,
+            "display_order": display_order,
+            "is_active": True
+        }
+
+        response = supabase.table("event_banners").insert(banner_data).execute()
+
+        if response.data:
+            cache.pop("event_banners_active", None)
+            return {
+                "success": True,
+                "message": "Event banner created successfully",
+                "data": response.data[0]
+            }
+        else:
+            return {"success": False, "message": "Failed to create event banner"}
+    except Exception as e:
+        print(f"Error creating event banner: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/api/admin/event-banners/{banner_id}")
+@limiter.limit("30/minute")
+async def update_event_banner(request: Request, banner_id: str):
+    """Admin: Update event banner fields (title, whatsapp_message, is_active, display_order)."""
+    try:
+        body = await request.json()
+        
+        # Build update dict from provided fields
+        update_data = {}
+        if "title" in body:
+            update_data["title"] = body["title"]
+        if "whatsapp_message" in body:
+            update_data["whatsapp_message"] = body["whatsapp_message"]
+        if "is_active" in body:
+            update_data["is_active"] = body["is_active"]
+        if "display_order" in body:
+            update_data["display_order"] = body["display_order"]
+        
+        if not update_data:
+            return {"success": False, "message": "No fields to update"}
+
+        response = supabase.table("event_banners") \
+            .update(update_data) \
+            .eq("id", banner_id) \
+            .execute()
+
+        if response.data:
+            cache.pop("event_banners_active", None)
+            return {
+                "success": True,
+                "message": "Banner updated successfully",
+                "data": response.data[0]
+            }
+        else:
+            return {"success": False, "message": "Banner not found"}
+    except Exception as e:
+        print(f"Error updating event banner: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/event-banners/{banner_id}/replace-image")
+@limiter.limit("20/minute")
+async def replace_event_banner_image(
+    request: Request,
+    banner_id: str,
+    image: UploadFile = File(...)
+):
+    """Admin: Replace background image of an existing event banner."""
+    import time as _time
+    try:
+        ensure_bucket_exists("event-banners")
+
+        if not image.content_type or not image.content_type.startswith("image/"):
+            return {"success": False, "message": "Only image files are allowed"}
+
+        file_bytes = await image.read()
+        ext = image.filename.split(".")[-1] if image.filename and "." in image.filename else "jpg"
+        filename = f"banner_replace_{int(_time.time())}.{ext}"
+
+        supabase.storage.from_("event-banners").upload(
+            filename,
+            file_bytes,
+            {"upsert": "true"}
+        )
+
+        bg_image_url = supabase.storage.from_("event-banners").get_public_url(filename)
+
+        response = supabase.table("event_banners") \
+            .update({"bg_image_url": bg_image_url}) \
+            .eq("id", banner_id) \
+            .execute()
+
+        if response.data:
+            cache.pop("event_banners_active", None)
+            return {
+                "success": True,
+                "message": "Banner image replaced successfully",
+                "data": response.data[0]
+            }
+        else:
+            return {"success": False, "message": "Banner not found"}
+    except Exception as e:
+        print(f"Error replacing event banner image: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/admin/event-banners/{banner_id}")
+@limiter.limit("20/minute")
+async def delete_event_banner(request: Request, banner_id: str):
+    """Admin: Delete an event banner."""
+    try:
+        response = supabase.table("event_banners") \
+            .delete() \
+            .eq("id", banner_id) \
+            .execute()
+
+        cache.pop("event_banners_active", None)
+        return {"success": True, "message": "Event banner deleted"}
+    except Exception as e:
+        print(f"Error deleting event banner: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

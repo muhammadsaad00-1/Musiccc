@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Loader2, ArrowLeft, Sparkles, Music, Star, Mic2, Disc3, Heart, Users } from 'lucide-react';
 import Pagination from '@/components/ui/Pagination';
 import { API_BASE_URL } from '@/lib/api';
+import EventBannerCarousel from '@/components/home/EventBannerCarousel';
 
 const categoryIcons: Record<string, any> = {
     'Singers': <Mic2 className="w-8 h-8" />,
@@ -92,6 +93,10 @@ export default function CategoriesPage() {
                     <p className="text-gray-400 max-w-2xl mx-auto text-lg">
                         Browse through our curated list of professional performers for every type of event.
                     </p>
+                </div>
+
+                <div className="mb-16 -mt-8">
+                    <EventBannerCarousel />
                 </div>
 
                 {/* Categories Grid */}

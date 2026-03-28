@@ -8,9 +8,11 @@ interface PortfolioItem {
   id: string;
   title: string;
   category?: string; // from DB
+  description?: string;
   media_type: 'image' | 'video' | 'youtube';
   media_url?: string;
   youtube_url?: string;
+  thumbnail_url?: string;
   location?: string;
   date?: string;
 }

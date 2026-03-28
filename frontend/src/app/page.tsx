@@ -4,14 +4,16 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import Hero from '@/components/home/Hero';
+import EventBannerCarousel from '@/components/home/EventBannerCarousel';
 import FeaturedArtists from '@/components/home/FeaturedArtists';
 import ClientsMarquee from '@/components/home/ClientsMarquee';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import OurClients from '@/components/home/OurClients';
 import HowItWorks from '@/components/home/HowItWorks';
 import HomeGallerySection from '@/components/home/HomeGallerySection';
+import HomeBlogSection from '@/components/home/HomeBlogSection';
 import WhatsAppCTAGrid from '@/components/home/WhatsAppCTAGrid';
-import CTASection from '@/components/home/CTASection';
+import FeaturesSection from '@/components/home/FeatureSection';
 import SplashScreen from '@/components/ui/SplashScreen';
 import FloatingWhatsAppButton from '@/components/home/FloatingWhatsAppButton';
 import InstagramFeed from '@/components/home/InstagramFeed';
@@ -57,6 +59,7 @@ export default function Home() {
   return (
     <div className="animate-fadeIn">
       <Hero />
+      <EventBannerCarousel />
 
       <CategoryGrid />
       <FeaturedArtists />
@@ -65,9 +68,10 @@ export default function Home() {
       <TestimonialsSection />
 
       <HomeGallerySection />
+      <HomeBlogSection />
 
       <HowItWorks />
-      <CTASection />
+
 
       <WhatsAppCTAGrid />
       <FloatingWhatsAppButton />
