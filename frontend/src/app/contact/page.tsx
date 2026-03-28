@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Mail, Phone, MapPin, Send, CheckCircle, ArrowLeft, Star, Navigation, MessageCircle, ArrowRight } from 'lucide-react';
 import FAQSection from '@/components/ui/FAQSection';
+import WhatsAppCTAGrid from '@/components/home/WhatsAppCTAGrid';
 import { API_BASE_URL } from '@/lib/api';
 
 export default function ContactPage() {
@@ -385,6 +386,8 @@ export default function ContactPage() {
                     }
                 ]}
             />
+
+            <WhatsAppCTAGrid />
         </div>
     );
 }

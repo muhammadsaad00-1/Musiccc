@@ -103,6 +103,9 @@ export default function Hero() {
         rating: 4.9,
     });
 
+    const categoriesList = ['Artists', 'Qawwals', 'Singers', 'Live Bands', 'Bhangra Artists'];
+    const [categoryIndex, setCategoryIndex] = useState(0);
+
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [heroImages, setHeroImages] = useState<string[]>(fallbackHeroImages);
 
@@ -132,6 +135,13 @@ export default function Hero() {
         return () => clearInterval(interval);
     }, [heroImages.length]);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCategoryIndex((prev) => (prev + 1) % categoriesList.length);
+        }, 2000);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-[#0a0a0b] pt-24 pb-10 sm:pb-12 lg:pt-0 lg:pb-0">
             {/* Background Effects */}
@@ -151,8 +161,10 @@ export default function Hero() {
                         </div>
 
                         {/* Heading */}
-                        <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight">
-                            Book <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600">Top Artists</span><br />
+                        <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight min-h-[1.2em]">
+                            Book <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600 inline-block animate-slideUp">
+                                Top {categoriesList[categoryIndex]}
+                            </span><br />
                             For Your Event
                         </h1>
 
@@ -273,8 +285,17 @@ export default function Hero() {
                     0%, 100% { transform: translateY(0); }
                     50% { transform: translateY(-10px); }
                 }
+                @keyframes slideUp {
+                    0% { transform: translateY(10px); opacity: 0; }
+                    10% { transform: translateY(0); opacity: 1; }
+                    90% { transform: translateY(0); opacity: 1; }
+                    100% { transform: translateY(-10px); opacity: 0; }
+                }
                 .animate-float {
                     animation: float 4s ease-in-out infinite;
+                }
+                .animate-slideUp {
+                    animation: slideUp 2s ease-in-out infinite;
                 }
             `}</style>
         </section>

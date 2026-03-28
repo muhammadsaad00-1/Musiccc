@@ -13,7 +13,34 @@ interface EventBanner {
 }
 
 // Provide your WhatsApp number here
-const WHATSAPP_NUMBER = "923001234567"; // TODO: Replace with actual number
+const WHATSAPP_NUMBER = "923206876442"; 
+
+const FALLBACK_BANNERS: EventBanner[] = [
+  {
+    id: "1",
+    title: "Experience the Grandeur of Royal Weddings",
+    bg_image_url: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80",
+    whatsapp_message: "Wedding",
+    is_active: true,
+    display_order: 1
+  },
+  {
+    id: "2",
+    title: "Corporate Excellence with Premium Talent",
+    bg_image_url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80",
+    whatsapp_message: "Corporate Event",
+    is_active: true,
+    display_order: 2
+  },
+  {
+    id: "3",
+    title: "Unforgettable Concerts & Musical Festivals",
+    bg_image_url: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80",
+    whatsapp_message: "Concert",
+    is_active: true,
+    display_order: 3
+  }
+];
 
 export default function EventBannerCarousel() {
   const [banners, setBanners] = useState<EventBanner[]>([]);
@@ -25,12 +52,18 @@ export default function EventBannerCarousel() {
     const fetchBanners = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/api/event-banners`);
-        const result = await res.json();
-        if (result.success && result.data.length > 0) {
-          setBanners(result.data);
+        if (res.ok) {
+          const result = await res.json();
+          if (result.success && result.data && result.data.length > 0) {
+            setBanners(result.data);
+            return;
+          }
         }
+        // If fetch fails or no data, use fallback
+        setBanners(FALLBACK_BANNERS);
       } catch (error) {
-        console.error("Failed to fetch event banners:", error);
+        console.error("Failed to fetch event banners, using fallback:", error);
+        setBanners(FALLBACK_BANNERS);
       } finally {
         setLoading(false);
       }

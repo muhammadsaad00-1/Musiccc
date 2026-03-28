@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 
 interface ClientLogo {
@@ -10,207 +9,148 @@ interface ClientLogo {
   name: string;
   logo_url?: string;
   is_active?: boolean;
-  display_order?: number;
 }
 
 export default function ClientsMarquee() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [rotation, setRotation] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [allBrands, setAllBrands] = useState<ClientLogo[]>([]);
+  const [logos, setLogos] = useState<ClientLogo[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch backend client logos
   useEffect(() => {
-    const fetchClientLogos = async () => {
+    const fetchLogos = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/client-logos`);
         if (response.ok) {
-          const data: ClientLogo[] = await response.json();
-          // Use only backend data
-          setAllBrands(data);
+          const data = await response.json();
+          setLogos(data.filter((l: any) => l.is_active));
         }
       } catch (error) {
         console.error('Error fetching client logos:', error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchClientLogos();
+    fetchLogos();
   }, []);
 
-  const handlePrev = useCallback(() => {
-    if (isAnimating || allBrands.length === 0) return;
+  if (loading || logos.length === 0) return null;
 
-    setIsAnimating(true);
-    setRotation(prev => prev - 360); // Spin backwards
+  // Split logos into two rows
+  const midPoint = Math.ceil(logos.length / 2);
+  const row1 = logos.slice(0, midPoint);
+  const row2 = logos.slice(midPoint);
 
-    // Change logo halfway through rotation
-    setTimeout(() => {
-      setCurrentIndex((prev) => (prev === 0 ? allBrands.length - 1 : prev - 1));
-    }, 250);
-
-    setTimeout(() => {
-      setIsAnimating(false);
-    }, 500);
-  }, [isAnimating, allBrands.length]);
-
-  const handleNext = useCallback(() => {
-    if (isAnimating || allBrands.length === 0) return;
-
-    setIsAnimating(true);
-    setRotation(prev => prev + 360);
-
-    // Change logo halfway through rotation when it's moving fast/blurred
-    setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % allBrands.length);
-    }, 250);
-
-    setTimeout(() => {
-      setIsAnimating(false);
-    }, 500);
-  }, [isAnimating, allBrands.length]);
-
-  // Auto-rotation effect
-  useEffect(() => {
-    if (isPaused || allBrands.length === 0) return;
-
-    const interval = setInterval(() => {
-      handleNext();
-    }, 5000); // Rotate every 5 seconds
-
-    return () => clearInterval(interval);
-  }, [handleNext, isPaused, allBrands.length]);
-
-  const currentBrand = allBrands[currentIndex];
-
-  if (!currentBrand) return null;
+  // Triple the logos for seamless scroll
+  const scrollRow1 = [...row1, ...row1, ...row1];
+  const scrollRow2 = [...row2, ...row2, ...row2];
 
   return (
-    <section className="py-24 bg-[#0a0a0b] overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 bg-[#0a0a0b] overflow-hidden relative border-y border-white/5">
+      <div className="max-w-7xl mx-auto px-4 mb-16">
+        <div className="flex flex-col items-center">
+            <span className="text-[10px] uppercase tracking-[0.4em] text-orange-500 font-bold mb-4 drop-shadow-sm">Trusted Partnership</span>
+            <h2 className="text-4xl md:text-6xl font-black text-white text-center leading-tight tracking-tighter uppercase">
+                OUR PRESTIGIOUS <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-purple-600">CLIENTS</span>
+            </h2>
+        </div>
+      </div>
 
-        {/* Header */}
-        <div className="text-center mb-16 relative">
-          <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-orange-400 inline-block mb-4">
-            Our Clients
-          </h2>
-          <div className="relative inline-block ml-4 align-top rotate-[-6deg]">
-            <span className="font-handwriting text-2xl md:text-3xl text-pink-400 font-medium" style={{ fontFamily: 'cursive' }}>
-              happy clients, Happy us
-            </span>
-            <svg className="absolute -bottom-6 -right-4 w-12 h-12 text-pink-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3">
-              <path d="M10,10 Q50,50 80,80 M80,80 L60,80 M80,80 L80,60" />
-            </svg>
-          </div>
+      <div className="flex flex-col gap-8 md:gap-12">
+        {/* Row 1 - Original Direction */}
+        <div className="relative w-full overflow-hidden flex items-center h-48 md:h-56">
+            <div className="absolute inset-y-0 left-0 w-32 md:w-64 z-20 pointer-events-none bg-gradient-to-r from-[#0a0a0b] to-transparent" />
+            <div className="absolute inset-y-0 right-0 w-32 md:w-64 z-20 pointer-events-none bg-gradient-to-l from-[#0a0a0b] to-transparent" />
+            
+            <div className="flex animate-marquee-row1 hover:pause whitespace-nowrap gap-16 md:gap-32 px-16 items-center">
+            {scrollRow1.map((brand, idx) => (
+                <div key={`row1-${brand.id}-${idx}`} className="flex flex-col items-center gap-4 group transition-all duration-300">
+                {brand.logo_url ? (
+                    <div className="relative w-32 h-16 md:w-44 md:h-24 flex-shrink-0">
+                        <Image
+                        src={brand.logo_url}
+                        alt={brand.name}
+                        fill
+                        className="object-contain opacity-100 transition-all duration-500 group-hover:scale-125 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.1)] group-hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                        sizes="(max-width: 768px) 128px, 176px"
+                        />
+                    </div>
+                ) : (
+                    <div className="w-32 h-16 md:w-44 md:h-24 flex items-center justify-center bg-white/5 rounded-xl border border-white/10 group-hover:border-orange-500/50 transition-colors">
+                    <span className="text-xs font-bold text-gray-500 group-hover:text-white transition-colors uppercase tracking-widest px-4 text-center">{brand.name}</span>
+                    </div>
+                )}
+                <span className="text-[10px] md:text-xs font-bold text-gray-600 uppercase tracking-widest group-hover:text-orange-400 transition-colors duration-300">
+                    {brand.name}
+                </span>
+                </div>
+            ))}
+            </div>
         </div>
 
-        {/* The Rotating Disc Display */}
-        <div className="relative flex flex-col items-center justify-center">
-
-          {/* Background Glows */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-orange-500/10 to-pink-500/10 rounded-full blur-[100px] pointer-events-none" />
-
-          {/* The Disc Container */}
-          <div
-            className="relative z-10 group"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-          >
-            {/* Outer Ring / Record Grooves */}
-            <div
-              className="w-80 h-80 md:w-[500px] md:h-[500px] rounded-full bg-[#111] border-8 border-[#222] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)] flex items-center justify-center transition-transform duration-500 ease-in-out"
-              style={{ transform: `rotate(${rotation}deg)` }}
-            >
-              {/* Vinyl Texture Lines */}
-              <div className="absolute inset-0 rounded-full border border-white/5 m-4" />
-              <div className="absolute inset-0 rounded-full border border-white/5 m-8" />
-              <div className="absolute inset-0 rounded-full border border-white/5 m-12" />
-              <div className="absolute inset-0 rounded-full border border-white/5 m-16" />
-              <div className="absolute inset-0 rounded-full border border-white/5 m-20" />
-              <div className="absolute inset-0 rounded-full border border-white/5 m-24" />
-
-              {/* Center Label (The Brand Logo) */}
-              {/* Counter-rotate the inner content so logos stay readable? 
-                        Actually user asked for "rotate disc", implying the logo spins too. 
-                        Let's spin the whole thing for the transition effect. */
-              }
-              <div className="w-52 h-52 md:w-[350px] md:h-[350px] rounded-full bg-gradient-to-br from-[#1a1a1a] to-black flex items-center justify-center border-4 border-[#333] shadow-inner relative overflow-hidden">
-
-                {/* Logo Content */}
-                <div
-                  className={`transition-opacity duration-200 ${isAnimating ? 'opacity-50 blur-sm' : 'opacity-100'} flex items-center justify-center w-full h-full p-8`}
-                >
-                  {currentBrand.logo_url ? (
-                    <div className="relative w-full h-full">
-                      <Image
-                        src={currentBrand.logo_url}
-                        alt={currentBrand.name}
+        {/* Row 2 - Opposite/Slower Direction */}
+        <div className="relative w-full overflow-hidden flex items-center h-48 md:h-56">
+            <div className="absolute inset-y-0 left-0 w-32 md:w-64 z-20 pointer-events-none bg-gradient-to-r from-[#0a0a0b] to-transparent" />
+            <div className="absolute inset-y-0 right-0 w-32 md:w-64 z-20 pointer-events-none bg-gradient-to-l from-[#0a0a0b] to-transparent" />
+            
+            <div className="flex animate-marquee-row2 hover:pause whitespace-nowrap gap-16 md:gap-32 px-16 items-center">
+            {scrollRow2.map((brand, idx) => (
+                <div key={`row2-${brand.id}-${idx}`} className="flex flex-col items-center gap-4 group transition-all duration-300">
+                {brand.logo_url ? (
+                    <div className="relative w-32 h-16 md:w-44 md:h-24 flex-shrink-0">
+                        <Image
+                        src={brand.logo_url}
+                        alt={brand.name}
                         fill
-                        className="object-contain group-hover:scale-110 transition-transform duration-300"
-                        sizes="(max-width: 768px) 208px, 350px"
-                        priority={currentIndex === 0}
-                      />
+                        className="object-contain opacity-100 transition-all duration-500 group-hover:scale-125 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.1)] group-hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                        sizes="(max-width: 768px) 128px, 176px"
+                        />
                     </div>
-                  ) : (
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-white">{currentBrand.name}</p>
+                ) : (
+                    <div className="w-32 h-16 md:w-44 md:h-24 flex items-center justify-center bg-white/5 rounded-xl border border-white/10 group-hover:border-orange-500/50 transition-colors">
+                    <span className="text-xs font-bold text-gray-500 group-hover:text-white transition-colors uppercase tracking-widest px-4 text-center">{brand.name}</span>
                     </div>
-                  )}
+                )}
+                <span className="text-[10px] md:text-xs font-bold text-gray-600 uppercase tracking-widest group-hover:text-orange-400 transition-colors duration-300">
+                    {brand.name}
+                </span>
                 </div>
-
-                {/* Glossy Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
-              </div>
+            ))}
             </div>
-
-            {/* "Previous" Button Overlaid */}
-            <button
-              onClick={handlePrev}
-              className="absolute top-1/2 -left-8 md:-left-24 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-[#1a1a1a] border border-gray-700 rounded-full flex items-center justify-center hover:bg-orange-600 hover:border-orange-500 hover:text-white transition-all duration-300 shadow-xl group/btn active:scale-95 z-20"
-              aria-label="Previous Client"
-            >
-              <ArrowLeft className="w-8 h-8 text-gray-400 group-hover/btn:text-white transition-colors" />
-            </button>
-
-            {/* "Play/Next" Button Overlaid or nearby */}
-            <button
-              onClick={handleNext}
-              className="absolute top-1/2 -right-8 md:-right-24 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-[#1a1a1a] border border-gray-700 rounded-full flex items-center justify-center hover:bg-orange-600 hover:border-orange-500 hover:text-white transition-all duration-300 shadow-xl group/btn active:scale-95 z-20"
-              aria-label="Next Client"
-            >
-              <ArrowRight className="w-8 h-8 text-gray-400 group-hover/btn:text-white transition-colors" />
-            </button>
-
-            {/* Decorative Needle (Stylistic) */}
-            <div className="absolute -top-10 -right-10 md:-right-20 w-32 h-64 pointer-events-none origin-top-right rotate-12 transition-transform duration-500 opacity-50 hidden md:block">
-              <div className="w-2 h-40 bg-gray-700 absolute right-4 top-0 rotate-[20deg] origin-top rounded-b-lg shadow-lg" />
-            </div>
-          </div>
-
-          {/* Current Client Name */}
-          <div className="mt-12 text-center h-16">
-            <h3 className="text-2xl font-bold text-white mb-2 tracking-wide animate-fade-in-up key">
-              {currentBrand.name}
-            </h3>
-            <div className="flex justify-center gap-2">
-              {allBrands.map((_, idx) => (
-                <div
-                  key={idx}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-orange-500 w-6' : 'bg-gray-700'}`}
-                />
-              ))}
-            </div>
-          </div>
-
         </div>
       </div>
 
       <style jsx>{`
-        @keyframes fade-in-up {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
+        .animate-marquee-row1 {
+          display: flex;
+          width: fit-content;
+          animation: marquee-scroll-r1 18s linear infinite;
+          will-change: transform;
         }
-        .animate-fade-in-up {
-            animation: fade-in-up 0.5s ease-out forwards;
+
+        .animate-marquee-row2 {
+          display: flex;
+          width: fit-content;
+          animation: marquee-scroll-r2 22s linear infinite;
+          will-change: transform;
+        }
+        
+        .hover\:pause:hover {
+          animation-play-state: paused;
+        }
+
+        @keyframes marquee-scroll-r1 {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-33.333%); }
+        }
+
+        @keyframes marquee-scroll-r2 {
+          0% { transform: translateX(-33.333%); }
+          100% { transform: translateX(0); }
+        }
+
+        @media (max-width: 768px) {
+          .animate-marquee-row1 { animation-duration: 12s; }
+          .animate-marquee-row2 { animation-duration: 15s; }
         }
       `}</style>
     </section>

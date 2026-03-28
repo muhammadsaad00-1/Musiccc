@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 import TestimonialsSection from "@/components/home/TestimonialsSection";
-import PortfolioGrid from "@/components/home/PortfolioGrid";
+import ArtistVideoTestimonials from "@/components/testimonials/ArtistVideoTestimonials";
+import HomeGallerySection from "@/components/home/HomeGallerySection";
 import {
     CheckCircle,
     Star,
@@ -25,21 +26,6 @@ import {
     Award,
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
-
-// ─── YouTube helper ────────────────────────────────────────────
-function extractYoutubeId(url: string): string | null {
-    const match = url.match(
-        /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s]{11})/
-    );
-    return match ? match[1] : null;
-}
-
-// ─── Portfolio types ────────────────────────────────────────────
-interface PortfolioItem {
-    id: string;
-    url: string;
-    title: string;
-}
 
 // ─── Team data ─────────────────────────────────────────────────
 const teamMembers = [
@@ -121,10 +107,10 @@ const whyChooseUs = [
 
 // ─── Stats ──────────────────────────────────────────────────────
 const stats = [
-    { value: 500, suffix: "+", label: "Verified Artists", icon: Mic2 },
-    { value: 2000, suffix: "+", label: "Events Delivered", icon: Music },
-    { value: 5, suffix: "", label: "Countries Served", icon: Globe },
-    { value: 98, suffix: "%", label: "Client Satisfaction", icon: Award },
+    { value: 400, suffix: "+", label: "Verified Artists", icon: Mic2 },
+    { value: 5000, suffix: "+", label: "Events Delivered", icon: Music },
+    { value: 20, suffix: "", label: "Cities Served", icon: Globe },
+    { value: 4.9, suffix: "", label: "Average Rating", icon: Award },
 ];
 
 // ─── FAQ (kept from original) ────────────────────────────────────
@@ -151,251 +137,6 @@ const faqs = [
     },
 ];
 
-// ─── PortfolioSection Component ──────────────────────────────────
-function PortfolioSection() {
-    const [images, setImages] = useState<PortfolioItem[]>([]);
-    const [videos, setVideos] = useState<PortfolioItem[]>([]);
-    const [imagePage, setImagePage] = useState(0);
-    const [activeVideoIndex, setActiveVideoIndex] = useState(0);
-    const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const IMAGES_PER_PAGE = 12;
-
-    useEffect(() => {
-        fetch(`${API_BASE_URL}/api/portfolio`)
-            .then((r) => r.json())
-            .then((data) => {
-                setImages(data.images || []);
-                setVideos(
-                    (data.videos || []).map((v: PortfolioItem) => ({
-                        ...v,
-                        videoId: extractYoutubeId(v.url),
-                        thumbnail: extractYoutubeId(v.url)
-                            ? `https://img.youtube.com/vi/${extractYoutubeId(v.url)}/hqdefault.jpg`
-                            : "",
-                    }))
-                );
-            })
-            .catch(() => { });
-    }, []);
-
-    const pageImages = images.slice(
-        imagePage * IMAGES_PER_PAGE,
-        (imagePage + 1) * IMAGES_PER_PAGE
-    );
-    const totalPages = Math.ceil(images.length / IMAGES_PER_PAGE);
-    const activeVideo = videos[activeVideoIndex] as any;
-
-
-    if (images.length === 0 && videos.length === 0) {
-        return (
-            <section className="py-20 bg-[#0f0f10] border-t border-gray-800/50">
-                <div className="max-w-7xl mx-auto px-4 text-center">
-                    <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-800/50 rounded-full text-gray-400 text-sm font-medium mb-6">
-                        🎬 Portfolio
-                    </span>
-                    <h2 className="text-3xl font-bold text-white mb-4">Our Work</h2>
-                    <div className="max-w-xl mx-auto p-12 bg-[#1a1a1a] rounded-3xl border border-gray-800 border-dashed">
-                        <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span className="text-2xl">📸</span>
-                        </div>
-                        <h3 className="text-white font-semibold mb-2">Portfolio Coming Soon</h3>
-                        <p className="text-gray-500">We are currently curating our finest moments. Check back shortly to see our work in action.</p>
-                    </div>
-                </div>
-            </section>
-        );
-    }
-
-
-    return (
-        <section className="py-20 bg-[#0f0f10]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Section Header */}
-                <div className="text-center mb-14">
-                    <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-orange-500/20 to-pink-600/20 rounded-full text-orange-400 text-sm font-medium mb-6 border border-orange-500/30">
-                        🎬 Our Portfolio
-                    </span>
-                    <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
-                        Our Work in Action
-                    </h2>
-                    <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                        Browse through our gallery of events and watch live performances from our roster.
-                    </p>
-                </div>
-
-                {/* Image Gallery */}
-                {images.length > 0 && (
-                    <div className="mb-16">
-                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                            <span className="w-2 h-6 bg-gradient-to-b from-orange-500 to-pink-600 rounded-full" />
-                            Event Gallery
-                        </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                            {pageImages.map((img) => (
-                                <div
-                                    key={img.id}
-                                    onClick={() => setSelectedImage(img.url)}
-                                    className="relative aspect-square rounded-xl overflow-hidden cursor-pointer group border border-gray-800/50 hover:border-orange-500/30 transition-all"
-                                >
-                                    <Image
-                                        src={img.url}
-                                        alt={img.title || "Portfolio"}
-                                        fill
-                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                    />
-                                    {img.title && (
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                                            <p className="text-white text-xs font-medium line-clamp-2">{img.title}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-3 mt-8">
-                                <button
-                                    onClick={() => setImagePage((p) => Math.max(0, p - 1))}
-                                    disabled={imagePage === 0}
-                                    className="p-2 rounded-xl bg-[#1a1a1a] border border-gray-800 text-gray-400 hover:text-white hover:border-orange-500/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                {Array.from({ length: totalPages }).map((_, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => setImagePage(i)}
-                                        className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${i === imagePage
-                                            ? "bg-gradient-to-r from-orange-500 to-pink-600 text-white"
-                                            : "bg-[#1a1a1a] border border-gray-800 text-gray-500 hover:text-white"
-                                            }`}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                ))}
-                                <button
-                                    onClick={() => setImagePage((p) => Math.min(totalPages - 1, p + 1))}
-                                    disabled={imagePage === totalPages - 1}
-                                    className="p-2 rounded-xl bg-[#1a1a1a] border border-gray-800 text-gray-400 hover:text-white hover:border-orange-500/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* YouTube Videos: Same player as artist profile */}
-                {videos.length > 0 && (
-                    <div>
-                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                            <span className="w-2 h-6 bg-gradient-to-b from-red-500 to-red-700 rounded-full" />
-                            Live Performances
-                        </h3>
-                        <div className="grid lg:grid-cols-3 gap-0 rounded-2xl overflow-hidden border border-gray-800">
-                            {/* Main Player */}
-                            <div className="lg:col-span-2 bg-black">
-                                {activeVideo && (
-                                    <div className="relative aspect-video">
-                                        {isVideoPlaying ? (
-                                            <iframe
-                                                width="100%"
-                                                height="100%"
-                                                src={`https://www.youtube.com/embed/${activeVideo.videoId}?autoplay=1&modestbranding=1&rel=0`}
-                                                title={activeVideo.title}
-                                                frameBorder="0"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                allowFullScreen
-                                                className="absolute inset-0 w-full h-full"
-                                            />
-                                        ) : (
-                                            <div
-                                                className="absolute inset-0 cursor-pointer group"
-                                                onClick={() => setIsVideoPlaying(true)}
-                                            >
-                                                {activeVideo.thumbnail ? (
-                                                    <Image
-                                                        src={activeVideo.thumbnail}
-                                                        alt={activeVideo.title}
-                                                        fill
-                                                        className="object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full bg-gray-900" />
-                                                )}
-                                                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                                    <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-2xl shadow-red-600/50">
-                                                        <Play className="w-10 h-10 text-white ml-1" />
-                                                    </div>
-                                                </div>
-                                                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-                                                    <h4 className="text-lg font-semibold text-white">{activeVideo.title}</h4>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            {/* Sidebar */}
-                            <div className="bg-[#141414] max-h-[400px] lg:max-h-none overflow-y-auto custom-scrollbar">
-                                <div className="p-3 border-b border-gray-800 sticky top-0 bg-[#141414] z-10 flex items-center gap-2">
-                                    <Youtube className="w-4 h-4 text-red-500" />
-                                    <p className="text-sm text-gray-400 font-medium">{videos.length} Videos</p>
-                                </div>
-                                {videos.map((video: any, index: number) => {
-                                    const isActive = index === activeVideoIndex;
-                                    return (
-                                        <button
-                                            key={video.id}
-                                            onClick={() => { setActiveVideoIndex(index); setIsVideoPlaying(false); }}
-                                            className={`w-full flex items-start gap-3 p-3 text-left transition-all hover:bg-white/5 ${isActive ? "bg-orange-500/10 border-l-4 border-orange-500" : "border-l-4 border-transparent"
-                                                }`}
-                                        >
-                                            <div className="relative w-28 h-16 flex-shrink-0 rounded-lg overflow-hidden">
-                                                {video.thumbnail && (
-                                                    <Image src={video.thumbnail} alt={video.title} fill className="object-cover" />
-                                                )}
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                                                    <Play className="w-5 h-5 text-white/80" />
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className={`text-sm font-medium line-clamp-2 ${isActive ? "text-orange-400" : "text-gray-300"}`}>
-                                                    {video.title || "Untitled"}
-                                                </p>
-                                                <p className="text-xs text-gray-500 mt-1">Artist Factory</p>
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Lightbox */}
-            {selectedImage && (
-                <div
-                    className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                    onClick={() => setSelectedImage(null)}
-                >
-                    <button
-                        onClick={() => setSelectedImage(null)}
-                        className="absolute top-4 right-4 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors z-10"
-                    >
-                        ✕
-                    </button>
-                    <div className="relative w-full h-full max-w-5xl max-h-[85vh]">
-                        <Image src={selectedImage} alt="Portfolio" fill className="object-contain" />
-                    </div>
-                </div>
-            )}
-        </section>
-    );
-}
-
-// ─── FAQ ────────────────────────────────────────────────────────
 function FAQItem({ q, a }: { q: string; a: string }) {
     const [open, setOpen] = useState(false);
     return (
@@ -672,11 +413,12 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            {/* ══ PORTFOLIO (dynamic) ════════════════════════════════════ */}
-            <PortfolioGrid bgClass="bg-[#0f0f10]" />
-
             {/* ══ TESTIMONIALS ══════════════════════════════════════════ */}
+            <ArtistVideoTestimonials />
             <TestimonialsSection bgClass="bg-[#0a0a0b]" />
+
+            {/* ══ PORTFOLIO GALLERY ══════════════════════════════════════ */}
+            <HomeGallerySection />
 
             {/* ══ FAQ ═════════════════════════════════════════════════════ */}
             <section className="py-20 bg-[#0f0f10]">

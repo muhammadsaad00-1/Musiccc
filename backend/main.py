@@ -2591,6 +2591,9 @@ async def create_artist_testimonial(
     rating: int = Form(5),
     emoji: str = Form("🎵"),
     is_active: bool = Form(True),
+    video_url: str = Form(None),
+    event_name: str = Form(None),
+    custom_message: str = Form(None),
     photo: UploadFile = File(None),
 ):
     """Create a new artist testimonial (with optional photo)."""
@@ -2603,6 +2606,9 @@ async def create_artist_testimonial(
             "rating": max(1, min(5, rating)),
             "emoji": emoji,
             "is_active": is_active,
+            "video_url": video_url,
+            "event_name": event_name,
+            "custom_message": custom_message,
             "photo_url": None,
         }
 
@@ -2650,6 +2656,9 @@ async def update_artist_testimonial(
     rating: int = Form(None),
     emoji: str = Form(None),
     is_active: bool = Form(None),
+    video_url: str = Form(None),
+    event_name: str = Form(None),
+    custom_message: str = Form(None),
     photo: UploadFile = File(None),
 ):
     """Update an existing artist testimonial."""
@@ -2669,6 +2678,12 @@ async def update_artist_testimonial(
             update_data["emoji"] = emoji
         if is_active is not None:
             update_data["is_active"] = is_active
+        if video_url is not None:
+            update_data["video_url"] = video_url
+        if event_name is not None:
+            update_data["event_name"] = event_name
+        if custom_message is not None:
+            update_data["custom_message"] = custom_message
 
         if photo and photo.filename:
             ensure_bucket_exists("artist-testimonials")

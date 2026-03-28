@@ -12,10 +12,13 @@ interface ArtistTestimonial {
     name: string;
     role: string;
     location: string;
+    event_name: string | null;
+    custom_message: string | null;
     emoji: string;
     photo_url: string | null;
     rating: number;
     review: string;
+    video_url: string | null;
     is_active: boolean;
 }
 
@@ -25,9 +28,12 @@ const emptyForm = {
     name: '',
     role: '',
     location: '',
+    event_name: '',
+    custom_message: '',
     review: '',
     rating: 5,
     emoji: '🎵',
+    video_url: '',
     is_active: true,
     photo: null as File | null,
 };
@@ -76,7 +82,7 @@ const TestimonialForm = ({
     onClose
 }: TestimonialFormProps) => (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div className="bg-[#1a1a1a] border border-gray-800 rounded-2xl w-full max-w-lg my-4">
+        <div className="bg-[#1a1a1a] border border-gray-800 rounded-2xl w-full max-w-2xl my-4">
             <div className="flex items-center justify-between p-6 border-b border-gray-800">
                 <h2 className="text-white font-bold text-lg flex items-center gap-2">
                     <Quote className="w-5 h-5 text-orange-400" />
@@ -85,55 +91,106 @@ const TestimonialForm = ({
                 <button onClick={onClose} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
 
-            <form onSubmit={onSubmit} className="p-6 space-y-5">
-                {/* Name + Role */}
-                <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={onSubmit} className="p-5 space-y-4">
+                {/* Basic Info: Name, Role, Location */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1.5">Artist Name *</label>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Artist Name *</label>
                         <input
                             type="text" required value={formData.name}
                             onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
-                            className="w-full bg-[#0f0f10] border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
+                            className="w-full bg-[#0f0f10] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 outline-none"
                             placeholder="e.g. Ustad Ali"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1.5">Role / Category *</label>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Role / Category *</label>
                         <input
                             type="text" required value={formData.role}
                             onChange={(e) => setFormData((f) => ({ ...f, role: e.target.value }))}
-                            className="w-full bg-[#0f0f10] border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
+                            className="w-full bg-[#0f0f10] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 outline-none"
                             placeholder="e.g. Classical Vocalist"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Location</label>
+                        <input
+                            type="text" value={formData.location}
+                            onChange={(e) => setFormData((f) => ({ ...f, location: e.target.value }))}
+                            className="w-full bg-[#0f0f10] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 outline-none"
+                            placeholder="e.g. Lahore"
                         />
                     </div>
                 </div>
 
-                {/* Location */}
+                {/* Review Text */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1.5">Location</label>
-                    <input
-                        type="text" value={formData.location}
-                        onChange={(e) => setFormData((f) => ({ ...f, location: e.target.value }))}
-                        className="w-full bg-[#0f0f10] border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
-                        placeholder="e.g. Lahore"
-                    />
-                </div>
-
-                {/* Review */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1.5">Testimonial Text *</label>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Testimonial Text *</label>
                     <textarea
-                        required rows={4} value={formData.review}
+                        required rows={3} value={formData.review}
                         onChange={(e) => setFormData((f) => ({ ...f, review: e.target.value }))}
-                        className="w-full bg-[#0f0f10] border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500 resize-none"
+                        className="w-full bg-[#0f0f10] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 outline-none resize-none"
                         placeholder="Write the artist's testimonial…"
                     />
                 </div>
 
-                {/* Rating */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1.5">Rating</label>
-                    <StarRatingInput rating={formData.rating} onChange={(r) => setFormData((f) => ({ ...f, rating: r }))} />
+                {/* Event & Video Meta */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-2">Rating</label>
+                        <StarRatingInput rating={formData.rating} onChange={(r) => setFormData((f) => ({ ...f, rating: r }))} />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Event Name</label>
+                        <input
+                            type="text" value={formData.event_name}
+                            onChange={(e) => setFormData((f) => ({ ...f, event_name: e.target.value }))}
+                            className="w-full bg-[#0f0f10] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 outline-none"
+                            placeholder="e.g. Grand Wedding"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">YouTube URL</label>
+                        <input
+                            type="url" value={formData.video_url}
+                            onChange={(e) => setFormData((f) => ({ ...f, video_url: e.target.value }))}
+                            className="w-full bg-[#0f0f10] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 outline-none"
+                            placeholder="https://..."
+                        />
+                    </div>
+                </div>
+
+                {/* Custom Message & Media */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Custom Display Message</label>
+                        <input
+                            type="text" value={formData.custom_message}
+                            onChange={(e) => setFormData((f) => ({ ...f, custom_message: e.target.value }))}
+                            className="w-full bg-[#0f0f10] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 outline-none"
+                            placeholder="Personalized note..."
+                        />
+                    </div>
+                    <div>
+                       <label className="block text-xs font-medium text-gray-500 mb-1">Artist Photo</label>
+                       <div className="flex items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-white hover:bg-gray-700 transition-all font-medium"
+                            >
+                                <Upload className="w-3 h-3" />
+                                {formData.photo ? 'Change File' : 'Upload Photo'}
+                            </button>
+                            {previewUrl && (
+                                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-gray-700">
+                                    <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                                </div>
+                            )}
+                            {formData.photo && <span className="text-[10px] text-gray-500 truncate max-w-[100px]">{formData.photo.name}</span>}
+                       </div>
+                       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                    </div>
                 </div>
 
                 {/* Emoji fallback */}
@@ -259,9 +316,28 @@ export default function ManageTestimonialsPage() {
 
     const openEdit = (t: ArtistTestimonial) => {
         setSelected(t);
-        setFormData({ name: t.name, role: t.role, location: t.location, review: t.review, rating: t.rating, emoji: t.emoji, is_active: t.is_active, photo: null });
+        setFormData({ 
+            name: t.name, 
+            role: t.role, 
+            location: t.location, 
+            event_name: t.event_name || '',
+            custom_message: t.custom_message || '',
+            review: t.review, 
+            rating: t.rating, 
+            emoji: t.emoji, 
+            video_url: t.video_url || '',
+            is_active: t.is_active, 
+            photo: null 
+        });
         setPreviewUrl(t.photo_url);
         setShowEditModal(true);
+    };
+
+    // Extract YouTube ID (Supports regular, shorts, and mobile links)
+    const getYouTubeId = (url: string) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
     };
 
     const closeModals = () => {
@@ -280,6 +356,9 @@ export default function ManageTestimonialsPage() {
         body.append('rating', String(formData.rating));
         body.append('emoji', formData.emoji);
         body.append('is_active', String(formData.is_active));
+        if (formData.video_url) body.append('video_url', formData.video_url);
+        if (formData.event_name) body.append('event_name', formData.event_name);
+        if (formData.custom_message) body.append('custom_message', formData.custom_message);
         if (formData.photo) body.append('photo', formData.photo);
         return body;
     };
@@ -423,15 +502,30 @@ export default function ManageTestimonialsPage() {
                                     {t.is_active ? 'Visible' : 'Hidden'}
                                 </span>
 
-                                {/* Stars */}
-                                <div className="flex gap-0.5">
-                                    {[1, 2, 3, 4, 5].map((s) => (
-                                        <Star key={s} className={`w-3.5 h-3.5 ${s <= t.rating ? 'fill-orange-400 text-orange-400' : 'text-gray-700'}`} />
-                                    ))}
+                                {/* Stars & Video Badge */}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex gap-0.5">
+                                        {[1, 2, 3, 4, 5].map((s) => (
+                                            <Star key={s} className={`w-3.5 h-3.5 ${s <= t.rating ? 'fill-orange-400 text-orange-400' : 'text-gray-700'}`} />
+                                        ))}
+                                    </div>
+                                    {t.video_url && (
+                                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[10px] font-bold uppercase tracking-wider">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                            Video
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Review text */}
                                 <p className="text-gray-400 text-sm leading-relaxed line-clamp-3">{t.review}</p>
+
+                                {/* Custom Message Section */}
+                                {t.custom_message && (
+                                    <div className="mt-2 p-3 bg-white/5 border border-white/5 rounded-xl">
+                                        <p className="text-orange-400/80 text-xs italic">"{t.custom_message}"</p>
+                                    </div>
+                                )}
 
                                 {/* Author */}
                                 <div className="flex items-center gap-2.5 mt-auto pt-3 border-t border-gray-800/60">
