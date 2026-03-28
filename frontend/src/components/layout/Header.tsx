@@ -184,6 +184,14 @@ export default function Header() {
                             Express Booking
                         </Link>
 
+                        {/* Gallery */}
+                        <Link
+                            href="/gallery"
+                            className="text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 font-medium transition-all duration-300"
+                        >
+                            Gallery
+                        </Link>
+
                         {/* About Us */}
                         <Link
                             href="/about"
@@ -298,6 +306,9 @@ export default function Header() {
                         <Link href="/post-requirement" className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 font-semibold" onClick={() => setIsMenuOpen(false)}>
                             <Zap className="w-4 h-4" />
                             Express Booking
+                        </Link>
+                        <Link href="/gallery" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-gray-300 bg-white/5 border border-white/10 hover:text-white hover:border-orange-500/30 transition-all font-medium" onClick={() => setIsMenuOpen(false)}>
+                            <Star className="w-4 h-4 text-orange-400" /> Gallery
                         </Link>
                         <Link href="/about" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-gray-300 bg-white/5 border border-white/10 hover:text-white hover:border-orange-500/30 transition-all font-medium" onClick={() => setIsMenuOpen(false)}>
                             <Info className="w-4 h-4 text-orange-400" /> About Us

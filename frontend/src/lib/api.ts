@@ -3,8 +3,8 @@
 
 import { Artist, Category, Inquiry, SearchFilters } from '@/types';
 
-//export const API_BASE_URL = 'https://artistfactorybackend-340951229057.us-central1.run.app';
-export const API_BASE_URL ='http://127.0.0.1:8000';
+export const API_BASE_URL = 'https:///artistfactorybackend-340951229057.us-central1.run.app';
+// export const API_BASE_URL ='http://127.0.0.1:8000';
 //  // Use this during development, switch to actual URL when backend is deployed
 
 // Helper function for API calls
@@ -56,6 +56,3 @@ export const inquiriesApi = {
         }),
     getAll: () => fetchApi<Inquiry[]>('/admin/inquiries'),
 };
-
-// For now, use mock data during development
-// This will be replaced with actual API calls once backend is connected
