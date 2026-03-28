@@ -19,12 +19,26 @@ const defaultItems: PortfolioItem[] = []; // Define outside to avoid reference c
 
 export default function GalleryComponent() {
   const { data: portfolioItems, isLoading } = usePortfolio();
-  
+
   const [filter, setFilter] = useState('all');
   const [filteredItems, setFilteredItems] = useState<PortfolioItem[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const items: PortfolioItem[] = (portfolioItems && portfolioItems.length > 0) ? portfolioItems : defaultItems;
+
+  const [cycleIndex, setCycleIndex] = useState(0);
+
+  // Auto-cycle hero images (now cycles 4 at a time to maintain perfect symmetry)
+  useEffect(() => {
+    if (items.length <= 4 && items.length > 0) return;
+    const interval = setInterval(() => {
+      setCycleIndex(prev => {
+        const total = items.length > 0 ? items.length : 4;
+        return (prev + 4 >= total ? 0 : prev + 4);
+      });
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [items.length]);
 
   // Extract unique categories dynamically
   const uniqueCategories = Array.from(
@@ -43,7 +57,7 @@ export default function GalleryComponent() {
     if (filter === 'all') {
       setFilteredItems(items);
     } else {
-      setFilteredItems(items.filter(item => 
+      setFilteredItems(items.filter(item =>
         (item.category?.toLowerCase() || 'other') === filter.toLowerCase()
       ));
     }
@@ -79,7 +93,8 @@ export default function GalleryComponent() {
   const getYoutubeEmbedUrl = (url?: string) => {
     if (!url) return '';
     if (url.includes('embed/')) return url;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    // Updated regex to properly match youtube 'shorts/' formats as well
+    const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11)
       ? `https://www.youtube.com/embed/${match[2]}?autoplay=1`
@@ -87,44 +102,101 @@ export default function GalleryComponent() {
   };
 
   const isYouTubeVideo = (item: PortfolioItem) => {
-    return item.media_type === 'youtube' || 
-           !!item.youtube_url || 
-           (item.media_url && (item.media_url.includes('youtube.com') || item.media_url.includes('youtu.be')));
+    return item.media_type === 'youtube' ||
+      !!item.youtube_url ||
+      (item.media_url && (item.media_url.includes('youtube.com') || item.media_url.includes('youtu.be')));
   };
+
+  const baseFallbacks = [
+    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f4a7?q=80&w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1543791939-cefb08008f1f?q=80&w=800&auto=format&fit=crop"
+  ];
+
+  const effectiveItems = items.length > 0 ? items : baseFallbacks.map(url => ({ thumbnail_url: url, media_url: url }) as unknown as PortfolioItem);
+
+  // Use 4 images for a completely horizontally symmetric layout
+  const displayImages = Array.from({ length: 4 }).map((_, i) => {
+    const idx = (cycleIndex + i) % effectiveItems.length;
+    return effectiveItems[idx]?.thumbnail_url || effectiveItems[idx]?.media_url;
+  });
 
   return (
     <div className="w-full bg-[#0a0a0b] text-[#F2EDE8] font-outfit pb-20">
-      {/* HERO SECTION */}
-      <section className="relative flex flex-col items-center justify-center min-h-[58vh] pt-24 pb-12 text-center overflow-hidden">
+      {/* HERO SECTION - SHAPED COLLAGE */}
+      <section className="relative w-full max-w-[1500px] mx-auto pt-10 pb-8 px-4 sm:px-8 overflow-hidden min-h-[70vh] flex flex-col justify-center">
         {/* Background Gradients */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: `
-            radial-gradient(ellipse 60% 55% at 50% 100%, rgba(249,115,22,0.1) 0%, transparent 70%),
-            radial-gradient(ellipse 80% 80% at 50% 50%, rgba(236,72,153,0.03) 0%, transparent 100%)
+            radial-gradient(ellipse 40% 50% at 50% 50%, rgba(249,115,22,0.08) 0%, transparent 100%),
+            radial-gradient(ellipse 60% 60% at 80% 20%, rgba(236,72,153,0.05) 0%, transparent 100%)
           `
         }}></div>
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
-          backgroundImage: 'repeating-linear-gradient(-45deg, #f97316 0, #f97316 1px, transparent 0, transparent 50%)',
-          backgroundSize: '12px 12px'
-        }}></div>
-        
-        <div className="relative z-10 animate-revealUp" style={{ animationDelay: '0.3s' }}>
-          <div className="flex items-center gap-3 text-[11px] font-semibold tracking-[4px] uppercase text-orange-400 mb-6 justify-center">
-            <span className="w-8 h-[1px] bg-orange-500/50"></span>
-            Our Portfolio
-            <span className="w-8 h-[1px] bg-orange-500/50"></span>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-center relative z-10 w-full lg:h-[650px] mt-0">
+
+          {/* FAR LEFT - TALL ARCH */}
+          <div className="hidden lg:flex lg:col-span-1 h-full items-end pb-12 justify-end pr-2 xl:pr-6">
+            <div className="w-[95%] h-[95%] rounded-t-[500px] rounded-b-3xl overflow-hidden shadow-2xl shadow-orange-500/10 border border-white/5 group bg-[#1a1a1a] relative">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0C0C0C]/80 via-transparent to-transparent z-10 transition-opacity duration-700"></div>
+              <img
+                key={displayImages[0]}
+                src={displayImages[0]}
+                alt="Tall Arch Portfolio Collage"
+                className="w-full h-full object-cover object-center animate-fade-in opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+              />
+            </div>
           </div>
-          
-          <h1 className="font-playfair text-5xl md:text-7xl lg:text-8xl font-black leading-[0.88] tracking-tight mb-6 animate-revealUp" style={{ animationDelay: '0.45s' }}>
-            Events That<br />
-            <span className="block italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 pb-2">Live Forever</span>
-          </h1>
-          
-          <p className="mt-7 text-sm font-light text-[#BFB9B2] tracking-wide max-w-[420px] mx-auto leading-relaxed animate-revealUp px-4" style={{ animationDelay: '0.6s' }}>
-            From grand weddings to electrifying concerts — every frame tells the story of an unforgettable moment.
-          </p>
-          
-          <div className="w-[1px] h-12 bg-gradient-to-b from-orange-500/80 to-transparent mx-auto mt-8 animate-revealUp" style={{ animationDelay: '0.8s' }}></div>
+
+          {/* CENTER FRAME - TEXT + SUB-IMAGES */}
+          <div className="lg:col-span-2 flex flex-col justify-center items-center h-full relative">
+
+            {/* Absolute positioning prevents text from pushing images down violently */}
+            <div className="text-center animate-revealUp z-20 absolute top-0 lg:top-8 w-full pointer-events-none" style={{ animationDelay: '0.1s' }}>
+              <div className="flex items-center gap-3 text-[11px] font-semibold tracking-[4px] uppercase text-orange-400 mb-6 justify-center">
+                <span className="w-8 h-[1px] bg-orange-500/50"></span>
+                Our Portfolio
+                <span className="w-8 h-[1px] bg-orange-500/50"></span>
+              </div>
+
+              <h1 className="font-playfair text-5xl md:text-7xl lg:text-[5rem] font-black leading-[0.95] tracking-tight mb-5 drop-shadow-[0_0_40px_rgba(0,0,0,0.8)]">
+                Events That<br />
+                <span className="block italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 pb-2 mt-2">Live Forever</span>
+              </h1>
+
+              {/* <p className="mt-4 text-[15px] font-light text-[#BFB9B2] tracking-wide max-w-[420px] mx-auto leading-relaxed px-4 drop-shadow-md bg-black/20 py-2 rounded-2xl backdrop-blur-sm">
+                From grand weddings to electrifying concerts — every frame tells the story of an unforgettable moment.
+              </p> */}
+            </div>
+
+            {/* Sub-images tightly nested inside the center column under the absolute text */}
+            <div className="w-full flex justify-center items-end gap-6 sm:gap-10 z-10 h-full pb-10 pt-[240px]">
+              {/* Left Leaf (Reflected) */}
+              <div className="w-[50%] max-w-[260px] aspect-[4/5] rounded-tr-[120px] rounded-bl-[40px] rounded-tl-xl rounded-br-xl overflow-hidden border border-white/5 shadow-xl group bg-[#1a1a1a] relative">
+                <img key={displayImages[1]} src={displayImages[1]} alt="Reflected Leaf Collage" className="w-full h-full object-cover animate-fade-in opacity-85 group-hover:opacity-100 transition-opacity duration-500" />
+              </div>
+              {/* Right Leaf */}
+              <div className="w-[50%] max-w-[260px] aspect-[4/5] rounded-tl-[120px] rounded-br-[40px] rounded-tr-xl rounded-bl-xl overflow-hidden border border-white/5 shadow-xl group bg-[#1a1a1a] relative">
+                <img key={displayImages[2]} src={displayImages[2]} alt="Leaf Mask Collage" className="w-full h-full object-cover animate-fade-in opacity-85 group-hover:opacity-100 transition-opacity duration-500" />
+              </div>
+            </div>
+          </div>
+
+          {/* FAR RIGHT - TALL ARCH (MIRRORED ALIGNMENT) */}
+          <div className="hidden lg:flex lg:col-span-1 h-full items-end pb-12 justify-start pl-2 xl:pl-6">
+            <div className="w-[95%] h-[95%] rounded-t-[500px] rounded-b-3xl overflow-hidden shadow-2xl shadow-orange-500/10 border border-white/5 group bg-[#1a1a1a] relative">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0C0C0C]/80 via-transparent to-transparent z-10 transition-opacity duration-700"></div>
+              <img
+                key={displayImages[3]}
+                src={displayImages[3]}
+                alt="Tall Arch Right Collage"
+                className="w-full h-full object-cover object-center animate-fade-in opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+              />
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -138,8 +210,8 @@ export default function GalleryComponent() {
               className={`
                 flex-shrink-0 px-7 py-2.5 font-outfit text-[11px] font-semibold tracking-[2px] uppercase transition-all duration-300 border
                 ${idx === 0 ? '' : '-ml-[1px]'}
-                ${filter === cat.id 
-                  ? 'bg-gradient-to-r from-orange-500 to-pink-600 border-transparent text-white z-10 shadow-lg shadow-orange-500/20' 
+                ${filter === cat.id
+                  ? 'bg-gradient-to-r from-orange-500 to-pink-600 border-transparent text-white z-10 shadow-lg shadow-orange-500/20'
                   : 'bg-transparent border-[#2E2E2E] text-[#6E6A66] hover:text-orange-400 hover:border-orange-500/50 hover:z-10'
                 }
               `}
@@ -167,7 +239,7 @@ export default function GalleryComponent() {
         ) : (
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-3 space-y-3">
             {filteredItems.map((item, index) => (
-              <div 
+              <div
                 key={item.id}
                 onClick={() => openLightbox(index)}
                 className="group relative break-inside-avoid overflow-hidden cursor-pointer bg-[#1A1A1A] animate-revealUp rounded-sm"
@@ -176,7 +248,7 @@ export default function GalleryComponent() {
                 <div className="w-full relative">
                   {isYouTubeVideo(item) ? (
                     <div className="w-full aspect-video bg-[#242424] flex items-center justify-center relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
-                      <img 
+                      <img
                         src={item.thumbnail_url || item.media_url || `https://img.youtube.com/vi/${getYoutubeEmbedUrl(item.youtube_url || item.media_url).split('embed/')[1]?.split('?')[0]}/maxresdefault.jpg`}
                         alt={item.title}
                         className="w-full h-full object-cover opacity-60"
@@ -193,9 +265,9 @@ export default function GalleryComponent() {
                   ) : item.media_type === 'video' ? (
                     <div className="w-full aspect-video bg-[#242424] flex items-center justify-center relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
                       {/* Native HTML5 Preview - muted, non-autoplay */}
-                      <video 
-                        src={item.media_url} 
-                        muted 
+                      <video
+                        src={item.media_url}
+                        muted
                         playsInline
                         className="w-full h-full object-cover opacity-70"
                       />
@@ -206,8 +278,8 @@ export default function GalleryComponent() {
                       </div>
                     </div>
                   ) : (
-                    <img 
-                      src={item.media_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop'} 
+                    <img
+                      src={item.media_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop'}
                       alt={item.title}
                       className="w-full object-cover transition-transform duration-700 group-hover:scale-105 min-h-[200px]"
                       loading="lazy"
@@ -248,14 +320,14 @@ export default function GalleryComponent() {
 
       {/* LIGHTBOX */}
       {lightboxIndex !== null && filteredItems[lightboxIndex] && (
-        <div 
+        <div
           className="fixed inset-0 z-[500] bg-[#080808]/95 backdrop-blur-md flex items-center justify-center animate-fadeIn"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeLightbox();
           }}
         >
           <div className="w-full max-w-5xl px-4 relative flex flex-col animate-scaleIn">
-            <button 
+            <button
               onClick={closeLightbox}
               className="absolute -top-12 right-4 bg-transparent border border-[#2E2E2E] text-[#BFB9B2] text-[13px] font-normal tracking-[2px] uppercase px-4 py-1.5 transition-colors duration-200 hover:border-orange-500 hover:text-orange-400 flex items-center gap-2 rounded"
             >
@@ -264,7 +336,7 @@ export default function GalleryComponent() {
 
             <div className="w-full bg-[#1A1A1A] flex items-center justify-center relative shadow-2xl overflow-hidden aspect-video md:aspect-auto md:min-h-[500px] rounded-lg">
               {isYouTubeVideo(filteredItems[lightboxIndex]) ? (
-                <iframe 
+                <iframe
                   src={getYoutubeEmbedUrl(filteredItems[lightboxIndex].youtube_url || filteredItems[lightboxIndex].media_url)}
                   title={filteredItems[lightboxIndex].title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -272,14 +344,14 @@ export default function GalleryComponent() {
                   className="absolute inset-0 w-full h-full border-0"
                 ></iframe>
               ) : filteredItems[lightboxIndex].media_type === 'video' ? (
-                <video 
+                <video
                   src={filteredItems[lightboxIndex].media_url}
                   controls
                   autoPlay
                   className="absolute inset-0 w-full h-full bg-black outline-none"
                 />
               ) : (
-                <img 
+                <img
                   src={filteredItems[lightboxIndex].media_url}
                   alt={filteredItems[lightboxIndex].title}
                   className="max-w-full max-h-[75vh] object-contain"
@@ -296,15 +368,15 @@ export default function GalleryComponent() {
                   {filteredItems[lightboxIndex].title}
                 </h3>
               </div>
-              
+
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => navigateLightbox(-1)}
                   className="w-10 h-10 rounded border border-[#2E2E2E] bg-transparent text-[#BFB9B2] flex items-center justify-center transition-colors hover:border-orange-500 hover:text-orange-400"
                 >
                   <ChevronLeft size={20} />
                 </button>
-                <button 
+                <button
                   onClick={() => navigateLightbox(1)}
                   className="w-10 h-10 rounded border border-[#2E2E2E] bg-transparent text-[#BFB9B2] flex items-center justify-center transition-colors hover:border-orange-500 hover:text-orange-400"
                 >
@@ -317,7 +389,8 @@ export default function GalleryComponent() {
       )}
 
       {/* CUSTOM STYLES */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes revealUp {
           from { opacity: 0; transform: translateY(24px); }
           to { opacity: 1; transform: translateY(0); }

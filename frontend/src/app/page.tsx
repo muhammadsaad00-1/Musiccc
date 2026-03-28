@@ -9,6 +9,7 @@ import ClientsMarquee from '@/components/home/ClientsMarquee';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import OurClients from '@/components/home/OurClients';
 import HowItWorks from '@/components/home/HowItWorks';
+import HomeGallerySection from '@/components/home/HomeGallerySection';
 import WhatsAppCTAGrid from '@/components/home/WhatsAppCTAGrid';
 import CTASection from '@/components/home/CTASection';
 import SplashScreen from '@/components/ui/SplashScreen';
@@ -56,24 +57,21 @@ export default function Home() {
   return (
     <div className="animate-fadeIn">
       <Hero />
+
       <CategoryGrid />
       <FeaturedArtists />
-      <ClientsMarquee />
 
-      {/* Testimonials — Clients & Artists */}
+      <ClientsMarquee />
       <TestimonialsSection />
 
-      {/* Our Corporate Clients */}
-      {/* <OurClients /> */}
+      <HomeGallerySection />
 
       <HowItWorks />
       <CTASection />
+
       <WhatsAppCTAGrid />
-
-      {/*<InstagramFeed />*/}
-
-      {/* Floating WhatsApp Button */}
       <FloatingWhatsAppButton />
+      {/*<InstagramFeed />*/}
 
       <style jsx>{`
         @keyframes fadeIn {
