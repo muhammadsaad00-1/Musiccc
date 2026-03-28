@@ -1,9 +1,14 @@
+import sys
+import os
+
+# Add parent directory to path so we can import supabase_client from root
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from fastapi import FastAPI, UploadFile, File, Form, Request, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from supabase_functions import create_client
-from supabase import create_client
+from supabase_client import supabase
 from typing import Optional
 import json
 import re
@@ -14,7 +19,6 @@ from slowapi.errors import RateLimitExceeded
 from cachetools import TTLCache
 import hashlib
 from email_service import send_requirement_notification, send_contact_message
-import os
 from dotenv import load_dotenv
 from datetime import datetime
 import secrets
@@ -35,9 +39,6 @@ general_cache = TTLCache(maxsize=500, ttl=300)      # 5 minutes (for other endpo
 
 # Legacy cache variable for backward compatibility
 cache = general_cache
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Helper function to generate cache keys
 def get_cache_key(prefix: str, **kwargs) -> str:
@@ -2025,6 +2026,7 @@ async def create_portfolio_item(
     item_type: str = Form(...),  # 'image' or 'video'
     media_url: str = Form(...),  # Image URL from storage or YouTube link
     thumbnail_url: str = Form(""),
+    category: str = Form("other"), # New category field
     display_order: int = Form(0)
 ):
     """Admin: Create a new portfolio item."""
@@ -2042,6 +2044,7 @@ async def create_portfolio_item(
             "item_type": item_type,
             "media_url": media_url,
             "thumbnail_url": thumbnail_url if thumbnail_url else None,
+            "category": category.strip().lower() if category else 'other',
             "display_order": display_order,
             "is_active": True
         }
@@ -2079,6 +2082,7 @@ async def update_portfolio_item(
     item_type: str = Form(...),
     media_url: str = Form(...),
     thumbnail_url: str = Form(""),
+    category: str = Form("other"), # New category field
     display_order: int = Form(0),
     is_active: bool = Form(True)
 ):
@@ -2097,6 +2101,7 @@ async def update_portfolio_item(
             "item_type": item_type,
             "media_url": media_url,
             "thumbnail_url": thumbnail_url if thumbnail_url else None,
+            "category": category.strip().lower() if category else 'other',
             "display_order": display_order,
             "is_active": is_active
         }
@@ -2715,6 +2720,7 @@ async def upload_portfolio_image(
     image: UploadFile = File(...),
     title: str = Form(...),
     description: str = Form(""),
+    category: str = Form("other"),
     display_order: int = Form(0)
 ):
     """Admin: Upload an image for portfolio_items."""
@@ -2746,12 +2752,12 @@ async def upload_portfolio_image(
         # Get public URL
         media_url = supabase.storage.from_("portfolio-items").get_public_url(filename)
         
-        # Create portfolio item in database
         item_data = {
             "title": title,
             "description": description,
             "item_type": "image",
             "media_url": media_url,
+            "category": category.strip().lower() if category else 'other',
             "display_order": display_order,
             "is_active": True
         }
@@ -2784,6 +2790,7 @@ async def upload_portfolio_video(
     title: str = Form(...),
     description: str = Form(""),
     thumbnail_url: str = Form(""),
+    category: str = Form("other"),
     display_order: int = Form(0)
 ):
     """Admin: Add a YouTube video to portfolio_items."""
@@ -2795,13 +2802,13 @@ async def upload_portfolio_video(
                 "message": "Please provide a valid YouTube video URL"
             }
         
-        # Create portfolio item in database
         item_data = {
             "title": title,
             "description": description,
             "item_type": "video",
             "media_url": video_url,
             "thumbnail_url": thumbnail_url if thumbnail_url else None,
+            "category": category.strip().lower() if category else 'other',
             "display_order": display_order,
             "is_active": True
         }

@@ -23,6 +23,7 @@ interface PortfolioItem {
     id: string;
     media_url: string;
     title: string;
+    category?: string;
     description: string;
     item_type: "image" | "video";
     thumbnail_url: string | null;
@@ -33,7 +34,7 @@ interface PortfolioItem {
 
 function extractYoutubeId(url: string): string | null {
     const match = url.match(
-        /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s]{11})/
+        /(?:youtu\.be\/|youtube\.com\/(?:embed\/|shorts\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s/]{11})/
     );
     return match ? match[1] : null;
 }
@@ -46,16 +47,22 @@ export default function AdminPortfolioPage() {
     const [videos, setVideos] = useState<PortfolioItem[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Derived unique categories
+    const uniqueCategories = Array.from(new Set([...images, ...videos].map(item => item.category).filter(Boolean)));
+
     // Image upload state
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imageTitle, setImageTitle] = useState("");
+    const [imageCategory, setImageCategory] = useState("");
     const [uploadingImage, setUploadingImage] = useState(false);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     // Video add state
     const [videoUrl, setVideoUrl] = useState("");
     const [videoTitle, setVideoTitle] = useState("");
+    const [videoCategory, setVideoCategory] = useState("");
     const [addingVideo, setAddingVideo] = useState(false);
+    const [videoError, setVideoError] = useState("");
 
     // Video playback state
     const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
@@ -114,6 +121,7 @@ export default function AdminPortfolioPage() {
             const form = new FormData();
             form.append("image", imageFile);
             form.append("title", imageTitle.trim());
+            form.append("category", imageCategory.trim() || 'other');
             form.append("description", "");
             form.append("display_order", "0");
             const res = await fetch(`${API_BASE_URL}/api/admin/portfolio/upload-image`, { method: "POST", body: form });
@@ -122,6 +130,7 @@ export default function AdminPortfolioPage() {
             showFeedback("success", "Image uploaded successfully!");
             setImageFile(null);
             setImageTitle("");
+            setImageCategory("");
             setImagePreview(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
             fetchPortfolio();
@@ -137,7 +146,7 @@ export default function AdminPortfolioPage() {
         if (!videoUrl.trim()) return;
         const videoId = extractYoutubeId(videoUrl);
         if (!videoId) {
-            showFeedback("error", "Please enter a valid YouTube URL.");
+            setVideoError("Please enter a valid YouTube or YouTube Shorts URL.");
             return;
         }
         setAddingVideo(true);
@@ -145,6 +154,7 @@ export default function AdminPortfolioPage() {
             const form = new FormData();
             form.append("video_url", videoUrl.trim());
             form.append("title", videoTitle.trim() || "Untitled Video");
+            form.append("category", videoCategory.trim() || 'other');
             form.append("description", "");
             form.append("thumbnail_url", `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`);
             form.append("display_order", "0");
@@ -154,6 +164,7 @@ export default function AdminPortfolioPage() {
             showFeedback("success", "Video added to portfolio!");
             setVideoUrl("");
             setVideoTitle("");
+            setVideoCategory("");
             fetchPortfolio();
         } catch (err: any) {
             showFeedback("error", err.message || "Failed to add video. Please try again.");
@@ -217,6 +228,13 @@ export default function AdminPortfolioPage() {
                 </div>
             )}
 
+            {/* Datalist for dynamic categories */}
+            <datalist id="portfolio-categories">
+                {uniqueCategories.map((cat, i) => (
+                    <option key={i} value={cat as string} />
+                ))}
+            </datalist>
+
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
                 {/* ── SECTION: Upload Image ── */}
                 <section className="bg-[#1a1a1a] rounded-2xl border border-gray-800 overflow-hidden">
@@ -275,6 +293,23 @@ export default function AdminPortfolioPage() {
                                         This label will appear as a caption on the portfolio image.
                                     </p>
                                 </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">
+                                        Category
+                                    </label>
+                                    <input
+                                        list="portfolio-categories"
+                                        type="text"
+                                        value={imageCategory}
+                                        onChange={(e) => setImageCategory(e.target.value)}
+                                        placeholder="Select or type a new category"
+                                        className="w-full px-4 py-3 bg-[#0f0f10] border border-gray-700 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50 transition-colors"
+                                    />
+                                    <p className="text-xs text-gray-600 mt-1.5">
+                                        Pick an existing category from the dropdown or type a custom one.
+                                    </p>
+                                </div>
 
                                 {imageFile && (
                                     <div className="p-3 bg-[#0f0f10] rounded-lg border border-gray-800 text-sm">
@@ -321,11 +356,17 @@ export default function AdminPortfolioPage() {
                                 <input
                                     type="url"
                                     value={videoUrl}
-                                    onChange={(e) => setVideoUrl(e.target.value)}
+                                    onChange={(e) => { setVideoUrl(e.target.value); setVideoError(""); }}
                                     placeholder="https://youtube.com/watch?v=..."
-                                    className="w-full px-4 py-3 bg-[#0f0f10] border border-gray-700 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors"
+                                    className={`w-full px-4 py-3 bg-[#0f0f10] border ${videoError ? 'border-red-500' : 'border-gray-700'} rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors`}
                                     required
                                 />
+                                {videoError && (
+                                    <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                                        <XCircle className="w-3.5 h-3.5" />
+                                        {videoError}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-2">
@@ -338,6 +379,22 @@ export default function AdminPortfolioPage() {
                                     placeholder="e.g. Live Performance at Lahore Expo"
                                     className="w-full px-4 py-3 bg-[#0f0f10] border border-gray-700 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors"
                                 />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-400 mb-2">
+                                    Category
+                                </label>
+                                <input
+                                    list="portfolio-categories"
+                                    type="text"
+                                    value={videoCategory}
+                                    onChange={(e) => setVideoCategory(e.target.value)}
+                                    placeholder="Select or type a new category"
+                                    className="w-full px-4 py-3 bg-[#0f0f10] border border-gray-700 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors"
+                                />
+                                <p className="text-xs text-gray-600 mt-1.5">
+                                    Pick an existing category from the dropdown or type a custom one.
+                                </p>
                             </div>
                         </div>
                         {videoUrl && extractYoutubeId(videoUrl) && (
