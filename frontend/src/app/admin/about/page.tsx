@@ -31,7 +31,7 @@ export default function AdminAboutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Founder State
+  // Founder Statesssss
   const [founderData, setFounderData] = useState({
     name: "",
     role: "",
