@@ -3,9 +3,7 @@
 
 import { Artist, Category, Inquiry, SearchFilters } from '@/types';
 
-export const API_BASE_URL = 'https:///artistfactorybackend-340951229057.us-central1.run.app';
-// export const API_BASE_URL ='http://127.0.0.1:8000';
-//  // Use this during development, switch to actual URL when backend is deployed
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://artistfactorybackend-340951229057.us-central1.run.app';
 
 // Helper function for API calls
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {

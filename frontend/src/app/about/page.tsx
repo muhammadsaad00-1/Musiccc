@@ -28,13 +28,14 @@ import {
 import { API_BASE_URL } from "@/lib/api";
 
 // ─── Team data ─────────────────────────────────────────────────
-const teamMembers = [
+const fallbackTeamMembers = [
     {
         name: "Sarah Malik",
         role: "Head of Artist Relations",
         bio: "Curates and manages our roster of 500+ verified artists across Pakistan and internationally.",
         emoji: "🎭",
         gradient: "from-orange-500 to-pink-600",
+        image_url: "",
     },
     {
         name: "Usman Tariq",
@@ -42,6 +43,7 @@ const teamMembers = [
         bio: "10+ years of experience producing corporate galas, weddings, and live concerts across South Asia.",
         emoji: "🎬",
         gradient: "from-purple-500 to-blue-600",
+        image_url: "",
     },
     {
         name: "Ayesha Noor",
@@ -49,6 +51,7 @@ const teamMembers = [
         bio: "Ensures every client gets a seamless booking experience from first inquiry to final performance.",
         emoji: "💼",
         gradient: "from-pink-500 to-rose-600",
+        image_url: "",
     },
     {
         name: "Bilal Chaudhary",
@@ -56,8 +59,22 @@ const teamMembers = [
         bio: "Builds and maintains the platform infrastructure that connects artists and clients worldwide.",
         emoji: "💻",
         gradient: "from-cyan-500 to-teal-600",
+        image_url: "",
     },
 ];
+
+const fallbackFounder = {
+    name: "Abubakar Javed",
+    role: "Founder, The Artist Factory",
+    bio: `
+<p class="text-gray-300 text-lg leading-relaxed italic border-l-2 border-orange-500/40 pl-4">&ldquo;I build entertainment infrastructure designed for scale, precision, and global standards.&rdquo;</p>
+<p class="text-gray-400 leading-relaxed">With formal training from the <span class="text-white font-medium">Berklee College of Music</span> and an <span class="text-white font-medium">ACCA qualification from London</span>, Abubakar combines creative direction with financial and operational discipline — ensuring every production is both artistically powerful and professionally executed.</p>
+<p class="text-gray-400 leading-relaxed">As former <span class="text-white font-medium">Music Producer and Project Director at the Lahore Arts Council</span>, he launched <em>Alhamra Unplugged</em>, elevating live studio production standards in Pakistan.</p>
+<p class="text-gray-400 leading-relaxed">Over the years, he has collaborated with artists including <span class="text-white font-medium">Abrar-ul-Haq, Hadiqa Kiani, Javed Bashir, and Qurat-ul-Ain Balouch</span> — delivering music production for films, multinational campaigns, diplomatic missions, and high-profile corporate events.</p>
+<p class="text-gray-400 leading-relaxed">Today, through <span class="text-white font-medium">The Artist Factory</span>, we manage a curated network of <span class="text-orange-400 font-semibold">1,000+ professional artists</span> across all major genres and provide complete entertainment solutions — from artist booking and contract structuring to full production management.</p>
+`,
+    image_url: "",
+};
 
 // ─── Why choose us data ─────────────────────────────────────────
 const whyChooseUs = [
@@ -161,6 +178,51 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 export default function AboutPage() {
     // Auto-cycle neon effect for "Why Choose Us" cards
     const [activeNeonIndex, setActiveNeonIndex] = useState(0);
+    const [founder, setFounder] = useState(fallbackFounder);
+    const [teamMembers, setTeamMembers] = useState(fallbackTeamMembers);
+
+    useEffect(() => {
+        const fetchAboutData = async () => {
+            try {
+                const [founderRes, teamRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/about/founder`),
+                    fetch(`${API_BASE_URL}/api/about/team`),
+                ]);
+
+                if (founderRes.ok) {
+                    const founderData = await founderRes.json();
+                    if (founderData?.name || founderData?.bio || founderData?.image_url) {
+                        setFounder({
+                            name: founderData.name || fallbackFounder.name,
+                            role: founderData.role || fallbackFounder.role,
+                            bio: founderData.bio || fallbackFounder.bio,
+                            image_url: founderData.image_url || "",
+                        });
+                    }
+                }
+
+                if (teamRes.ok) {
+                    const teamData = await teamRes.json();
+                    if (Array.isArray(teamData) && teamData.length > 0) {
+                        setTeamMembers(
+                            teamData.map((member: any) => ({
+                                name: member.name,
+                                role: member.role,
+                                bio: member.bio || "",
+                                emoji: member.emoji || "🎭",
+                                gradient: member.gradient || "from-orange-500 to-pink-600",
+                                image_url: member.image_url || "",
+                            }))
+                        );
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch about data:", error);
+            }
+        };
+
+        fetchAboutData();
+    }, []);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -201,13 +263,20 @@ export default function AboutPage() {
                         {/* Founder Photo */}
                         <div className="relative min-h-[420px] lg:min-h-[560px]">
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center">
-                                {/* Placeholder — replace src with real founder photo */}
-                                <div className="flex flex-col items-center gap-4 text-center p-12">
-                                    <div className="w-48 h-48 rounded-full bg-gradient-to-br from-orange-500/30 to-pink-600/30 flex items-center justify-center border-4 border-orange-500/20">
-                                        <Users className="w-24 h-24 text-orange-400/40" />
+                                {founder.image_url ? (
+                                    <img
+                                        src={founder.image_url}
+                                        alt={founder.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex flex-col items-center gap-4 text-center p-12">
+                                        <div className="w-48 h-48 rounded-full bg-gradient-to-br from-orange-500/30 to-pink-600/30 flex items-center justify-center border-4 border-orange-500/20">
+                                            <Users className="w-24 h-24 text-orange-400/40" />
+                                        </div>
+                                        <p className="text-gray-600 text-sm">(Founder photo placeholder)</p>
                                     </div>
-                                    <p className="text-gray-600 text-sm">(Founder photo placeholder)</p>
-                                </div>
+                                )}
                             </div>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#1a1a1a]/20 hidden lg:block" />
                         </div>
@@ -218,27 +287,14 @@ export default function AboutPage() {
                                 👤 Our Founder
                             </span>
                             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-1">
-                                Abubakar Javed
+                                {founder.name}
                             </h2>
-                            <p className="text-orange-400 font-medium mb-6">Founder, The Artist Factory</p>
+                            <p className="text-orange-400 font-medium mb-6">{founder.role}</p>
 
-                            <div className="space-y-4 max-h-[380px] overflow-y-auto custom-scrollbar pr-2">
-                                <p className="text-gray-300 text-lg leading-relaxed italic border-l-2 border-orange-500/40 pl-4">
-                                    &ldquo;I build entertainment infrastructure designed for scale, precision, and global standards.&rdquo;
-                                </p>
-                                <p className="text-gray-400 leading-relaxed">
-                                    With formal training from the <span className="text-white font-medium">Berklee College of Music</span> and an <span className="text-white font-medium">ACCA qualification from London</span>, Abubakar combines creative direction with financial and operational discipline — ensuring every production is both artistically powerful and professionally executed.
-                                </p>
-                                <p className="text-gray-400 leading-relaxed">
-                                    As former <span className="text-white font-medium">Music Producer and Project Director at the Lahore Arts Council</span>, he launched <em>Alhamra Unplugged</em>, elevating live studio production standards in Pakistan.
-                                </p>
-                                <p className="text-gray-400 leading-relaxed">
-                                    Over the years, he has collaborated with artists including <span className="text-white font-medium">Abrar-ul-Haq, Hadiqa Kiani, Javed Bashir, and Qurat-ul-Ain Balouch</span> — delivering music production for films, multinational campaigns, diplomatic missions, and high-profile corporate events.
-                                </p>
-                                <p className="text-gray-400 leading-relaxed">
-                                    Today, through <span className="text-white font-medium">The Artist Factory</span>, we manage a curated network of <span className="text-orange-400 font-semibold">1,000+ professional artists</span> across all major genres and provide complete entertainment solutions — from artist booking and contract structuring to full production management.
-                                </p>
-                            </div>
+                            <div
+                                className="space-y-4 max-h-[380px] overflow-y-auto custom-scrollbar pr-2"
+                                dangerouslySetInnerHTML={{ __html: founder.bio }}
+                            />
 
                             {/* CTA Buttons */}
                             <div className="mt-6 pt-5 border-t border-gray-800/50">
@@ -292,9 +348,17 @@ export default function AboutPage() {
                                 className="group relative bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-orange-500/5 flex flex-col items-center text-center overflow-hidden"
                             >
                                 {/* Avatar */}
-                                <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${member.gradient} flex items-center justify-center text-4xl mb-4 shadow-lg`}>
-                                    {member.emoji}
-                                </div>
+                                {member.image_url ? (
+                                    <img
+                                        src={member.image_url}
+                                        alt={member.name}
+                                        className="w-20 h-20 rounded-full object-cover mb-4 shadow-lg border border-gray-700"
+                                    />
+                                ) : (
+                                    <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${member.gradient} flex items-center justify-center text-4xl mb-4 shadow-lg`}>
+                                        {member.emoji}
+                                    </div>
+                                )}
                                 <h3 className="text-white font-bold text-lg mb-1">{member.name}</h3>
                                 <p className={`text-sm font-medium mb-3 text-transparent bg-clip-text bg-gradient-to-r ${member.gradient}`}>
                                     {member.role}
