@@ -41,11 +41,9 @@ const categoryIcons: Record<string, string> = {
 };
 
 const eventTypes = [
-    { name: 'Wedding', slug: 'wedding', icon: '💍' },
-    { name: 'Mehendi', slug: 'mehendi', icon: '🌙' },
+    { name: 'Wedding & Mehndi', slug: 'wedding', icon: '💍' },
     { name: 'Corporate Event', slug: 'corporate', icon: '🏢' },
     { name: 'College Event', slug: 'college-event', icon: '🎓' },
-    { name: 'Concert', slug: 'concert', icon: '🎭' },
     { name: 'Birthday Party', slug: 'birthday', icon: '🎂' },
     { name: 'Luxury Resort', slug: 'resort-event', icon: '🛳️' },
     { name: 'Private Party', slug: 'private-party', icon: '🎉' },
