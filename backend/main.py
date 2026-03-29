@@ -2491,6 +2491,288 @@ async def upsert_about_profile(
         return {"success": False, "message": "An error occurred while saving about profile"}
 
 
+@app.get("/api/about/founder")
+@limiter.limit("100/minute")
+def get_about_founder(request: Request):
+    """Get founder profile in the shape expected by the admin/public About pages."""
+    cache_key = "about_founder_single"
+    if cache_key in cache:
+        return cache[cache_key]
+
+    try:
+        response = (
+            supabase.table("about_profile")
+            .select("*")
+            .order("updated_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        profile = response.data[0] if response.data else {}
+        result = {
+            "name": profile.get("founder_name", ""),
+            "role": profile.get("founder_title", ""),
+            "bio": profile.get("founder_bio", ""),
+            "image_url": profile.get("image_url", ""),
+        }
+        cache[cache_key] = result
+        return result
+    except Exception as e:
+        print(f"Error fetching founder profile: {e}")
+        return {
+            "name": "",
+            "role": "",
+            "bio": "",
+            "image_url": "",
+        }
+
+
+@app.post("/api/admin/about/founder")
+@limiter.limit("20/minute")
+async def upsert_about_founder(
+    request: Request,
+    name: str = Form(...),
+    role: str = Form(""),
+    bio: str = Form(...),
+    image: UploadFile = File(None),
+):
+    """Admin: Upsert founder profile using admin About page payload."""
+    try:
+        existing = (
+            supabase.table("about_profile")
+            .select("id,image_url")
+            .order("updated_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+
+        record_id = existing.data[0]["id"] if existing.data else None
+        image_url = existing.data[0].get("image_url") if existing.data else None
+
+        if image and image.filename:
+            ensure_bucket_exists("about-profile")
+            ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
+            safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
+            filename = f"about_{record_id or int(datetime.now().timestamp())}_{safe_name}.{ext}"
+
+            file_bytes = await image.read()
+            supabase.storage.from_("about-profile").upload(
+                filename,
+                file_bytes,
+                {"upsert": "true", "content-type": image.content_type or "image/jpeg"},
+            )
+            image_url = supabase.storage.from_("about-profile").get_public_url(filename)
+
+        payload = {
+            "founder_name": name,
+            "founder_title": role if role else None,
+            "founder_bio": bio,
+            "image_url": image_url,
+            "updated_at": datetime.now().isoformat(),
+        }
+
+        if record_id:
+            response = (
+                supabase.table("about_profile")
+                .update(payload)
+                .eq("id", record_id)
+                .execute()
+            )
+        else:
+            payload["created_at"] = datetime.now().isoformat()
+            response = supabase.table("about_profile").insert(payload).execute()
+
+        cache.pop("about_profile_single", None)
+        cache.pop("about_founder_single", None)
+
+        if response.data:
+            data = response.data[0]
+            return {
+                "success": True,
+                "message": "Founder details updated successfully",
+                "data": {
+                    "name": data.get("founder_name", ""),
+                    "role": data.get("founder_title", ""),
+                    "bio": data.get("founder_bio", ""),
+                    "image_url": data.get("image_url", ""),
+                },
+            }
+
+        return {"success": False, "message": "Failed to update founder details"}
+    except Exception as e:
+        print(f"Error upserting founder profile: {e}")
+        return {"success": False, "message": "An error occurred while saving founder details"}
+
+
+@app.get("/api/about/team")
+@limiter.limit("100/minute")
+def get_about_team(request: Request):
+    """Public/Admin shared: Get team members from about_team table."""
+    cache_key = "about_team_all"
+    if cache_key in cache:
+        return cache[cache_key]
+
+    try:
+        response = (
+            supabase.table("about_team")
+            .select("*")
+            .order("display_order", desc=False)
+            .execute()
+        )
+        result = response.data or []
+        cache[cache_key] = result
+        return result
+    except Exception as e:
+        print(f"Error fetching about team: {e}")
+        return []
+
+
+@app.post("/api/admin/about/team")
+@limiter.limit("20/minute")
+async def create_about_team_member(
+    request: Request,
+    name: str = Form(...),
+    role: str = Form(...),
+    bio: str = Form(""),
+    emoji: str = Form("🎭"),
+    gradient: str = Form("from-orange-500 to-pink-600"),
+    display_order: int = Form(0),
+    image: UploadFile = File(None),
+):
+    """Admin: Create a team member in about_team table."""
+    try:
+        image_url = None
+        if image and image.filename:
+            ensure_bucket_exists("about-team")
+            ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
+            safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
+            filename = f"about_team_{int(datetime.now().timestamp())}_{safe_name}.{ext}"
+
+            file_bytes = await image.read()
+            supabase.storage.from_("about-team").upload(
+                filename,
+                file_bytes,
+                {"upsert": "true", "content-type": image.content_type or "image/jpeg"},
+            )
+            image_url = supabase.storage.from_("about-team").get_public_url(filename)
+
+        payload = {
+            "name": name,
+            "role": role,
+            "bio": bio if bio else None,
+            "emoji": emoji if emoji else "🎭",
+            "gradient": gradient if gradient else "from-orange-500 to-pink-600",
+            "display_order": display_order,
+            "image_url": image_url,
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat(),
+        }
+
+        response = supabase.table("about_team").insert(payload).execute()
+        cache.pop("about_team_all", None)
+
+        if response.data:
+            return {
+                "success": True,
+                "message": "Team member added successfully",
+                "data": response.data[0],
+            }
+        return {"success": False, "message": "Failed to add team member"}
+    except Exception as e:
+        print(f"Error creating about team member: {e}")
+        return {"success": False, "message": "An error occurred while adding team member"}
+
+
+@app.put("/api/admin/about/team/{member_id}")
+@limiter.limit("20/minute")
+async def update_about_team_member(
+    request: Request,
+    member_id: str,
+    name: str = Form(...),
+    role: str = Form(...),
+    bio: str = Form(""),
+    emoji: str = Form("🎭"),
+    gradient: str = Form("from-orange-500 to-pink-600"),
+    display_order: int = Form(0),
+    image: UploadFile = File(None),
+):
+    """Admin: Update a team member in about_team table."""
+    try:
+        existing = (
+            supabase.table("about_team")
+            .select("image_url")
+            .eq("id", member_id)
+            .limit(1)
+            .execute()
+        )
+        current_image_url = existing.data[0].get("image_url") if existing.data else None
+        image_url = current_image_url
+
+        if image and image.filename:
+            ensure_bucket_exists("about-team")
+            ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
+            safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
+            filename = f"about_team_{member_id}_{safe_name}.{ext}"
+
+            file_bytes = await image.read()
+            supabase.storage.from_("about-team").upload(
+                filename,
+                file_bytes,
+                {"upsert": "true", "content-type": image.content_type or "image/jpeg"},
+            )
+            image_url = supabase.storage.from_("about-team").get_public_url(filename)
+
+        payload = {
+            "name": name,
+            "role": role,
+            "bio": bio if bio else None,
+            "emoji": emoji if emoji else "🎭",
+            "gradient": gradient if gradient else "from-orange-500 to-pink-600",
+            "display_order": display_order,
+            "image_url": image_url,
+            "updated_at": datetime.now().isoformat(),
+        }
+
+        response = (
+            supabase.table("about_team")
+            .update(payload)
+            .eq("id", member_id)
+            .execute()
+        )
+        cache.pop("about_team_all", None)
+
+        if response.data:
+            return {
+                "success": True,
+                "message": "Team member updated successfully",
+                "data": response.data[0],
+            }
+        return {"success": False, "message": "Team member not found"}
+    except Exception as e:
+        print(f"Error updating about team member: {e}")
+        return {"success": False, "message": "An error occurred while updating team member"}
+
+
+@app.delete("/api/admin/about/team/{member_id}")
+@limiter.limit("20/minute")
+async def delete_about_team_member(request: Request, member_id: str):
+    """Admin: Delete a team member from about_team table."""
+    try:
+        response = (
+            supabase.table("about_team")
+            .delete()
+            .eq("id", member_id)
+            .execute()
+        )
+        cache.pop("about_team_all", None)
+
+        if response.data:
+            return {"success": True, "message": "Team member deleted"}
+        return {"success": False, "message": "Team member not found"}
+    except Exception as e:
+        print(f"Error deleting about team member: {e}")
+        return {"success": False, "message": "An error occurred while deleting team member"}
+
+
 # ============================================
 # CLIENT LOGOS ENDPOINTS
 # ============================================
