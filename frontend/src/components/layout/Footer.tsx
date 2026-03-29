@@ -76,11 +76,9 @@ export default function Footer() {
     };
 
     const events = [
-        { name: "Wedding Events", slug: "wedding" },
-        { name: "Mehendi Events", slug: "mehendi" },
+        { name: "Wedding & Mehndi", slug: "wedding" },
         { name: "Corporate Events", slug: "corporate" },
         { name: "College Fests", slug: "college-event" },
-        { name: "Concerts", slug: "concert" },
         { name: "Birthday Parties", slug: "birthday" },
         { name: "Luxury Cruise & Resort", slug: "resort-event" },
         { name: "Private Parties", slug: "private-party" },
