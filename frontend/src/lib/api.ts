@@ -1,4 +1,4 @@
-// Artist Factory - API Service Layer
+// Artist Factory - API Service Layers
 // This will connect to FastAPI backend when ready
 
 import { Artist, Category, Inquiry, SearchFilters } from '@/types';
