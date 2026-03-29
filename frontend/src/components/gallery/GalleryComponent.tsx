@@ -13,7 +13,6 @@ interface PortfolioItem {
   media_url?: string;
   thumbnail_url?: string;
   youtube_url?: string;
-  thumbnail_url?: string;
   location?: string;
   date?: string;
 }
