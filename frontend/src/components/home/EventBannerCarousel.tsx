@@ -18,9 +18,9 @@ const WHATSAPP_NUMBER = "923206876442";
 const FALLBACK_BANNERS: EventBanner[] = [
   {
     id: "1",
-    title: "Experience the Grandeur of Royal Weddings",
+    title: "Experience the Grandeur of Wedding & Mehndi Events",
     bg_image_url: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80",
-    whatsapp_message: "Wedding",
+    whatsapp_message: "Wedding & Mehndi",
     is_active: true,
     display_order: 1
   },
@@ -31,14 +31,6 @@ const FALLBACK_BANNERS: EventBanner[] = [
     whatsapp_message: "Corporate Event",
     is_active: true,
     display_order: 2
-  },
-  {
-    id: "3",
-    title: "Unforgettable Concerts & Musical Festivals",
-    bg_image_url: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80",
-    whatsapp_message: "Concert",
-    is_active: true,
-    display_order: 3
   }
 ];
 
