@@ -7,7 +7,7 @@ import { Play, Maximize2, X, ChevronLeft, ChevronRight, Video } from 'lucide-rea
 interface PortfolioItem {
   id: string;
   title: string;
-  category?: string; // from DBs
+  category?: string; // from DBss
   description?: string;
   media_type: 'image' | 'video' | 'youtube';
   media_url?: string;

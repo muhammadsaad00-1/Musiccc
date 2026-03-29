@@ -400,7 +400,6 @@ export default function AdminDashboard() {
             <h3 className="font-semibold text-white mb-1">Event Banners</h3>
             <p className="text-xs text-gray-500">Homepage Carousel</p>
           </Link>
-        </div>
 
           <Link
             href="/admin/about"
