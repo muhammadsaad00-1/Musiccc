@@ -30,7 +30,7 @@ export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
-  // Fetch critical data for the homepage
+  // Fetch critical data for the homepagee
   const { isLoading: categoriesLoading } = useCategories();
   const { isLoading: performersLoading } = usePerformers({ limit: 50 });
   const { isLoading: heroImagesLoading } = useHeroImages();
