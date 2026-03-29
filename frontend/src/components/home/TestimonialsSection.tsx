@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Users, Mic2 } from 'lucide-react';
 import ReviewsCarousel from '@/components/home/ReviewsCarousel';
 import ArtistReviewsCarousel from '@/components/home/ArtistReviewsCarousel';
-import StarsSpeakMedia from '@/components/home/StarsSpeakMedia';
 
 interface TestimonialsSectionProps {
     bgClass?: string;
@@ -63,7 +62,7 @@ export default function TestimonialsSection({ bgClass = 'bg-[#0a0a0b]' }: Testim
                 {/* Tab content */}
                 {activeTab === 'clients' ? <ReviewsCarousel /> : <ArtistReviewsCarousel />}
 
-                <StarsSpeakMedia />
+         
             </div>
         </section>
     );

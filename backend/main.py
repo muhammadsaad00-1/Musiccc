@@ -2501,7 +2501,7 @@ def get_about_founder(request: Request):
 
     try:
         response = (
-            supabase.table("about_profile")
+            supabase.table("about_founder")
             .select("*")
             .order("updated_at", desc=True)
             .limit(1)
@@ -2509,9 +2509,9 @@ def get_about_founder(request: Request):
         )
         profile = response.data[0] if response.data else {}
         result = {
-            "name": profile.get("founder_name", ""),
-            "role": profile.get("founder_title", ""),
-            "bio": profile.get("founder_bio", ""),
+            "name": profile.get("name", ""),
+            "role": profile.get("role", ""),
+            "bio": profile.get("bio", ""),
             "image_url": profile.get("image_url", ""),
         }
         cache[cache_key] = result
@@ -2538,7 +2538,7 @@ async def upsert_about_founder(
     """Admin: Upsert founder profile using admin About page payload."""
     try:
         existing = (
-            supabase.table("about_profile")
+            supabase.table("about_founder")
             .select("id,image_url")
             .order("updated_at", desc=True)
             .limit(1)
@@ -2563,23 +2563,23 @@ async def upsert_about_founder(
             image_url = supabase.storage.from_("about-profile").get_public_url(filename)
 
         payload = {
-            "founder_name": name,
-            "founder_title": role if role else None,
-            "founder_bio": bio,
+            "name": name,
+            "role": role if role else None,
+            "bio": bio,
             "image_url": image_url,
             "updated_at": datetime.now().isoformat(),
         }
 
         if record_id:
             response = (
-                supabase.table("about_profile")
+                supabase.table("about_founder")
                 .update(payload)
                 .eq("id", record_id)
                 .execute()
             )
         else:
             payload["created_at"] = datetime.now().isoformat()
-            response = supabase.table("about_profile").insert(payload).execute()
+            response = supabase.table("about_founder").insert(payload).execute()
 
         cache.pop("about_profile_single", None)
         cache.pop("about_founder_single", None)
@@ -2590,9 +2590,9 @@ async def upsert_about_founder(
                 "success": True,
                 "message": "Founder details updated successfully",
                 "data": {
-                    "name": data.get("founder_name", ""),
-                    "role": data.get("founder_title", ""),
-                    "bio": data.get("founder_bio", ""),
+                    "name": data.get("name", ""),
+                    "role": data.get("role", ""),
+                    "bio": data.get("bio", ""),
                     "image_url": data.get("image_url", ""),
                 },
             }
