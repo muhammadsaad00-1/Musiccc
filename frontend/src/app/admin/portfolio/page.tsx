@@ -67,6 +67,10 @@ export default function AdminPortfolioPage() {
     // Video playback state
     const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
+    // Form visibility toggles
+    const [showImageForm, setShowImageForm] = useState(false);
+    const [showVideoForm, setShowVideoForm] = useState(false);
+
     const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
     // Auth check
@@ -236,8 +240,35 @@ export default function AdminPortfolioPage() {
             </datalist>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+                {/* ── Form Toggles ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                        onClick={() => { setShowImageForm(!showImageForm); setShowVideoForm(false); }}
+                        className={`group flex items-center justify-center gap-3 p-5 rounded-2xl transition-all duration-300 font-semibold text-lg border ${
+                            showImageForm 
+                                ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white border-transparent shadow-[0_0_20px_rgba(249,115,22,0.3)] scale-[1.02]' 
+                                : 'bg-orange-500/10 border-orange-500/30 text-orange-200 hover:bg-orange-500/20 hover:border-orange-500/60 hover:-translate-y-1 hover:text-white'
+                        }`}
+                    >
+                        <ImageIcon className={`w-6 h-6 transition-transform duration-300 ${showImageForm ? 'scale-110 drop-shadow-md' : 'group-hover:scale-110'}`} />
+                        <span>Add Event Image</span>
+                    </button>
+                    <button
+                        onClick={() => { setShowVideoForm(!showVideoForm); setShowImageForm(false); }}
+                        className={`group flex items-center justify-center gap-3 p-5 rounded-2xl transition-all duration-300 font-semibold text-lg border ${
+                            showVideoForm 
+                                ? 'bg-gradient-to-r from-red-600 to-red-400 text-white border-transparent shadow-[0_0_20px_rgba(220,38,38,0.3)] scale-[1.02]' 
+                                : 'bg-red-500/10 border-red-500/30 text-red-200 hover:bg-red-500/20 hover:border-red-500/60 hover:-translate-y-1 hover:text-white'
+                        }`}
+                    >
+                        <Youtube className={`w-6 h-6 transition-transform duration-300 ${showVideoForm ? 'scale-110 drop-shadow-md' : 'group-hover:scale-110'}`} />
+                        <span>Add YouTube Video</span>
+                    </button>
+                </div>
+
                 {/* ── SECTION: Upload Image ── */}
-                <section className="bg-[#1a1a1a] rounded-2xl border border-gray-800 overflow-hidden">
+                {showImageForm && (
+                <section className="bg-[#1a1a1a] rounded-2xl border border-gray-800 overflow-hidden animate-fadeIn">
                     <div className="px-6 py-4 border-b border-gray-800 flex items-center gap-3">
                         <div className="w-9 h-9 bg-orange-500/10 rounded-lg flex items-center justify-center">
                             <ImageIcon className="w-5 h-5 text-orange-400" />
@@ -338,9 +369,11 @@ export default function AdminPortfolioPage() {
                         </div>
                     </form>
                 </section>
+                )}
 
                 {/* ── SECTION: Add YouTube Video ── */}
-                <section className="bg-[#1a1a1a] rounded-2xl border border-gray-800 overflow-hidden">
+                {showVideoForm && (
+                <section className="bg-[#1a1a1a] rounded-2xl border border-gray-800 overflow-hidden animate-fadeIn">
                     <div className="px-6 py-4 border-b border-gray-800 flex items-center gap-3">
                         <div className="w-9 h-9 bg-red-500/10 rounded-lg flex items-center justify-center">
                             <Youtube className="w-5 h-5 text-red-400" />
@@ -424,6 +457,7 @@ export default function AdminPortfolioPage() {
                         </button>
                     </form>
                 </section>
+                )}
 
                 {/* ── SECTION: Portfolio Images ── */}
                 <section>

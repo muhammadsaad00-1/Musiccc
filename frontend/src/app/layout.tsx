@@ -4,6 +4,8 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Providers } from "@/components/providers";
+import FloatingWhatsAppButton from "@/components/home/FloatingWhatsAppButton";
+import SmoothScroll from "@/components/providers/SmoothScroll";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,11 +27,14 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth dark" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-[#0a0a0b] text-white`} suppressHydrationWarning>
         <Providers>
-          <Header />
-          <main className="pt-24 lg:pt-[104px]">
-            {children}
-          </main>
-          <Footer />
+          <SmoothScroll>
+            <Header />
+            <main className="pt-24 lg:pt-[104px]">
+              {children}
+            </main>
+            <Footer />
+            <FloatingWhatsAppButton />
+          </SmoothScroll>
         </Providers>
       </body>
     </html>

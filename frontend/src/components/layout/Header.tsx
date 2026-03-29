@@ -40,12 +40,14 @@ const categoryIcons: Record<string, string> = {
     'Decorator': '🎈',
 };
 
-// Event types
 const eventTypes = [
     { name: 'Wedding', slug: 'wedding', icon: '💍' },
     { name: 'Mehendi', slug: 'mehendi', icon: '🌙' },
-    { name: 'Concert', slug: 'concert', icon: '🎭' },
     { name: 'Corporate Event', slug: 'corporate', icon: '🏢' },
+    { name: 'College Event', slug: 'college-event', icon: '🎓' },
+    { name: 'Concert', slug: 'concert', icon: '🎭' },
+    { name: 'Birthday Party', slug: 'birthday', icon: '🎂' },
+    { name: 'Luxury Resort', slug: 'resort-event', icon: '🛳️' },
     { name: 'Private Party', slug: 'private-party', icon: '🎉' },
     { name: 'Luxury / Resort / Cruise', slug: 'luxury-resort-cruise', icon: '🛳️' },
 ];
@@ -106,7 +108,7 @@ export default function Header() {
                             onMouseEnter={() => setIsDropdownOpen(true)}
                             onMouseLeave={() => setIsDropdownOpen(false)}
                         >
-                            <button className="flex items-center space-x-1 text-gray-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 font-medium transition-all duration-300 py-6">
+                            <button className="flex items-center space-x-1 text-white hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-orange-400 hover:to-pink-500 font-medium transition-all duration-300 py-6">
                                 <span>Artists</span>
                                 <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
@@ -166,6 +168,13 @@ export default function Header() {
                                                             <span className="text-sm font-medium">{event.name}</span>
                                                         </Link>
                                                     ))}
+                                                    <Link
+                                                        href="/events"
+                                                        className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-all duration-200 pt-2 border-t border-gray-800 font-bold"
+                                                    >
+                                                        <span>📅</span>
+                                                        <span className="text-sm">View All Events</span>
+                                                    </Link>
                                                 </div>
                                             </div>
 
@@ -299,6 +308,14 @@ export default function Header() {
                                         {event.name}
                                     </Link>
                                 ))}
+                                <Link
+                                    href="/events"
+                                    className="flex items-center gap-2 text-orange-400 font-bold py-2 px-2 rounded-lg bg-orange-500/10 border border-orange-500/20 text-sm"
+                                    onClick={() => setIsMenuOpen(false)}
+                                >
+                                    <span>📅</span>
+                                    View All Events
+                                </Link>
                             </div>
                         </div>
 

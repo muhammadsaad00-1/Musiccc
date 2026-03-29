@@ -12,6 +12,7 @@ import {
 import Pagination from '@/components/ui/Pagination';
 import { Artist } from '@/types';
 import { API_BASE_URL } from '@/lib/api';
+import EventBannerCarousel from '@/components/home/EventBannerCarousel';
 
 // Hero background images
 const heroImages = [
@@ -108,18 +109,22 @@ function AllArtistsContent() {
     const filteredArtists = (() => {
         let result = [...artists];
 
-        // Search filter
+        // Search filter (Matches based on name simply as requested)
         if (searchQuery) {
-            const query = searchQuery.toLowerCase();
             result = result.filter(artist =>
-                artist.name.toLowerCase().includes(query) ||
-                artist.short_bio?.toLowerCase().includes(query)
+                artist.name.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
 
-        // Category filter
+        // Category filter (Handles artists with multiple categories)
         if (categoryFilter) {
-            result = result.filter(artist => String(artist.category_id) === categoryFilter);
+            result = result.filter(artist => {
+                const cats = Array.isArray(artist.category_id) 
+                    ? artist.category_id 
+                    : [String(artist.category_id)];
+                
+                return cats.some(c => String(c).toLowerCase() === categoryFilter.toLowerCase());
+            });
         }
 
         return result;
@@ -233,6 +238,11 @@ function AllArtistsContent() {
                     ))}
                 </div>
             </section>
+
+            {/* Event Banners Carousel - Placed right below the hero banner */}
+            <div className="bg-[#0a0a0b] py-4 border-b border-gray-800/50">
+                <EventBannerCarousel />
+            </div>
 
             {/* Search and Category Filter */}
             <section className="py-8 border-b border-gray-800/50 sticky top-16 lg:top-20 z-30 bg-[#0a0a0b]/95 backdrop-blur-md">

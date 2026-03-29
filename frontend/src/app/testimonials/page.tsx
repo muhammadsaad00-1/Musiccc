@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import TestimonialsSection from "@/components/home/TestimonialsSection";
-import AnimatedCounter from "@/components/ui/AnimatedCounter";
-import { Mic2, Music, Globe, Award, Send, Star, User, MapPin, Briefcase } from "lucide-react";
 import { API_BASE_URL } from '@/lib/api';
+import ReviewsCarousel from '@/components/home/ReviewsCarousel';
+import ArtistReviewsCarousel from '@/components/home/ArtistReviewsCarousel';
+import ArtistVideoTestimonials from "@/components/testimonials/ArtistVideoTestimonials";
+import AnimatedCounter from "@/components/ui/AnimatedCounter";
+import { Mic2, Music, Globe, Award, Send, Star, User, MapPin, Briefcase, X, Quote } from "lucide-react";
 
 // Reuse stats data structure for consistency
 const stats = [
-    { value: 500, suffix: "+", label: "Verified Artists", icon: Mic2 },
-    { value: 2000, suffix: "+", label: "Events Delivered", icon: Music },
-    { value: 5, suffix: "", label: "Countries Served", icon: Globe },
-    { value: 98, suffix: "%", label: "Client Satisfaction", icon: Award },
+    { value: 400, suffix: "+", label: "Verified Artists", icon: Mic2 },
+    { value: 5000, suffix: "+", label: "Events Delivered", icon: Music },
+    { value: 20, suffix: "", label: "Cities Served", icon: Globe },
+    { value: 4.9, suffix: "", label: "Average Rating", icon: Award },
 ];
 
 function ReviewForm() {
@@ -207,52 +209,100 @@ function ReviewForm() {
 }
 
 export default function TestimonialsPage() {
+    const [activeTab, setActiveTab] = useState<'clients' | 'artists'>('clients');
+
     return (
         <div className="min-h-screen bg-[#0a0a0b]">
 
             {/* ══ HERO ══════════════════════════════════════════════════ */}
-            <section className="relative py-28 md:py-36 overflow-hidden">
+            <section className="relative py-32 md:py-48 overflow-hidden bg-black">
                 <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-pink-600/10 rounded-full blur-[100px]" />
+                    <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-orange-500/10 rounded-full blur-[160px]" />
+                    <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-pink-600/10 rounded-full blur-[140px]" />
                 </div>
-                <div className="relative max-w-4xl mx-auto px-4 text-center">
-                    <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-orange-500/20 to-pink-600/20 rounded-full text-orange-400 text-sm font-medium mb-8 border border-orange-500/30">
-                        ✨ Client Stories
-                    </span>
-                    <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight leading-none">
-                        Trusted by the <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">
-                            Best in the Business
-                        </span>
+                <div className="relative max-w-7xl mx-auto px-4 text-center">
+                    <div className="flex items-center justify-center gap-4 mb-10">
+                        <div className="h-px w-16 bg-gradient-to-r from-transparent to-orange-500" />
+                        <span className="text-orange-500 text-sm font-black tracking-[0.4em] uppercase">The Testimonials</span>
+                        <div className="h-px w-16 bg-gradient-to-l from-transparent to-orange-500" />
+                    </div>
+                    
+                    <h1 className="text-7xl md:text-9xl font-black text-white mb-10 tracking-tighter leading-[0.8]">
+                        Voices of <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600 italic font-serif">Excellence</span>
                     </h1>
-                    <p className="text-gray-400 text-xl max-w-2xl mx-auto leading-relaxed">
-                        From multinational corporations to happy couples, see why thousands choose The Artist Factory for their most important moments.
-                    </p>
-                </div>
-            </section>
-
-            {/* ══ STATS STRIP ════════════════════════════════════════════ */}
-            <section className="border-y border-gray-800/50 bg-[#0f0f10]/50 backdrop-blur-sm relative z-10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                    
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-20">
                         {stats.map((stat) => (
-                            <div key={stat.label} className="text-center group">
-                                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 group-hover:border-orange-500/30 shadow-lg">
-                                    <stat.icon className="w-5 h-5 text-orange-400" />
+                            <div
+                                key={stat.label}
+                                className="bg-[#1a1a1a] border border-gray-800 rounded-3xl p-8 hover:border-orange-500/30 transition-all duration-300 group overflow-hidden relative"
+                            >
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-3xl pointer-events-none group-hover:bg-orange-500/10 transition-colors" />
+                                <div className="relative z-10 text-center">
+                                    <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 group-hover:border-orange-500/50 shadow-lg">
+                                        <stat.icon className="w-5 h-5 text-orange-400" />
+                                    </div>
+                                    <div className="text-3xl font-extrabold text-white mb-1 flex items-center justify-center gap-0.5">
+                                        <AnimatedCounter end={stat.value} duration={2000} suffix={stat.suffix} />
+                                    </div>
+                                    <p className="text-gray-500 text-xs font-bold uppercase tracking-[0.2em]">{stat.label}</p>
                                 </div>
-                                <div className="text-3xl font-extrabold text-white mb-1 flex items-center justify-center gap-0.5">
-                                    <AnimatedCounter end={stat.value} duration={2000} suffix={stat.suffix} />
-                                </div>
-                                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">{stat.label}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* ══ EXISTING TESTIMONIALS ══════════════════════════════════ */}
-            <TestimonialsSection />
+
+
+            {/* ══ VIDEO HIGHLIGHTS ═════════════════════════════════════ */}
+            <ArtistVideoTestimonials />
+
+            {/* ══ TABS SECTION ══════════════════════════════════════════ */}
+            <section className="py-24 bg-[#0a0a0b]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* Premium Tabs */}
+                    <div className="flex justify-center mb-20">
+                        <div className="flex gap-2 p-2 bg-[#1a1a1a] rounded-2xl border border-gray-800 shadow-2xl">
+                            <button
+                                onClick={() => setActiveTab('clients')}
+                                className={`flex items-center gap-3 px-10 py-4 rounded-xl text-lg font-bold transition-all duration-500 ${activeTab === 'clients'
+                                    ? 'bg-gradient-to-r from-orange-500 to-pink-600 text-white shadow-xl shadow-orange-500/20 scale-105'
+                                    : 'text-gray-500 hover:text-white'
+                                    }`}
+                            >
+                                <User className="w-5 h-5" />
+                                Client Reviews
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('artists')}
+                                className={`flex items-center gap-3 px-10 py-4 rounded-xl text-lg font-bold transition-all duration-500 ${activeTab === 'artists'
+                                    ? 'bg-gradient-to-r from-orange-500 to-pink-600 text-white shadow-xl shadow-orange-500/20 scale-105'
+                                    : 'text-gray-500 hover:text-white'
+                                    }`}
+                            >
+                                <Mic2 className="w-5 h-5" />
+                                Artist Stories
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="min-h-[400px]">
+                        {activeTab === 'clients' ? (
+                            <div className="animate-fadeIn">
+                                <h3 className="text-center text-gray-400 text-sm uppercase tracking-[0.3em] font-bold mb-12">Trusted by 2000+ Happy Clients</h3>
+                                <ReviewsCarousel />
+                            </div>
+                        ) : (
+                            <div className="animate-fadeIn">
+                                <h3 className="text-center text-gray-400 text-sm uppercase tracking-[0.3em] font-bold mb-12">Stars Who Call Us Home</h3>
+                                <ArtistReviewsCarousel />
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </section>
 
             {/* ══ SUBMIT REVIEW ══════════════════════════════════════════ */}
             <section className="py-20 bg-[#0f0f10]">

@@ -1,17 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import Hero from '@/components/home/Hero';
+import EventBannerCarousel from '@/components/home/EventBannerCarousel';
 import FeaturedArtists from '@/components/home/FeaturedArtists';
 import ClientsMarquee from '@/components/home/ClientsMarquee';
+import { MessageSquare, Star, Quote, ArrowRight, Play, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
+import ArtistVideoTestimonials from '@/components/testimonials/ArtistVideoTestimonials';
+import WallOfLoveGrid from '@/components/testimonials/WallOfLoveGrid';
+import AnimatedCounter from "@/components/ui/AnimatedCounter";
+import { Mic2, Music, Globe, Award, Send, User, MapPin, Briefcase } from "lucide-react";
+import OurClients from '@/components/home/OurClients';
 import HowItWorks from '@/components/home/HowItWorks';
 import HomeGallerySection from '@/components/home/HomeGallerySection';
+import HomeBlogSection from '@/components/home/HomeBlogSection';
 import WhatsAppCTAGrid from '@/components/home/WhatsAppCTAGrid';
-import CTASection from '@/components/home/CTASection';
+import FeaturesSection from '@/components/home/FeatureSection';
 import SplashScreen from '@/components/ui/SplashScreen';
 import FloatingWhatsAppButton from '@/components/home/FloatingWhatsAppButton';
+import InstagramFeed from '@/components/home/InstagramFeed';
+import ReadyForMomentsCTA from '@/components/home/ReadyForMomentsCTA';
 import { useCategories, usePerformers, useHeroImages, useStats } from '@/lib/hooks';
 
 export default function Home() {
@@ -54,24 +66,25 @@ export default function Home() {
   return (
     <div className="animate-fadeIn">
       <Hero />
+      <EventBannerCarousel />
 
       <CategoryGrid />
       <FeaturedArtists />
 
       <ClientsMarquee />
-      <TestimonialsSection />
-      <HomeGallerySection />
+            {/* ══ TESTIMONIALS ══════════════════════════════════════════ */}
+            <ArtistVideoTestimonials />
+            <TestimonialsSection bgClass="bg-[#0a0a0b]" />
 
-      {/* Our Corporate Clients */}
-      {/* <OurClients /> */}
+      <HomeGallerySection />
+      <HomeBlogSection />
 
       <HowItWorks />
-      <CTASection />
 
-      <WhatsAppCTAGrid />
 
-      {/* Floating WhatsApp Button */}
-      <FloatingWhatsAppButton />
+      {/* ══ FINAL CTA ══════════════════════════════════════════════ */}
+      <ReadyForMomentsCTA />
+
       {/*<InstagramFeed />*/}
 
       <style jsx>{`

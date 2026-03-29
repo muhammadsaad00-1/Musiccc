@@ -95,8 +95,7 @@ function SearchContent() {
     if (query) {
       filtered = filtered.filter(
         (artist) =>
-          artist.name.toLowerCase().includes(query.toLowerCase()) ||
-          artist.bio?.toLowerCase().includes(query.toLowerCase()),
+          artist.name.toLowerCase().includes(query.toLowerCase())
       );
     }
 
@@ -104,7 +103,11 @@ function SearchContent() {
       const cat = categories.find((c) => c.slug === category || c.name === category);
       if (cat) {
         filtered = filtered.filter((artist) => {
-          return String(artist.category_id) === cat.name;
+          const cats = Array.isArray(artist.category_id)
+            ? artist.category_id
+            : [String(artist.category_id)];
+          
+          return cats.some((c: string) => String(c).toLowerCase() === cat.name.toLowerCase());
         });
       }
     }
