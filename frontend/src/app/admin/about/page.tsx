@@ -312,15 +312,15 @@ export default function AdminAboutPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">Biography (Rich Text)</label>
-                  <div className="prose-dark">
-                    <ReactQuill
-                      theme="snow"
-                      value={founderData.bio}
-                      onChange={(val) => setFounderData({ ...founderData, bio: val })}
-                      modules={quillModules}
-                      className="bg-[#0a0a0b] border-gray-700 rounded-xl overflow-hidden min-h-[300px]"
-                    />
-                  </div>
+                    <div className="prose-dark" data-lenis-prevent>
+                      <ReactQuill
+                        theme="snow"
+                        value={founderData.bio}
+                        onChange={(val) => setFounderData({ ...founderData, bio: val })}
+                        modules={quillModules}
+                        className="bg-[#0a0a0b] border-gray-700 rounded-xl overflow-hidden min-h-[300px]"
+                      />
+                    </div>
                 </div>
 
                 <div className="flex justify-end pt-4">
@@ -470,7 +470,7 @@ export default function AdminAboutPage() {
               </button>
             </div>
 
-            <form onSubmit={handleMemberSubmit} className="flex-1 min-h-0 overflow-y-auto p-6 space-y-6 custom-scrollbar overscroll-contain">
+            <form onSubmit={handleMemberSubmit} className="flex-1 min-h-0 overflow-y-auto p-6 space-y-6 custom-scrollbar overscroll-contain" data-lenis-prevent>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">Full Name</label>

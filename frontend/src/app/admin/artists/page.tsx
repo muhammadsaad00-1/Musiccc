@@ -500,7 +500,7 @@ function ManageArtistsContent() {
                 </button>
               </div>
 
-              <div className="overflow-y-auto p-6 space-y-8 custom-scrollbar">
+              <div className="overflow-y-auto p-6 space-y-8 custom-scrollbar" data-lenis-prevent>
                 <form id="artist-form" onSubmit={handleSubmit} className="space-y-8">
 
                   {/* Section: Basic Information */}
@@ -525,7 +525,7 @@ function ManageArtistsContent() {
                         <label className="block text-sm font-medium text-gray-400 mb-1.5">
                           Categories <span className="text-red-400">*</span>
                         </label>
-                        <div className="bg-[#0a0a0b] border border-gray-700 rounded-lg p-3 max-h-48 overflow-y-auto custom-scrollbar">
+                        <div className="bg-[#0a0a0b] border border-gray-700 rounded-lg p-3 max-h-48 overflow-y-auto custom-scrollbar" data-lenis-prevent>
                           <div className="grid grid-cols-2 gap-2">
                             {categories.map((cat) => (
                               <label

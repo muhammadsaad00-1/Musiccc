@@ -125,7 +125,7 @@ export default function Header() {
                                                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                                                     <Star className="w-3 h-3" /> Artists
                                                 </h3>
-                                                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar" data-lenis-prevent>
                                                     {artistCategories.map((category) => (
                                                         <Link
                                                             key={category.slug}
@@ -255,7 +255,7 @@ export default function Header() {
 
             {/* Mobile Menu */}
             {isMenuOpen && (
-                <div className="lg:hidden border-t border-white/10 animate-slideDown max-h-[85vh] overflow-y-auto bg-gradient-to-b from-[#111113] via-[#141416] to-[#0f0f10] backdrop-blur-xl">
+                <div className="lg:hidden border-t border-white/10 animate-slideDown max-h-[85vh] overflow-y-auto bg-gradient-to-b from-[#111113] via-[#141416] to-[#0f0f10] backdrop-blur-xl" data-lenis-prevent>
                     <div className="px-4 py-5 space-y-4">
                         {/* Home */}
                         <Link

@@ -292,8 +292,13 @@ export default function AboutPage() {
                             <p className="text-orange-400 font-medium mb-6">{founder.role}</p>
 
                             <div
-                                className="space-y-4 max-h-[380px] overflow-y-auto custom-scrollbar pr-2"
+                                className="space-y-4 max-h-[380px] overflow-y-auto overflow-x-hidden break-words w-full custom-scrollbar pr-2
+                                           [&>p]:text-gray-400 [&>p]:leading-relaxed
+                                           [&>p:first-child]:text-gray-300 [&>p:first-child]:text-lg [&>p:first-child]:italic [&>p:first-child]:border-l-2 [&>p:first-child]:border-orange-500/40 [&>p:first-child]:pl-4
+                                           [&_strong]:text-white [&_strong]:font-medium [&_b]:text-white [&_b]:font-medium
+                                           [&_em]:text-orange-400 [&_em]:font-semibold [&_i]:text-orange-400 [&_i]:font-semibold"
                                 dangerouslySetInnerHTML={{ __html: founder.bio }}
+                                data-lenis-prevent
                             />
 
                             {/* CTA Buttons */}
@@ -532,21 +537,7 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            {/* Custom Scrollbar Style */}
-            <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #1a1a1a; }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #f97316, #ec4899);
-          border-radius: 10px;
-        }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
+
         </div>
     );
 }
