@@ -25,10 +25,10 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
     return (
         <div
             onClick={handleCardClick}
-            className="group bg-[#1a1a1a] rounded-3xl overflow-hidden border border-gray-800 hover:border-orange-500/40 transition-all duration-300 card-glow hover:shadow-lg hover:shadow-orange-500/5 cursor-pointer"
+            className="group bg-[#1a1a1a] rounded-3xl overflow-hidden border border-gray-800 hover:border-orange-500/40 transition-all duration-300 card-glow hover:shadow-lg hover:shadow-orange-500/5 cursor-pointer flex flex-col h-full"
         >
             {/* Image Container */}
-            <div className="relative aspect-[4/3] overflow-hidden">
+            <div className="relative aspect-[4/3] overflow-hidden shrink-0">
                 <Image
                     src={imageUrl}
                     alt={artist.name}
@@ -55,7 +55,7 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
             </div>
 
             {/* Content */}
-            <div className="p-5">
+            <div className="p-5 flex-1 flex flex-col">
                 {/* Name */}
                 <h3 className="text-lg font-bold text-white group-hover:text-orange-400 transition-colors mb-1">
                     {artist.name}
@@ -65,12 +65,6 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
                 <p className="text-gray-500 text-sm line-clamp-2 mb-3">
                     {shortBio}
                 </p>
-
-                {/* Location */}
-                <div className="flex items-center gap-1 text-sm text-gray-400 mb-4">
-                    <MapPin className="w-4 h-4" />
-                    <span>{location}</span>
-                </div>
 
                 {/* Languages/Genres */}
                 {artist.languages && artist.languages.length > 0 && (
@@ -87,7 +81,7 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
                 )}
 
                 {/* CTA Buttons */}
-                <div className="flex items-center gap-2 pt-3 border-t border-gray-800">
+                <div className="flex items-center gap-2 pt-3 border-t border-gray-800 mt-auto">
                     <span className="flex-1 text-center py-2 text-sm font-medium text-gray-300 bg-[#2a2a2a] rounded-full group-hover:bg-orange-500/10 group-hover:text-orange-400 transition-all">
                         View Profile
                     </span>

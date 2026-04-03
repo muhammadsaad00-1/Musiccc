@@ -257,7 +257,7 @@ export default function HomeGallerySection() {
 
               {/* RIGHT: Scrollable Playlist */}
               <div className="w-full lg:w-[35%] xl:w-[32%]">
-                <div className="lg:max-h-[480px] overflow-y-auto overflow-x-hidden flex flex-col gap-3 pr-1 custom-scrollbar">
+                <div className="lg:max-h-[480px] overflow-y-auto overflow-x-hidden flex flex-col gap-3 pr-1 custom-scrollbar" data-lenis-prevent>
                   {videos.map((video: PortfolioItem, idx: number) => {
                     const isActive = idx === activeVideoIndex;
                     const thumbUrl =

@@ -25,6 +25,7 @@ export default function GalleryComponent() {
   const [filter, setFilter] = useState('all');
   const [filteredItems, setFilteredItems] = useState<PortfolioItem[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   const items: PortfolioItem[] = (portfolioItems && portfolioItems.length > 0) ? portfolioItems : defaultItems;
 
@@ -94,13 +95,18 @@ export default function GalleryComponent() {
 
   const getYoutubeEmbedUrl = (url?: string) => {
     if (!url) return '';
-    if (url.includes('embed/')) return url;
-    // Updated regex to properly match youtube 'shorts/' formats as well
-    const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11)
-      ? `https://www.youtube.com/embed/${match[2]}?autoplay=1`
-      : url;
+    let embedUrl = url;
+    if (!url.includes('embed/')) {
+      const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
+      const match = url.match(regExp);
+      if (match && match[2].length === 11) {
+        embedUrl = `https://www.youtube.com/embed/${match[2]}`;
+      }
+    }
+    if (embedUrl.includes('embed/') && !embedUrl.includes('autoplay=1')) {
+      embedUrl += embedUrl.includes('?') ? '&autoplay=1' : '?autoplay=1';
+    }
+    return embedUrl;
   };
 
   const isYouTubeVideo = (item: PortfolioItem) => {
@@ -243,42 +249,71 @@ export default function GalleryComponent() {
             {filteredItems.map((item, index) => (
               <div
                 key={item.id}
-                onClick={() => openLightbox(index)}
-                className="group relative break-inside-avoid overflow-hidden cursor-pointer bg-[#1A1A1A] animate-revealUp rounded-sm"
+                onClick={() => {
+                  if (playingVideoId === item.id) return;
+                  if (isYouTubeVideo(item) || item.media_type === 'video') {
+                    setPlayingVideoId(item.id);
+                  } else {
+                    openLightbox(index);
+                  }
+                }}
+                className={`group relative break-inside-avoid overflow-hidden bg-[#1A1A1A] animate-revealUp rounded-sm ${playingVideoId === item.id ? '' : 'cursor-pointer'}`}
                 style={{ animationDelay: `${0.05 * (index % 10)}s` }}
               >
                 <div className="w-full relative">
                   {isYouTubeVideo(item) ? (
-                    <div className="w-full aspect-video bg-[#242424] flex items-center justify-center relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
-                      <img
-                        src={item.thumbnail_url || item.media_url || `https://img.youtube.com/vi/${getYoutubeEmbedUrl(item.youtube_url || item.media_url).split('embed/')[1]?.split('?')[0]}/maxresdefault.jpg`}
-                        alt={item.title}
-                        className="w-full h-full object-cover opacity-60"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f4a7?q=80&w=800&auto=format&fit=crop';
-                        }}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-14 h-14 rounded-full border-2 border-white/20 backdrop-blur-sm bg-black/30 flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-pink-600 transition-all duration-300 group-hover:scale-110 group-hover:border-transparent">
-                          <Play className="text-white fill-white ml-1 w-5 h-5" />
+                    playingVideoId === item.id ? (
+                      <div className="w-full aspect-video bg-black relative">
+                        <iframe
+                          src={getYoutubeEmbedUrl(item.youtube_url || item.media_url)}
+                          title={item.title}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="absolute inset-0 w-full h-full border-0"
+                        ></iframe>
+                      </div>
+                    ) : (
+                      <div className="w-full aspect-video bg-[#242424] flex items-center justify-center relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
+                        <img
+                          src={item.thumbnail_url || item.media_url || `https://img.youtube.com/vi/${getYoutubeEmbedUrl(item.youtube_url || item.media_url).split('embed/')[1]?.split('?')[0]}/maxresdefault.jpg`}
+                          alt={item.title}
+                          className="w-full h-full object-cover opacity-60"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f4a7?q=80&w=800&auto=format&fit=crop';
+                          }}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-14 h-14 rounded-full border-2 border-white/20 backdrop-blur-sm bg-black/30 flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-pink-600 transition-all duration-300 group-hover:scale-110 group-hover:border-transparent">
+                            <Play className="text-white fill-white ml-1 w-5 h-5" />
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )
                   ) : item.media_type === 'video' ? (
-                    <div className="w-full aspect-video bg-[#242424] flex items-center justify-center relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
-                      {/* Native HTML5 Preview - muted, non-autoplay */}
-                      <video
-                        src={item.media_url}
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover opacity-70"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-14 h-14 rounded-full border-2 border-white/20 backdrop-blur-sm bg-black/30 flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-pink-600 transition-all duration-300 group-hover:scale-110 group-hover:border-transparent">
-                          <Play className="text-white fill-white ml-1 w-5 h-5" />
+                    playingVideoId === item.id ? (
+                      <div className="w-full aspect-video bg-black relative">
+                        <video
+                          src={item.media_url}
+                          controls
+                          autoPlay
+                          className="absolute inset-0 w-full h-full object-cover outline-none"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full aspect-video bg-[#242424] flex items-center justify-center relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
+                        <video
+                          src={item.media_url}
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover opacity-70"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-14 h-14 rounded-full border-2 border-white/20 backdrop-blur-sm bg-black/30 flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-pink-600 transition-all duration-300 group-hover:scale-110 group-hover:border-transparent">
+                            <Play className="text-white fill-white ml-1 w-5 h-5" />
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )
                   ) : (
                     <img
                       src={item.media_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop'}
@@ -290,7 +325,7 @@ export default function GalleryComponent() {
                 </div>
 
                 {/* Video Badge */}
-                {(isYouTubeVideo(item) || item.media_type === 'video') && (
+                {playingVideoId !== item.id && (isYouTubeVideo(item) || item.media_type === 'video') && (
                   <div className="absolute top-3 right-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white text-[8px] font-bold tracking-[1.5px] uppercase px-2 py-1 flex items-center gap-1.5 z-10 shadow-lg rounded">
                     <Video size={10} className="fill-white" />
                     VIDEO
@@ -298,22 +333,26 @@ export default function GalleryComponent() {
                 )}
 
                 {/* Expand Icon */}
-                <div className="absolute top-3 left-3 w-8 h-8 border border-white/30 bg-black/40 backdrop-blur-sm flex items-center justify-center text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10 rounded">
-                  <Maximize2 size={13} />
-                </div>
+                {playingVideoId !== item.id && !isYouTubeVideo(item) && item.media_type !== 'video' && (
+                  <div className="absolute top-3 left-3 w-8 h-8 border border-white/30 bg-black/40 backdrop-blur-sm flex items-center justify-center text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10 rounded">
+                    <Maximize2 size={13} />
+                  </div>
+                )}
 
                 {/* Info Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0C0C0C]/95 via-[#0C0C0C]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 flex flex-col justify-end p-5">
-                  <span className="text-[9px] font-semibold tracking-[2.5px] uppercase text-orange-400 mb-1">
-                    {item.category || 'Other'}
-                  </span>
-                  <p className="font-playfair text-lg font-semibold text-[#F2EDE8] leading-tight drop-shadow-md">
-                    {item.title}
-                  </p>
-                  <p className="text-[11px] text-[#BFB9B2] mt-1 opacity-80 max-h-[30px] overflow-hidden">
-                    {item.description || item.location}
-                  </p>
-                </div>
+                {playingVideoId !== item.id && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0C0C0C]/95 via-[#0C0C0C]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 flex flex-col justify-end p-5 pointer-events-none">
+                    <span className="text-[9px] font-semibold tracking-[2.5px] uppercase text-orange-400 mb-1">
+                      {item.category || 'Other'}
+                    </span>
+                    <p className="font-playfair text-lg font-semibold text-[#F2EDE8] leading-tight drop-shadow-md">
+                      {item.title}
+                    </p>
+                    <p className="text-[11px] text-[#BFB9B2] mt-1 opacity-80 max-h-[30px] overflow-hidden">
+                      {item.description || item.location}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>

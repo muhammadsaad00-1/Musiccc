@@ -399,7 +399,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                 {artist.name}
               </h2>
 
-              <div className="space-y-4 mb-8 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+              <div className="space-y-4 mb-8 max-h-[400px] overflow-y-auto custom-scrollbar pr-2" data-lenis-prevent>
                 {bioParagraphs.length > 0 ? (
                   bioParagraphs.map((paragraph: string, index: number) => (
                     <p
