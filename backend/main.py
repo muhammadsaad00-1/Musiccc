@@ -1,14 +1,10 @@
-import sys
 import os
-
-# Add parent directory to path so we can import supabase_client from root
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from fastapi import FastAPI, UploadFile, File, Form, Request, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from supabase_client import supabase
+from supabase_conn import supabase
 from typing import Optional
 import json
 import re
