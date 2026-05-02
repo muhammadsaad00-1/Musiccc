@@ -135,11 +135,11 @@ export default function VideoTestimonialCard({
                 <div className="mt-8 flex flex-wrap items-center justify-center md:justify-start gap-4 opacity-80">
                     <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-2xl transition-all duration-500 hover:bg-white/10 hover:border-orange-500/30">
                         <Image 
-                            src="/logo-taf.png" 
+                            src="/the_artist_factory_logo-04 (1).png" 
                             alt="Artist Factory Logo" 
-                            width={32} 
-                            height={32} 
-                            className="object-contain"
+                            width={80} 
+                            height={80} 
+                            className="h-8 w-auto object-contain"
                         />
                         <span className="text-gray-400 text-xs font-bold uppercase tracking-widest leading-none mt-0.5">
                             Artist Factory <br/> Exclusive
