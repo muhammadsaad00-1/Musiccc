@@ -55,15 +55,14 @@ export default function ReadyForMomentsCTA() {
                         
                         <div className="mt-12 flex items-center justify-center gap-4 opacity-80">
                             <div className="h-[1px] w-8 bg-white/20" />
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center">
                                 <Image 
-                                    src="/logo-taf.png" 
+                                    src="/the_artist_factory_logo-04 (1).png" 
                                     alt="Artist Factory Logo" 
-                                    width={24} 
-                                    height={24} 
-                                    className="object-contain"
+                                    width={120} 
+                                    height={120} 
+                                    className="h-10 w-auto object-contain"
                                 />
-                                <span className="text-white text-[10px] font-bold uppercase tracking-[0.3em]">The Artist Factory</span>
                             </div>
                             <div className="h-[1px] w-8 bg-white/20" />
                         </div>

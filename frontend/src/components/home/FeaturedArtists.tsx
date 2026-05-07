@@ -20,8 +20,8 @@ interface Artist {
 
 export default function FeaturedArtists() {
     // Use React Query hook to fetch featured performers
-    const { data: performersData, isLoading: loading } = usePerformers({ limit: 50 });
-    
+    const { data: performersData, isLoading: loading } = usePerformers({ limit: 500 });
+
     const [allFeaturedArtists, setAllFeaturedArtists] = useState<Artist[]>([]);
     const [featuredArtists, setFeaturedArtists] = useState<Artist[]>([]);
     const [displayIndex, setDisplayIndex] = useState(0);
