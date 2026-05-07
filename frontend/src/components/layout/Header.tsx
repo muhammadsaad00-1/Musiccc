@@ -76,17 +76,18 @@ export default function Header() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-24 lg:h-26">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center space-x-2">
+                    <Link href="/" className="flex items-end space-x-3 pb-1">
                         <Image
-                            src="/logo-taf.png"
+                            src="/the_artist_factory_logo-04 (1).png"
                             alt="The Artist Factory"
-                            width={96}
-                            height={96}
-                            className="w-24 h-24 object-contain"
+                            width={120}
+                            height={120}
+                            className="w-16 h-16 md:w-20 md:h-20 object-contain"
+                            priority
                         />
-                        <div className="hidden sm:block">
-                            <span className="text-2xl font-bold text-white">The Artist Factory</span>
-                            <span className="block text-[10px] text-orange-400 -mt-1 tracking-wide italic font-medium">Bringing stars to your event!</span>
+                        <div className="flex flex-col justify-end pb-1 md:pb-2">
+                            <span className="text-xl md:text-2xl font-bold text-white tracking-tight leading-none">The Artist Factory</span>
+                            <span className="text-[10px] md:text-xs text-orange-400 italic font-medium mt-1">Bringing stars to your event!</span>
                         </div>
                     </Link>
 

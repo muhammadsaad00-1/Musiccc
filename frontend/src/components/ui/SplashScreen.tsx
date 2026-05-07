@@ -26,24 +26,24 @@ export default function SplashScreen() {
         {/* Logo */}
         <div className="relative group">
           <div className="absolute -inset-2 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full blur-xl opacity-30 group-hover:opacity-50 animate-pulse"></div>
-          <div className="relative bg-[#0a0a0b] rounded-full p-4 border-2 border-white/10">
+          <div className="relative bg-[#0a0a0b] rounded-full w-40 h-40 md:w-48 md:h-48 p-4 border-2 border-white/10 flex items-center justify-center overflow-hidden">
             <Image
-              src="/logo-taf.png"
+              src="/the_artist_factory_logo-04 (1).png"
               alt="The Artist Factory"
-              width={100}
-              height={100}
-              className="w-24 h-24 object-contain animate-pulse"
+              width={160}
+              height={160}
+              className="w-24 h-24 md:w-32 md:h-32 object-contain animate-pulse"
               priority
             />
           </div>
         </div>
 
         {/* Brand name */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-white tracking-tight">
+        <div className="text-center space-y-1">
+          <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight leading-none">
             The Artist Factory
           </h1>
-          <p className="text-sm text-orange-400 italic font-medium tracking-wide">
+          <p className="text-sm md:text-base text-orange-400 italic font-medium tracking-wide mt-2">
             Bringing stars to your event!
           </p>
         </div>

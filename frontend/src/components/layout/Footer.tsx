@@ -107,20 +107,17 @@ export default function Footer() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
                     {/* Brand Column - Spans 4 columns for better balance */}
                     <div className="lg:col-span-4">
-                        <Link href="/" className="flex items-center gap-3 mb-6">
+                        <Link href="/" className="flex items-end gap-4 mb-6">
                             <Image
-                                src="/logo-taf.png"
+                                src="/the_artist_factory_logo-04 (1).png"
                                 alt="The Artist Factory"
-                                width={60}
-                                height={60}
-                                className="w-[60px] h-[60px] object-contain"
+                                width={120}
+                                height={120}
+                                className="w-20 h-20 md:w-24 md:h-24 object-contain"
                             />
-                            <div>
-                                <span className="text-2xl font-bold text-white block">The Artist Factory</span>
-                                {/* <span className="text-xs uppercase tracking-widest text-orange-500 font-semibold">
-                                    Pakistan&apos;s Premier Marketplace
-                                </span> */}
-                                <span className="block text-sm text-orange-300 italic font-medium mt-1">
+                            <div className="flex flex-col justify-end pb-1 md:pb-2">
+                                <span className="text-xl md:text-2xl font-bold text-white tracking-tight leading-none">The Artist Factory</span>
+                                <span className="text-xs md:text-sm text-orange-400 italic font-medium mt-1">
                                     Bringing stars to your event!
                                 </span>
                             </div>
