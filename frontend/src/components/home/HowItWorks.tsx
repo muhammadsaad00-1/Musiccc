@@ -72,8 +72,9 @@ export default function HowItWorks() {
 
             {/* Background Elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[10%] left-[5%] w-96 h-96 bg-orange-600/5 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[10%] right-[5%] w-96 h-96 bg-pink-600/5 rounded-full blur-[100px]" />
+                <div className="absolute -left-32 top-1/2 -translate-y-1/2 w-[460px] h-[460px] bg-orange-500/18 rounded-full blur-[120px]" />
+                <div className="absolute -right-32 top-1/2 -translate-y-1/2 w-[460px] h-[460px] bg-pink-600/12 rounded-full blur-[120px]" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] bg-purple-600/8 rounded-full blur-[100px]" />
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">

@@ -97,27 +97,30 @@ export default function ArtistVideoTestimonials() {
 
     return (
         <section ref={sectionRef} className="relative py-16 md:py-24 overflow-hidden bg-black">
-            {/* Background blobs */}
-            <div className="absolute inset-0 pointer-events-none opacity-30">
-                <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-orange-600/10 rounded-full blur-[120px]" />
-                <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-pink-600/10 rounded-full blur-[100px]" />
+            {/* Background gradients */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute -left-32 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-orange-500/20 rounded-full blur-[120px]" />
+                <div className="absolute -right-32 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-pink-600/15 rounded-full blur-[120px]" />
+                <div className="absolute -top-20 left-1/4 w-[320px] h-[320px] bg-orange-600/10 rounded-full blur-[100px]" />
+                <div className="absolute -bottom-20 right-1/4 w-[320px] h-[320px] bg-purple-600/10 rounded-full blur-[100px]" />
             </div>
 
             <div className="relative max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-10 md:mb-16 px-4">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] font-bold tracking-widest uppercase mb-6">
-                        <PlaySquare className="w-3.5 h-3.5" />
+                    <div className="flex items-center justify-center gap-3 text-[11px] font-semibold tracking-[4px] uppercase text-orange-400 mb-5">
+                        <span className="w-8 h-[1px] bg-orange-500/50" />
                         Video Stories
+                        <span className="w-8 h-[1px] bg-orange-500/50" />
                     </div>
-                    <h2 className="text-4xl md:text-6xl font-black text-white mb-4 md:mb-6 tracking-tighter leading-none uppercase">
-                        The Stage & <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 italic font-serif">
-                            Their Story
+                    <h2 className="text-4xl md:text-6xl font-black text-white mb-4 md:mb-6 tracking-tight leading-tight">
+                        Look what our artists{' '}
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500">
+                            have to say about us
                         </span>
                     </h2>
-                    <p className="text-gray-400 text-base md:text-xl max-w-3xl mx-auto font-medium leading-relaxed italic">
-                        Go behind the scenes and hear from the stars who turn every event into a masterpiece.
+                    <p className="text-gray-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                        Hear directly from the performers who trust Artist Factory to grow their careers and fill their calendars.
                     </p>
                 </div>
 

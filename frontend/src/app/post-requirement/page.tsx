@@ -358,7 +358,11 @@ const PhoneInput = ({
               />
             </div>
             {/* List */}
-            <div className="max-h-60 overflow-y-auto">
+            <div
+              className="max-h-60 overflow-y-auto"
+              data-lenis-prevent
+              onWheel={(e) => e.stopPropagation()}
+            >
               {filtered.map((c) => (
                 <button
                   key={`${c.iso2}-${c.code}`}
@@ -811,7 +815,11 @@ export default function PostRequirementPage() {
                         autoComplete="off"
                       />
                       {isCityDropdownOpen && (
-                        <div className="absolute z-[9999] mt-2 w-full max-h-60 overflow-y-auto bg-[#0f0f10] border-2 border-gray-800 rounded-2xl shadow-2xl shadow-black/50">
+                        <div
+                          className="absolute z-[9999] mt-2 w-full max-h-60 overflow-y-auto bg-[#0f0f10] border-2 border-gray-800 rounded-2xl shadow-2xl shadow-black/50"
+                          data-lenis-prevent
+                          onWheel={(e) => e.stopPropagation()}
+                        >
                           {filteredCities.length > 0 ? (
                             filteredCities.map((city) => (
                               <button
