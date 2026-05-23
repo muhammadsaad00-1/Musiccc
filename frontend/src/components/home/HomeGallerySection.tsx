@@ -275,18 +275,18 @@ export default function HomeGallerySection() {
             cycleMs={4600} startDelay={500} floatDuration={8.5} floatDelay={1.2}
           />
 
-          {/* Pointed pentagon arch */}
+          {/* Doorway arch (smooth round top, flat bottom) */}
           <ShapeFrame
             items={frameItems[2]}
-            clipStyle={{ clipPath: 'polygon(0% 100%, 0% 38%, 50% 0%, 100% 38%, 100% 100%)' }}
+            clipStyle={{ borderRadius: '999px 999px 20px 20px' }}
             sizeClass="w-32 h-52 sm:w-40 sm:h-64 lg:w-48 lg:h-80"
             cycleMs={5000} startDelay={1000} floatDuration={7.5} floatDelay={2.4}
           />
 
-          {/* Diamond — hidden on xs */}
+          {/* Rounded square — hidden on xs */}
           <ShapeFrame
             items={frameItems[3]}
-            clipStyle={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }}
+            clipStyle={{ borderRadius: '24px' }}
             sizeClass="hidden sm:block w-36 h-36 lg:w-48 lg:h-48"
             cycleMs={5400} startDelay={1500} floatDuration={6.5} floatDelay={3.6}
           />
@@ -297,25 +297,26 @@ export default function HomeGallerySection() {
         */}
         <div className="flex items-center justify-center gap-3 sm:gap-5 lg:gap-7 flex-wrap mt-4 lg:mt-5">
 
-          {/* Left-leaning parallelogram */}
+          {/* Wide arch — round top, flat bottom */}
           <ShapeFrame
             items={frameItems[4]}
-            clipStyle={{ clipPath: 'polygon(14% 0%, 100% 0%, 86% 100%, 0% 100%)' }}
+            clipStyle={{ borderRadius: '999px 999px 16px 16px' }}
             sizeClass="w-44 h-32 sm:w-60 sm:h-40 lg:w-72 lg:h-48"
             cycleMs={4400} startDelay={300} floatDuration={9} floatDelay={0.6}
           />
 
+          {/* Circle */}
           <ShapeFrame
             items={frameItems[5]}
-            clipStyle={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' }}
+            clipStyle={{ borderRadius: '50%' }}
             sizeClass="w-36 h-36 sm:w-48 sm:h-48 lg:w-56 lg:h-56"
             cycleMs={4800} startDelay={900} floatDuration={7.2} floatDelay={1.8}
           />
 
-          {/* Right-leaning parallelogram (mirrored) */}
+          {/* Inverted arch — flat top, round bottom */}
           <ShapeFrame
             items={frameItems[6]}
-            clipStyle={{ clipPath: 'polygon(0% 0%, 86% 0%, 100% 100%, 14% 100%)' }}
+            clipStyle={{ borderRadius: '16px 16px 999px 999px' }}
             sizeClass="w-44 h-32 sm:w-60 sm:h-40 lg:w-72 lg:h-48"
             cycleMs={5200} startDelay={1400} floatDuration={8} floatDelay={3}
           />
