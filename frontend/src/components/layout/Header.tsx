@@ -397,7 +397,7 @@ export default function Header() {
                                         <span className={`flex items-center justify-center w-8 h-8 rounded-lg border ${category.bg} ${category.color} shrink-0`}>
                                             {category.icon}
                                         </span>
-                                        <span className="text-gray-300 group-active:text-white truncate text-[12px] font-semibold uppercase tracking-wide leading-tight">{category.name}</span>
+                                        <span className="text-gray-300 group-active:text-white text-[11px] font-semibold uppercase tracking-wide leading-tight min-w-0 break-words">{category.name}</span>
                                         {category.hot && (
                                             <span className="px-1 py-0.5 text-[7px] font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white rounded uppercase shrink-0">Hot</span>
                                         )}
@@ -434,7 +434,7 @@ export default function Header() {
                                         <span className={`flex items-center justify-center w-8 h-8 rounded-lg border ${event.bg} ${event.color} shrink-0`}>
                                             {event.icon}
                                         </span>
-                                        <span className="text-gray-300 group-active:text-white truncate text-[12px] font-semibold uppercase tracking-wide leading-tight">{event.name}</span>
+                                        <span className="text-gray-300 group-active:text-white text-[11px] font-semibold uppercase tracking-wide leading-tight min-w-0 break-words">{event.name}</span>
                                     </Link>
                                 ))}
                                 <Link

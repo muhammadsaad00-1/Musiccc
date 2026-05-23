@@ -719,7 +719,7 @@ export default function PostRequirementPage() {
         {/* Form Card */}
         <form onSubmit={handleSubmit} className="relative">
           <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/40 via-pink-500/40 to-purple-500/40 rounded-[28px] blur-lg opacity-50 transition-opacity" />
-          <div className="relative bg-[#111113]/95 backdrop-blur-xl rounded-3xl border border-gray-800/50 p-8 sm:p-10 shadow-2xl">
+          <div className="relative bg-[#111113]/95 backdrop-blur-xl rounded-3xl border border-gray-800/50 p-4 sm:p-8 shadow-2xl">
 
             {/* ── Step 1: Event Details ────────────────────────────────────── */}
             <div className={`transition-all duration-300 ${step === 1 ? "opacity-100" : "hidden"} ${isAnimating ? "opacity-0 translate-x-4" : ""}`}>
@@ -890,7 +890,7 @@ export default function PostRequirementPage() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {categories.length > 0 ? (
                     categories.map((cat) => {
                       const artistTypeValue = cat.name;
@@ -1063,7 +1063,7 @@ export default function PostRequirementPage() {
                 {/* Booking summary */}
                 <div className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 rounded-2xl p-5 border border-gray-800/50">
                   <h3 className="text-sm font-medium text-gray-400 mb-3">Booking Summary</h3>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     {selectedArtist && (
                       <div className="col-span-2 pb-2 border-b border-gray-700/50">
                         <span className="text-gray-500">Selected Artist:</span>

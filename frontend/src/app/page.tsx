@@ -84,7 +84,7 @@ export default function Home() {
       <ClientsMarquee />
 
             {/* ══ WHY CHOOSE US ══════════════════════════════════════════ */}
-            <section className="py-24 bg-[#0f0f10] relative overflow-hidden">
+            <section className="hidden md:block py-24 bg-[#0f0f10] relative overflow-hidden">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent" />
                 <div className="absolute inset-0 pointer-events-none overflow-hidden">
                     <div className="absolute -left-32 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-orange-500/15 rounded-full blur-[130px]" />

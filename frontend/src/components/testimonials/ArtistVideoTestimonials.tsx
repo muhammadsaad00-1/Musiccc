@@ -129,8 +129,9 @@ export default function ArtistVideoTestimonials() {
                     <div
                         ref={mobileScrollRef}
                         onScroll={handleMobileScroll}
-                        className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2"
-                        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+                        className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 overscroll-x-contain"
+                        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
+                        data-lenis-prevent
                     >
                         {testimonials.map((t, i) => (
                             <div
