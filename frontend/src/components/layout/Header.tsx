@@ -186,10 +186,10 @@ export default function Header() {
                         </Link>
                     </div>
 
-                    {/* Mobile Menu Button */}
+                    {/* Mobile Menu Button — 44px touch target */}
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="lg:hidden p-2.5 text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:border-orange-500/40 hover:text-white transition-all"
+                        className="lg:hidden w-11 h-11 flex items-center justify-center text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:border-orange-500/40 hover:text-white transition-all"
                         aria-label="Toggle navigation menu"
                     >
                         {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -386,18 +386,18 @@ export default function Header() {
                                 </div>
                                 Book an Artist
                             </p>
-                            <div className="grid grid-cols-2 gap-1.5">
+                            <div className="grid grid-cols-2 gap-2">
                                 {artistCategories.map((category) => (
                                     <Link
                                         key={category.slug}
                                         href={`/artists/${category.slug}`}
-                                        className="group flex items-center gap-2 py-2 px-2 rounded-lg bg-black/20 hover:bg-orange-500/10 transition-all text-sm border border-transparent hover:border-orange-500/20"
+                                        className="group flex items-center gap-2.5 py-3 px-3 rounded-xl bg-black/20 active:bg-orange-500/10 transition-all border border-transparent active:border-orange-500/20"
                                         onClick={() => setIsMenuOpen(false)}
                                     >
-                                        <span className={`flex items-center justify-center w-7 h-7 rounded-md border ${category.bg} ${category.color} shrink-0`}>
+                                        <span className={`flex items-center justify-center w-8 h-8 rounded-lg border ${category.bg} ${category.color} shrink-0`}>
                                             {category.icon}
                                         </span>
-                                        <span className="text-gray-300 group-hover:text-white truncate text-[12px] font-semibold uppercase tracking-wide">{category.name}</span>
+                                        <span className="text-gray-300 group-active:text-white truncate text-[12px] font-semibold uppercase tracking-wide leading-tight">{category.name}</span>
                                         {category.hot && (
                                             <span className="px-1 py-0.5 text-[7px] font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white rounded uppercase shrink-0">Hot</span>
                                         )}
@@ -405,7 +405,7 @@ export default function Header() {
                                 ))}
                                 <Link
                                     href="/categories"
-                                    className="flex items-center gap-2 text-orange-400 font-bold py-2 px-2 rounded-lg bg-orange-500/10 border border-orange-500/20 text-sm col-span-2"
+                                    className="flex items-center gap-2 text-orange-400 font-bold py-3.5 px-3 rounded-xl bg-orange-500/10 border border-orange-500/20 col-span-2 text-sm"
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     <LayoutGrid className="w-4 h-4" />
@@ -423,23 +423,23 @@ export default function Header() {
                                 </div>
                                 Events
                             </p>
-                            <div className="grid grid-cols-2 gap-1.5">
+                            <div className="grid grid-cols-2 gap-2">
                                 {eventTypes.map((event) => (
                                     <Link
                                         key={event.slug}
                                         href={`/events/${event.slug}`}
-                                        className="group flex items-center gap-2 py-2 px-2 rounded-lg bg-black/20 hover:bg-pink-500/10 transition-all text-sm border border-transparent hover:border-pink-500/20"
+                                        className="group flex items-center gap-2.5 py-3 px-3 rounded-xl bg-black/20 active:bg-pink-500/10 transition-all border border-transparent active:border-pink-500/20"
                                         onClick={() => setIsMenuOpen(false)}
                                     >
-                                        <span className={`flex items-center justify-center w-7 h-7 rounded-md border ${event.bg} ${event.color} shrink-0`}>
+                                        <span className={`flex items-center justify-center w-8 h-8 rounded-lg border ${event.bg} ${event.color} shrink-0`}>
                                             {event.icon}
                                         </span>
-                                        <span className="text-gray-300 group-hover:text-white truncate text-[12px] font-semibold uppercase tracking-wide">{event.name}</span>
+                                        <span className="text-gray-300 group-active:text-white truncate text-[12px] font-semibold uppercase tracking-wide leading-tight">{event.name}</span>
                                     </Link>
                                 ))}
                                 <Link
                                     href="/events"
-                                    className="flex items-center gap-2 text-orange-400 font-bold py-2 px-2 rounded-lg bg-orange-500/10 border border-orange-500/20 text-sm col-span-2"
+                                    className="flex items-center gap-2 text-orange-400 font-bold py-3.5 px-3 rounded-xl bg-orange-500/10 border border-orange-500/20 col-span-2 text-sm"
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     <Calendar className="w-4 h-4" />
@@ -449,31 +449,33 @@ export default function Header() {
                             </div>
                         </div>
 
-                        {/* Quick Links */}
-                        <Link href="/post-requirement" className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 font-semibold" onClick={() => setIsMenuOpen(false)}>
-                            <Zap className="w-4 h-4" />
+                        {/* Quick Links — min 44px touch targets */}
+                        <Link href="/post-requirement" className="flex items-center gap-3 rounded-xl px-4 py-3.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 font-semibold text-sm" onClick={() => setIsMenuOpen(false)}>
+                            <Zap className="w-4 h-4 shrink-0" />
                             Express Booking
                         </Link>
-                        <Link href="/gallery" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-gray-300 bg-white/5 border border-white/10 hover:text-white hover:border-orange-500/30 transition-all font-medium" onClick={() => setIsMenuOpen(false)}>
-                            <Star className="w-4 h-4 text-orange-400" /> Gallery
-                        </Link>
-                        <Link href="/about" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-gray-300 bg-white/5 border border-white/10 hover:text-white hover:border-orange-500/30 transition-all font-medium" onClick={() => setIsMenuOpen(false)}>
-                            <Info className="w-4 h-4 text-orange-400" /> About Us
-                        </Link>
-                        <Link href="/contact" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-gray-300 bg-white/5 border border-white/10 hover:text-white hover:border-orange-500/30 transition-all font-medium" onClick={() => setIsMenuOpen(false)}>
-                            <Phone className="w-4 h-4 text-orange-400" /> Contact Us
-                        </Link>
-                        <Link href="/blog" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-gray-300 bg-white/5 border border-white/10 hover:text-white hover:border-orange-500/30 transition-all font-medium" onClick={() => setIsMenuOpen(false)}>
-                            <Music className="w-4 h-4 text-orange-400" /> Blog
-                        </Link>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Link href="/gallery" className="flex items-center gap-2 rounded-xl px-3 py-3.5 text-gray-300 bg-white/5 border border-white/10 transition-all font-medium text-sm" onClick={() => setIsMenuOpen(false)}>
+                                <Star className="w-4 h-4 text-orange-400 shrink-0" /> Gallery
+                            </Link>
+                            <Link href="/about" className="flex items-center gap-2 rounded-xl px-3 py-3.5 text-gray-300 bg-white/5 border border-white/10 transition-all font-medium text-sm" onClick={() => setIsMenuOpen(false)}>
+                                <Info className="w-4 h-4 text-orange-400 shrink-0" /> About Us
+                            </Link>
+                            <Link href="/contact" className="flex items-center gap-2 rounded-xl px-3 py-3.5 text-gray-300 bg-white/5 border border-white/10 transition-all font-medium text-sm" onClick={() => setIsMenuOpen(false)}>
+                                <Phone className="w-4 h-4 text-orange-400 shrink-0" /> Contact
+                            </Link>
+                            <Link href="/blog" className="flex items-center gap-2 rounded-xl px-3 py-3.5 text-gray-300 bg-white/5 border border-white/10 transition-all font-medium text-sm" onClick={() => setIsMenuOpen(false)}>
+                                <Music className="w-4 h-4 text-orange-400 shrink-0" /> Blog
+                            </Link>
+                        </div>
 
                         {/* CTA */}
                         <Link
                             href="/post-requirement"
-                            className="block w-full text-center px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition-all"
+                            className="block w-full text-center px-4 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 transition-all text-base"
                             onClick={() => setIsMenuOpen(false)}
                         >
-                            Express Booking
+                            Book An Artist Now
                         </Link>
                     </div>
                 </div>

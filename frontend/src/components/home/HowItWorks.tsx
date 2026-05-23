@@ -68,7 +68,7 @@ export default function HowItWorks() {
     }, [isVisible]);
 
     return (
-        <section ref={sectionRef} className="py-24 bg-[#080809] overflow-hidden relative">
+        <section ref={sectionRef} className="py-14 md:py-24 bg-[#080809] overflow-hidden relative">
 
             {/* Background Elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -78,17 +78,17 @@ export default function HowItWorks() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Section Header */}
-                <div className="text-center mb-20">
-                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+                <div className="text-center mb-10 md:mb-20">
+                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 md:mb-6 tracking-tight">
                         Your Event, <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600">Perfectly Orchestrated</span>
                     </h2>
-                    <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                    <p className="text-base md:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
                         From discovery to applause, we've streamlined the process to ensure a seamless experience for you and your guests.
                     </p>
                 </div>
 
                 {/* Steps Container */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-8 mb-12 md:mb-20">
                     {steps.map((step, index) => {
                         const isActive = index <= activeStep;
                         const isCurrent = index === activeStep;
@@ -109,7 +109,7 @@ export default function HowItWorks() {
 
                                 {/* Step Card */}
                                 <div
-                                    className={`relative p-8 rounded-3xl h-full transition-all duration-700 border ${isActive
+                                    className={`relative p-5 sm:p-8 rounded-3xl h-full transition-all duration-700 border ${isActive
                                             ? 'bg-[#121212] border-orange-500/30 shadow-[0_0_30px_-10px_rgba(249,115,22,0.15)]'
                                             : 'bg-[#0f0f10] border-gray-800/50 opacity-40 grayscale'
                                         }`}
@@ -170,7 +170,7 @@ export default function HowItWorks() {
                     }`}>
                     <Link
                         href="/post-requirement"
-                        className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-full text-lg shadow-lg hover:shadow-orange-500/40 hover:-translate-y-1 transition-all group"
+                        className="inline-flex items-center gap-3 px-8 py-4 md:px-10 md:py-5 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-full text-base md:text-lg shadow-lg hover:shadow-orange-500/40 hover:-translate-y-1 transition-all group w-full sm:w-auto justify-center"
                     >
                         <span>Start Your Booking</span>
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

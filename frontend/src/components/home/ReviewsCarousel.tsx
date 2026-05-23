@@ -127,22 +127,22 @@ export default function ReviewsCarousel({ artistId, className }: { artistId?: st
             onMouseLeave={() => setIsPaused(false)}
         >
             {/* Main Review Card */}
-            <div className="relative bg-[#0f0f10] rounded-3xl p-10 md:p-14 border border-gray-800 hover:border-orange-500/30 text-center transition-all duration-500 group shadow-2xl">
+            <div className="relative bg-[#0f0f10] rounded-3xl p-6 sm:p-10 md:p-14 border border-gray-800 hover:border-orange-500/30 text-center transition-all duration-500 group shadow-2xl">
                 {/* Elegant glow */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1/2 bg-gradient-to-b from-orange-500/10 to-transparent blur-3xl opacity-50 group-hover:opacity-80 transition-opacity duration-500" />
 
-                {/* Quote Icon - More subtle */}
-                <div className="mb-8">
-                    <Quote className="w-12 h-12 text-orange-500/40 mx-auto" />
+                {/* Quote Icon */}
+                <div className="mb-5 md:mb-8">
+                    <Quote className="w-8 h-8 md:w-12 md:h-12 text-orange-500/40 mx-auto" />
                 </div>
 
                 {/* Stars */}
-                <div className="relative mb-8">
+                <div className="relative mb-5 md:mb-8">
                     {renderStars(currentReview.rating)}
                 </div>
 
-                {/* Review Text - Serif & Elegant */}
-                <p className="relative text-xl md:text-3xl font-serif italic text-gray-200 leading-relaxed mb-10 max-w-4xl mx-auto">
+                {/* Review Text */}
+                <p className="relative text-base sm:text-xl md:text-3xl font-serif italic text-gray-200 leading-relaxed mb-6 md:mb-10 max-w-4xl mx-auto">
                     "{currentReview.review}"
                 </p>
 
@@ -158,35 +158,47 @@ export default function ReviewsCarousel({ artistId, className }: { artistId?: st
                 </div>
             </div>
 
-            {/* Navigation Arrows */}
+            {/* Navigation Arrows — hidden on mobile, shown from sm+ */}
             {reviews.length > 1 && (
                 <>
                     <button
                         onClick={goToPrevious}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-6 w-12 h-12 bg-[#1a1a1a] border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:border-orange-500 hover:bg-orange-500/10 transition-all duration-300 shadow-lg"
+                        className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 md:-translate-x-6 w-11 h-11 bg-[#1a1a1a] border border-gray-700 rounded-full items-center justify-center text-gray-400 hover:text-white hover:border-orange-500 hover:bg-orange-500/10 transition-all duration-300 shadow-lg"
                         aria-label="Previous review"
                     >
-                        <ChevronLeft className="w-6 h-6" />
+                        <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                         onClick={goToNext}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-6 w-12 h-12 bg-[#1a1a1a] border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:border-orange-500 hover:bg-orange-500/10 transition-all duration-300 shadow-lg"
+                        className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 md:translate-x-6 w-11 h-11 bg-[#1a1a1a] border border-gray-700 rounded-full items-center justify-center text-gray-400 hover:text-white hover:border-orange-500 hover:bg-orange-500/10 transition-all duration-300 shadow-lg"
                         aria-label="Next review"
                     >
-                        <ChevronRight className="w-6 h-6" />
+                        <ChevronRight className="w-5 h-5" />
                     </button>
                 </>
             )}
 
+            {/* Mobile prev/next row — replaces arrows that are hidden on mobile */}
+            {reviews.length > 1 && (
+                <div className="flex sm:hidden justify-center gap-3 mt-5">
+                    <button onClick={goToPrevious} className="flex-1 max-w-[120px] py-3 bg-[#1a1a1a] border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 active:bg-orange-500/10 active:border-orange-500 transition-all">
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button onClick={goToNext} className="flex-1 max-w-[120px] py-3 bg-[#1a1a1a] border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 active:bg-orange-500/10 active:border-orange-500 transition-all">
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
+                </div>
+            )}
+
             {/* Progress Dots */}
             {reviews.length > 1 && (
-                <div className="flex justify-center gap-2 mt-8">
+                <div className="flex justify-center gap-2 mt-5 md:mt-8 flex-wrap">
                     {reviews.map((_, idx) => (
                         <button
                             key={idx}
                             onClick={() => setCurrentIndex(idx)}
                             className={`h-2 rounded-full transition-all duration-300 ${idx === currentIndex
-                                ? 'bg-gradient-to-r from-orange-500 to-pink-600 w-8'
+                                ? 'bg-gradient-to-r from-orange-500 to-pink-600 w-6 sm:w-8'
                                 : 'bg-gray-600 hover:bg-gray-500 w-2'
                                 }`}
                             aria-label={`Go to review ${idx + 1}`}
@@ -194,11 +206,6 @@ export default function ReviewsCarousel({ artistId, className }: { artistId?: st
                     ))}
                 </div>
             )}
-
-            {/* Auto-advance indicator */}
-            <p className="text-center text-gray-600 text-xs mt-4">
-                {isPaused ? 'Paused' : 'Auto-advancing'} • {currentIndex + 1} of {reviews.length}
-            </p>
         </div>
     );
 }
