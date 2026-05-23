@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { usePortfolio } from '@/lib/hooks';
 import Link from 'next/link';
-import { ArrowRight, Play, ChevronRight } from 'lucide-react';
+import { ArrowRight, Play, X } from 'lucide-react';
 
 interface PortfolioItem {
   id: string;
@@ -16,336 +16,322 @@ interface PortfolioItem {
   thumbnail_url?: string;
 }
 
-function getYoutubeEmbedUrl(url?: string) {
+type ItemKind = 'image' | 'youtube' | 'video';
+
+function getKind(item: PortfolioItem): ItemKind {
+  if (item.youtube_url) return 'youtube';
+  const url = item.media_url || '';
+  if (url.includes('youtu')) return 'youtube';
+  const type = item.item_type || item.media_type || '';
+  if (type === 'video' || type === 'youtube') return 'youtube';
+  return 'image';
+}
+
+function ytEmbed(url?: string): string {
   if (!url) return '';
-  if (url.includes('embed/')) return url;
-  const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11)
-    ? `https://www.youtube.com/embed/${match[2]}`
+  if (url.includes('/embed/')) return url.includes('autoplay') ? url : `${url}?autoplay=1&rel=0`;
+  const m = url.match(/^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/);
+  return m && m[2].length === 11
+    ? `https://www.youtube.com/embed/${m[2]}?autoplay=1&rel=0&modestbranding=1`
     : url;
 }
 
-function getYoutubeThumbnail(url?: string) {
-  if (!url) return '';
-  const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11)
-    ? `https://img.youtube.com/vi/${match[2]}/hqdefault.jpg`
-    : '';
+function getThumb(item: PortfolioItem): string {
+  if (item.thumbnail_url) return item.thumbnail_url;
+  if (item.youtube_url) {
+    const m = item.youtube_url.match(/^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/);
+    return m && m[2].length === 11 ? `https://img.youtube.com/vi/${m[2]}/hqdefault.jpg` : '';
+  }
+  return item.media_url || '';
 }
 
-export default function HomeGallerySection() {
-  const { data: portfolioItems, isLoading } = usePortfolio();
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
-  // Split portfolio into images and videos
-  const images = useMemo(() => {
-    if (!portfolioItems) return [];
-    return portfolioItems.filter((item: PortfolioItem) => {
-      const type = item.item_type || item.media_type;
-      return type === 'image';
-    });
-  }, [portfolioItems]);
+const FALLBACK: PortfolioItem[] = [
+  { id: 'fb1',  title: 'Corporate Gala',      category: 'Corporate', item_type: 'image', media_url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop' },
+  { id: 'fb2',  title: 'Grand Wedding',        category: 'Wedding',   item_type: 'image', media_url: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800&auto=format&fit=crop' },
+  { id: 'fb3',  title: 'Concert Night',        category: 'Concert',   item_type: 'image', media_url: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&auto=format&fit=crop' },
+  { id: 'fb4',  title: 'Festival Lights',      category: 'Festival',  item_type: 'image', media_url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop' },
+  { id: 'fb5',  title: 'Private Party',        category: 'Private',   item_type: 'image', media_url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop' },
+  { id: 'fb6',  title: 'Award Show',           category: 'Awards',    item_type: 'image', media_url: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop' },
+  { id: 'fb7',  title: 'Live Stage',           category: 'Live',      item_type: 'image', media_url: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&auto=format&fit=crop' },
+  { id: 'fb8',  title: 'Cultural Night',       category: 'Cultural',  item_type: 'image', media_url: 'https://images.unsplash.com/photo-1504680177321-2e6a879aac86?w=800&auto=format&fit=crop' },
+  { id: 'fb9',  title: 'Mehendi Celebration',  category: 'Wedding',   item_type: 'image', media_url: 'https://images.unsplash.com/photo-1577086664693-894d8405334a?w=800&auto=format&fit=crop' },
+  { id: 'fb10', title: 'DJ Night',             category: 'Party',     item_type: 'image', media_url: 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=800&auto=format&fit=crop' },
+];
 
-  const videos = useMemo(() => {
-    if (!portfolioItems) return [];
-    return portfolioItems.filter((item: PortfolioItem) => {
-      const type = item.item_type || item.media_type;
-      return type === 'video' || type === 'youtube';
-    });
-  }, [portfolioItems]);
-
-  // Image cycling state
-  const IMAGES_PER_PAGE = 8;
-  const [imagePage, setImagePage] = useState(0);
+// ─── Individual shape frame ──────────────────────────────────────────────────
+function ShapeFrame({
+  items,
+  clipStyle,
+  sizeClass,
+  cycleMs = 4200,
+  startDelay = 0,
+  floatDuration = 7,
+  floatDelay = 0,
+}: {
+  items: PortfolioItem[];
+  clipStyle: React.CSSProperties;
+  sizeClass: string;
+  cycleMs?: number;
+  startDelay?: number;
+  floatDuration?: number;
+  floatDelay?: number;
+}) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [ready, setReady] = useState(false);
+  const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
-    if (images.length <= IMAGES_PER_PAGE) return;
-    const interval = setInterval(() => {
-      setImagePage(prev => {
-        const totalPages = Math.ceil(images.length / IMAGES_PER_PAGE);
-        return (prev + 1) % totalPages;
-      });
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [images.length]);
+    const t = setTimeout(() => setReady(true), startDelay);
+    return () => clearTimeout(t);
+  }, [startDelay]);
 
-  const visibleImages = useMemo(() => {
-    const start = imagePage * IMAGES_PER_PAGE;
-    const slice = images.slice(start, start + IMAGES_PER_PAGE);
-    // If we have fewer than IMAGES_PER_PAGE, just show what we have
-    return slice;
-  }, [images, imagePage]);
+  // Pause cycling while video is playing
+  useEffect(() => {
+    if (!ready || playing || items.length <= 1) return;
+    const id = setInterval(() => setActiveIdx(i => (i + 1) % items.length), cycleMs);
+    return () => clearInterval(id);
+  }, [ready, playing, items.length, cycleMs]);
 
-  const totalImagePages = Math.max(1, Math.ceil(images.length / IMAGES_PER_PAGE));
+  if (!items.length) return null;
 
-  // Video player state
-  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
-
-  const activeVideo: PortfolioItem | null = videos[activeVideoIndex] || null;
-
-  if (isLoading) return null;
-  const hasImages = images.length > 0;
-  const hasVideos = videos.length > 0;
-  if (!hasImages && !hasVideos) return null;
+  const activeItem = items[activeIdx];
+  const isVideo = getKind(activeItem) !== 'image';
+  const kind = getKind(activeItem);
 
   return (
-    <>
-      {/* ══════════════════════════════════════════════════════════ */}
-      {/* SECTION 1: IMAGE GALLERY - Bento Grid with Auto-Cycling  */}
-      {/* ══════════════════════════════════════════════════════════ */}
-      {hasImages && (
-        <section className="w-full py-20 bg-[#0a0a0b] text-[#f2ede8] overflow-hidden relative">
-          <div className="absolute inset-0 pointer-events-none" style={{
-            background: 'radial-gradient(circle at 30% 50%, rgba(249,115,22,0.06) 0%, transparent 50%)'
-          }}></div>
-
-          {/* Centered Heading */}
-          <div className="text-center mb-14 relative z-10 px-4">
-            <div className="flex items-center justify-center gap-3 text-[11px] font-semibold tracking-[4px] uppercase text-orange-400 mb-5">
-              <span className="w-8 h-[1px] bg-orange-500/50"></span>
-              Our Portfolio
-              <span className="w-8 h-[1px] bg-orange-500/50"></span>
-            </div>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-playfair font-black text-white leading-tight">
-              Moments That Last
-            </h2>
-            <p className="mt-4 text-[#bfb9b2] font-outfit text-base tracking-wide max-w-lg mx-auto">
-              A glimpse into some of our most electrifying, unforgettable events.
-            </p>
-          </div>
-
-          {/* Bento-style Image Grid */}
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 auto-rows-[200px] sm:auto-rows-[240px] lg:auto-rows-[220px]">
-              {visibleImages.map((item: PortfolioItem, idx: number) => {
-                // Create varied sizes for a bento effect
-                let spanClass = '';
-                if (idx === 0) spanClass = 'col-span-2 row-span-2';
-                else if (idx === 3) spanClass = 'sm:col-span-2';
-                else if (idx === 5) spanClass = 'sm:row-span-2';
-                else if (idx === 7) spanClass = 'sm:col-span-2';
-
-                return (
-                  <Link
-                    href="/gallery"
-                    key={item.id || `img-${idx}`}
-                    className={`relative overflow-hidden rounded-2xl group cursor-pointer bg-[#1a1a1a] border border-white/5 ${spanClass}`}
-                    style={{
-                      animation: 'bentoFadeIn 0.6s ease-out both',
-                      animationDelay: `${idx * 80}ms`
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0C0C0C]/80 via-transparent to-transparent z-10 opacity-60 group-hover:opacity-90 transition-opacity duration-500"></div>
-                    <img
-                      src={item.thumbnail_url || item.media_url}
-                      alt={item.title || 'Portfolio Event'}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      loading="lazy"
-                    />
-                    <div className="absolute bottom-4 left-4 right-4 z-20 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-400">
-                      <span className="text-[10px] font-semibold tracking-widest uppercase text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 block mb-1">
-                        {item.category || 'Event'}
-                      </span>
-                      <h3 className="font-playfair text-lg text-white font-bold leading-tight drop-shadow-lg">
-                        {item.title}
-                      </h3>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Page Indicators */}
-            {totalImagePages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
-                {Array.from({ length: totalImagePages }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setImagePage(i)}
-                    className={`h-1.5 rounded-full transition-all duration-500 ${
-                      i === imagePage
-                        ? 'w-8 bg-gradient-to-r from-orange-500 to-pink-500'
-                        : 'w-3 bg-[#333] hover:bg-[#555]'
-                    }`}
-                  />
-                ))}
-              </div>
+    // Outer: float animation — paused while video plays so the frame stays steady
+    <div
+      className="flex-shrink-0"
+      style={{
+        animation: playing
+          ? 'none'
+          : `galleryFloat ${floatDuration}s ease-in-out infinite ${floatDelay}s`,
+      }}
+    >
+      {/* Inner: shape clip + size */}
+      <div
+        className={`relative ${sizeClass}`}
+        style={{ ...clipStyle, overflow: 'hidden' }}
+      >
+        {playing ? (
+          /* ── Inline video inside the shaped frame ── */
+          <div className="absolute inset-0 bg-black">
+            {kind === 'youtube' ? (
+              <iframe
+                src={ytEmbed(activeItem.youtube_url || activeItem.media_url)}
+                title={activeItem.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full border-0"
+              />
+            ) : (
+              <video
+                src={activeItem.media_url}
+                autoPlay
+                controls
+                className="absolute inset-0 w-full h-full object-contain"
+              />
             )}
+            {/* Close — centred at top so it stays inside any clip shape */}
+            <button
+              onClick={() => setPlaying(false)}
+              className="absolute top-2 left-1/2 -translate-x-1/2 z-30 w-7 h-7 rounded-full bg-black/80 hover:bg-black border border-white/30 hover:border-white/60 flex items-center justify-center transition-all shadow-lg"
+              aria-label="Stop video"
+            >
+              <X className="w-3 h-3 text-white" />
+            </button>
+          </div>
+        ) : (
+          /* ── Cycling thumbnails ── */
+          <>
+            {items.map((item, i) => (
+              <img
+                key={i}
+                src={getThumb(item)}
+                alt=""
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{
+                  opacity: i === activeIdx ? 1 : 0,
+                  transition: 'opacity 1s ease-in-out',
+                  zIndex: i === activeIdx ? 1 : 0,
+                }}
+              />
+            ))}
 
-            {/* View Full Gallery CTA */}
-            <div className="flex justify-center mt-10">
-              <Link
-                href="/gallery"
-                className="flex items-center gap-2 text-[12px] font-outfit font-semibold uppercase tracking-[3px] text-orange-500 hover:text-pink-500 transition-colors duration-300 border border-orange-500/30 hover:border-pink-500/50 px-8 py-3 rounded-full hover:translate-x-1"
+            {/* Vignette */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.4) 100%)',
+                zIndex: 2,
+              }}
+            />
+
+            {/* Play button — only when active item is a video */}
+            {isVideo && (
+              <button
+                onClick={() => setPlaying(true)}
+                className="absolute inset-0 z-10 flex items-center justify-center hover:scale-110 transition-transform duration-300"
+                aria-label={`Play ${activeItem.title}`}
               >
-                View Full Gallery <ArrowRight size={16} />
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════ */}
-      {/* SECTION 2: VIDEO HIGHLIGHTS - Master/Detail Player       */}
-      {/* ══════════════════════════════════════════════════════════ */}
-      {hasVideos && (
-        <section className="w-full py-20 bg-[#0c0c0d] text-[#f2ede8] overflow-hidden relative">
-          <div className="absolute inset-0 pointer-events-none" style={{
-            background: 'radial-gradient(circle at 70% 40%, rgba(236,72,153,0.05) 0%, transparent 50%)'
-          }}></div>
-
-          {/* Centered Heading */}
-          <div className="text-center mb-14 relative z-10 px-4">
-            <div className="flex items-center justify-center gap-3 text-[11px] font-semibold tracking-[4px] uppercase text-orange-400 mb-5">
-              <span className="w-8 h-[1px] bg-orange-500/50"></span>
-              Featured Performances
-              <span className="w-8 h-[1px] bg-orange-500/50"></span>
-            </div>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-playfair font-black text-white leading-tight">
-              Watch Our Best Moments
-            </h2>
-            <p className="mt-4 text-[#bfb9b2] font-outfit text-base tracking-wide max-w-lg mx-auto">
-              Experience the energy and talent from our most memorable performances.
-            </p>
-          </div>
-
-          {/* Video Player + Playlist */}
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
-            <div className="flex flex-col lg:flex-row gap-5">
-
-              {/* LEFT: Large Video Player */}
-              <div className="w-full lg:w-[65%] xl:w-[68%]">
-                <div className="relative w-full aspect-video bg-[#111] rounded-2xl overflow-hidden border border-white/5 shadow-2xl shadow-black/50">
-                  {activeVideo && (
-                    <>
-                      {(activeVideo.item_type === 'video' && activeVideo.media_url?.includes('youtube')) ||
-                       activeVideo.youtube_url ||
-                       activeVideo.media_url?.includes('youtu') ? (
-                        <iframe
-                          key={activeVideo.id}
-                          src={getYoutubeEmbedUrl(activeVideo.youtube_url || activeVideo.media_url)}
-                          title={activeVideo.title}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="absolute inset-0 w-full h-full border-0"
-                        />
-                      ) : (
-                        <video
-                          key={activeVideo.id}
-                          src={activeVideo.media_url}
-                          controls
-                          autoPlay
-                          className="absolute inset-0 w-full h-full object-contain"
-                        />
-                      )}
-                    </>
-                  )}
+                <div className="w-11 h-11 rounded-full bg-black/50 border-2 border-white/70 flex items-center justify-center shadow-xl backdrop-blur-sm hover:bg-orange-500 hover:border-orange-400 transition-colors duration-300">
+                  <Play className="w-4 h-4 text-white fill-white ml-0.5" />
                 </div>
-                {/* Active video title */}
-                {activeVideo && (
-                  <div className="mt-4 px-1">
-                    <span className="text-[10px] font-semibold tracking-widest uppercase text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 block mb-1.5">
-                      {activeVideo.category || 'Performance'}
-                    </span>
-                    <h3 className="font-playfair text-xl sm:text-2xl text-white font-bold leading-tight">
-                      {activeVideo.title}
-                    </h3>
-                  </div>
-                )}
-              </div>
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
-              {/* RIGHT: Scrollable Playlist */}
-              <div className="w-full lg:w-[35%] xl:w-[32%]">
-                <div className="lg:max-h-[480px] overflow-y-auto overflow-x-hidden flex flex-col gap-3 pr-1 custom-scrollbar" data-lenis-prevent>
-                  {videos.map((video: PortfolioItem, idx: number) => {
-                    const isActive = idx === activeVideoIndex;
-                    const thumbUrl =
-                      video.thumbnail_url ||
-                      getYoutubeThumbnail(video.youtube_url || video.media_url) ||
-                      video.media_url;
+// ─── Main section ────────────────────────────────────────────────────────────
+export default function HomeGallerySection() {
+  const { data: raw, isLoading } = usePortfolio();
 
-                    return (
-                      <button
-                        key={video.id || `vid-${idx}`}
-                        onClick={() => setActiveVideoIndex(idx)}
-                        className={`flex items-center gap-4 w-full text-left rounded-xl p-3 transition-all duration-300 border group ${
-                          isActive
-                            ? 'bg-gradient-to-r from-orange-500/10 to-pink-500/10 border-orange-500/30 shadow-lg shadow-orange-500/5'
-                            : 'bg-[#161618] border-white/5 hover:bg-[#1e1e22] hover:border-orange-500/20'
-                        }`}
-                      >
-                        {/* Thumbnail */}
-                        <div className="relative w-24 sm:w-28 h-16 sm:h-[72px] rounded-lg overflow-hidden flex-shrink-0 bg-[#222]">
-                          <img
-                            src={thumbUrl}
-                            alt={video.title}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                          <div className={`absolute inset-0 flex items-center justify-center transition-colors duration-300 ${
-                            isActive ? 'bg-black/30' : 'bg-black/50 group-hover:bg-black/30'
-                          }`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 ${
-                              isActive
-                                ? 'bg-orange-500 border-orange-500 scale-110'
-                                : 'bg-black/50 border-white/20 group-hover:border-orange-500/50 group-hover:bg-orange-500/20'
-                            }`}>
-                              <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
-                            </div>
-                          </div>
-                        </div>
+  const allItems = useMemo<PortfolioItem[]>(() => {
+    const source = (raw && (raw as PortfolioItem[]).length > 0)
+      ? (raw as PortfolioItem[])
+      : FALLBACK;
+    return shuffle(source);
+  }, [raw]);
 
-                        {/* Title */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className={`font-outfit text-sm font-medium leading-snug transition-colors duration-300 line-clamp-2 ${
-                            isActive ? 'text-orange-400' : 'text-[#ccc] group-hover:text-white'
-                          }`}>
-                            {video.title}
-                          </h4>
-                          {video.category && (
-                            <span className="text-[10px] text-[#777] tracking-wider uppercase mt-1 block">
-                              {video.category}
-                            </span>
-                          )}
-                        </div>
+  // Each of 7 frames gets an independent rotating slice of the item pool
+  const frameItems = useMemo(() => {
+    if (!allItems.length) return Array(7).fill([]) as PortfolioItem[][];
+    const pool = allItems.length;
+    return Array.from({ length: 7 }, (_, fi) =>
+      Array.from({ length: Math.max(3, Math.ceil(pool / 4)) }, (_, j) =>
+        allItems[(fi * 3 + j) % pool]
+      )
+    );
+  }, [allItems]);
 
-                        {/* Active indicator */}
-                        {isActive && (
-                          <ChevronRight className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+  if (isLoading) return null;
+
+  return (
+    <section className="w-full py-20 lg:py-28 bg-[#0a0a0b] relative overflow-hidden">
+      <style>{`
+        @keyframes galleryFloat {
+          0%, 100% { transform: translateY(0px);   }
+          50%       { transform: translateY(-10px); }
+        }
+      `}</style>
+
+      {/* Ambient glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-orange-600/5 rounded-full blur-[130px]" />
+        <div className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] bg-pink-600/5 rounded-full blur-[110px]" />
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
+
+        {/* Heading */}
+        <div className="text-center mb-14">
+          <div className="flex items-center justify-center gap-3 text-[11px] font-semibold tracking-[4px] uppercase text-orange-400 mb-5">
+            <span className="w-8 h-[1px] bg-orange-500/50" />
+            Portfolio &amp; Performances
+            <span className="w-8 h-[1px] bg-orange-500/50" />
           </div>
-        </section>
-      )}
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight tracking-tight">
+            Moments That{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">
+              Last Forever
+            </span>
+          </h2>
+          <p className="mt-4 text-gray-400 text-base max-w-lg mx-auto leading-relaxed">
+            Browse event photos and watch live performances — all in one place.
+          </p>
+        </div>
 
-      {/* Inline styles for animations and scrollbar */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @keyframes bentoFadeIn {
-            from { opacity: 0; transform: translateY(16px) scale(0.97); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-          }
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 4px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #555;
-          }
-        `
-      }} />
-    </>
+        {/*
+          Row 1 (items-end): tall oval pill | large circle | pointed arch | diamond
+          Bottom-aligned so differing heights form a stage silhouette
+        */}
+        <div className="flex items-end justify-center gap-3 sm:gap-5 lg:gap-7 flex-wrap">
+
+          <ShapeFrame
+            items={frameItems[0]}
+            clipStyle={{ borderRadius: '999px' }}
+            sizeClass="w-28 h-52 sm:w-36 sm:h-64 lg:w-44 lg:h-80"
+            cycleMs={4200} startDelay={0} floatDuration={7} floatDelay={0}
+          />
+
+          <ShapeFrame
+            items={frameItems[1]}
+            clipStyle={{ borderRadius: '50%' }}
+            sizeClass="w-44 h-44 sm:w-52 sm:h-52 lg:w-60 lg:h-60"
+            cycleMs={4600} startDelay={500} floatDuration={8.5} floatDelay={1.2}
+          />
+
+          {/* Doorway arch (smooth round top, flat bottom) */}
+          <ShapeFrame
+            items={frameItems[2]}
+            clipStyle={{ borderRadius: '999px 999px 20px 20px' }}
+            sizeClass="w-32 h-52 sm:w-40 sm:h-64 lg:w-48 lg:h-80"
+            cycleMs={5000} startDelay={1000} floatDuration={7.5} floatDelay={2.4}
+          />
+
+          {/* Rounded square — hidden on xs */}
+          <ShapeFrame
+            items={frameItems[3]}
+            clipStyle={{ borderRadius: '24px' }}
+            sizeClass="hidden sm:block w-36 h-36 lg:w-48 lg:h-48"
+            cycleMs={5400} startDelay={1500} floatDuration={6.5} floatDelay={3.6}
+          />
+        </div>
+
+        {/*
+          Row 2 (items-center): left parallelogram | hexagon | right parallelogram
+        */}
+        <div className="flex items-center justify-center gap-3 sm:gap-5 lg:gap-7 flex-wrap mt-4 lg:mt-5">
+
+          {/* Wide arch — round top, flat bottom */}
+          <ShapeFrame
+            items={frameItems[4]}
+            clipStyle={{ borderRadius: '999px 999px 16px 16px' }}
+            sizeClass="w-44 h-32 sm:w-60 sm:h-40 lg:w-72 lg:h-48"
+            cycleMs={4400} startDelay={300} floatDuration={9} floatDelay={0.6}
+          />
+
+          {/* Circle */}
+          <ShapeFrame
+            items={frameItems[5]}
+            clipStyle={{ borderRadius: '50%' }}
+            sizeClass="w-36 h-36 sm:w-48 sm:h-48 lg:w-56 lg:h-56"
+            cycleMs={4800} startDelay={900} floatDuration={7.2} floatDelay={1.8}
+          />
+
+          {/* Inverted arch — flat top, round bottom */}
+          <ShapeFrame
+            items={frameItems[6]}
+            clipStyle={{ borderRadius: '16px 16px 999px 999px' }}
+            sizeClass="w-44 h-32 sm:w-60 sm:h-40 lg:w-72 lg:h-48"
+            cycleMs={5200} startDelay={1400} floatDuration={8} floatDelay={3}
+          />
+        </div>
+
+        {/* CTA */}
+        <div className="flex items-center justify-center mt-14">
+          <Link
+            href="/gallery"
+            className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[3px] text-orange-500 hover:text-white transition-colors duration-300 border border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10 px-8 py-3.5 rounded-full"
+          >
+            View Full Gallery <ArrowRight size={15} />
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }

@@ -11,26 +11,26 @@ export default function CTASection() {
                     <div className="absolute bottom-0 right-0 w-96 h-96 bg-black/10 rounded-full translate-x-1/3 translate-y-1/3" />
 
                     {/* Content */}
-                    <div className="relative z-10 px-8 py-16 lg:px-16 lg:py-20 text-center">
-                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+                    <div className="relative z-10 px-5 py-10 sm:px-8 sm:py-16 lg:px-16 lg:py-20 text-center">
+                        <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 md:mb-6">
                             Ready to Make Your Event
                             <span className="block">Unforgettable?</span>
                         </h2>
-                        <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto mb-10">
+                        <p className="text-base sm:text-xl text-white/90 max-w-2xl mx-auto mb-8 md:mb-10">
                             Tell us about your event and we'll help you find the perfect artists.
                             Get multiple quotes from verified performers.
                         </p>
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
                             <Link
                                 href="/post-requirement"
-                                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-colors shadow-lg shadow-black/20"
+                                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-colors shadow-lg shadow-black/20 text-base"
                             >
                                 Post Your Requirement
                                 <ArrowRight className="w-5 h-5" />
                             </Link>
                             <Link
                                 href="/artists"
-                                className="inline-flex items-center gap-2 px-8 py-4 bg-black/20 text-white font-semibold rounded-full hover:bg-black/30 transition-colors border border-white/30"
+                                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-black/20 text-white font-semibold rounded-full hover:bg-black/30 transition-colors border border-white/30 text-base"
                             >
                                 Browse Artists
                             </Link>

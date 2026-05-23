@@ -143,7 +143,7 @@ export default function Hero() {
     }, []);
 
     return (
-        <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-[#0a0a0b] pt-24 pb-10 sm:pb-12 lg:pt-0 lg:pb-0">
+        <section className="relative min-h-[100svh] flex items-center overflow-hidden bg-[#0a0a0b] pt-20 pb-10 sm:pb-12 lg:pt-0 lg:pb-0">
             {/* Background Effects */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-900/20 rounded-full blur-[120px]" />
@@ -151,9 +151,9 @@ export default function Hero() {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
-                <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
-                    {/* Left Content (now Right on Desktop) */}
-                    <div className="text-left space-y-5 sm:space-y-6 lg:space-y-8 lg:order-2 lg:col-span-7">
+                <div className="grid lg:grid-cols-12 gap-6 lg:gap-16 items-center">
+                    {/* Text content — order-2 on mobile (image shows first), order-2 on desktop too */}
+                    <div className="text-left space-y-4 sm:space-y-6 lg:space-y-8 order-2 lg:order-2 lg:col-span-7">
                         {/* Badge */}
                         <div className="inline-flex max-w-full items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full backdrop-blur-md">
                             <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
@@ -161,20 +161,20 @@ export default function Hero() {
                         </div>
 
                         {/* Heading */}
-                        <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight min-h-[1.2em]">
+                        <h1 className="text-[28px] sm:text-5xl lg:text-7xl font-bold text-white leading-tight tracking-tight">
                             Book <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600 inline-block animate-slideUp">
                                 Top {categoriesList[categoryIndex]}
-                            </span><br />
+                            </span>{' '}
                             For Your Event
                         </h1>
 
                         {/* Tagline */}
-                        <p className="text-base sm:text-xl font-semibold italic text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 -mt-2 sm:-mt-4">
+                        <p className="text-sm sm:text-xl font-semibold italic text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">
                             Bringing stars to your event!
                         </p>
 
-                        {/* Subtitle */}
-                        <p className="text-[15px] sm:text-base lg:text-lg text-gray-400 max-w-none sm:max-w-xl leading-7 sm:leading-relaxed">
+                        {/* Subtitle — hidden on smallest screens to reduce clutter */}
+                        <p className="hidden sm:block text-base lg:text-lg text-gray-400 max-w-xl leading-relaxed">
                             From soulful <strong>Qawwals</strong> to high-energy <strong>Live Bands</strong>, we connect you with Pakistan&apos;s finest talent for weddings, corporate events, and concerts.
                         </p>
 
@@ -209,7 +209,7 @@ export default function Hero() {
                         </div>
 
                         {/* Quick Stats Row */}
-                        <div className="grid grid-cols-3 gap-3 sm:gap-8 pt-5 sm:pt-6 border-t border-white/5">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-8 pt-4 sm:pt-6 border-t border-white/5">
                             <div>
                                 <div className="text-xl sm:text-2xl font-bold text-white"><AnimatedCounter end={stats.artists} duration={2000} suffix="+" /></div>
                                 <div className="text-xs sm:text-sm text-gray-500">Artists</div>
@@ -231,8 +231,8 @@ export default function Hero() {
 
                     </div>
 
-                    {/* Right Image (now Left on Desktop) */}
-                    <div className="relative h-[280px] sm:h-[460px] lg:h-[800px] flex items-end justify-center lg:justify-start lg:order-1 lg:col-span-5">
+                    {/* Image — order-1 on mobile (above text), order-1 on desktop */}
+                    <div className="relative h-[260px] sm:h-[400px] lg:h-[800px] flex items-end justify-center lg:justify-start order-1 lg:order-1 lg:col-span-5">
                         {/* Main Character Image */}
                         <div className="relative z-10 w-full max-w-[280px] sm:max-w-lg h-full lg:aspect-auto lg:h-[90%]">
                             <Image

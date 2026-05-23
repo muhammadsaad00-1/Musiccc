@@ -60,8 +60,12 @@ export default function HomeBlogSection() {
 
     return (
         <section className="w-full bg-[#0a0a0b] py-20 relative overflow-hidden">
-            {/* Background glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-500/5 rounded-full blur-[120px] pointer-events-none" />
+            {/* Background glows */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute -left-32 top-1/2 -translate-y-1/2 w-[420px] h-[420px] bg-orange-500/15 rounded-full blur-[120px]" />
+                <div className="absolute -right-32 top-1/2 -translate-y-1/2 w-[420px] h-[420px] bg-pink-600/10 rounded-full blur-[120px]" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-orange-500/6 rounded-full blur-[100px]" />
+            </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Section Header */}

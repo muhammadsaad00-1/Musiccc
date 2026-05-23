@@ -55,9 +55,10 @@ export default function OurClients() {
     return (
         <section className="py-20 lg:py-28 bg-[#0f0f10] relative overflow-hidden">
             {/* Decorative blobs */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-600/5 rounded-full blur-[120px]" />
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/5 rounded-full blur-[120px]" />
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute -left-32 top-1/2 -translate-y-1/2 w-[440px] h-[440px] bg-orange-500/18 rounded-full blur-[120px]" />
+                <div className="absolute -right-32 top-1/2 -translate-y-1/2 w-[440px] h-[440px] bg-pink-600/12 rounded-full blur-[120px]" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-orange-600/8 rounded-full blur-[100px]" />
             </div>
 
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

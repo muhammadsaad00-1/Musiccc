@@ -21,12 +21,29 @@ import {
   Star,
   Zap,
   PartyPopper,
-  Briefcase,
-  Users,
-  Heart,
   Music2,
-  User2,
   ChevronDown,
+  Mic,
+  Guitar,
+  Drum,
+  Headphones,
+  Piano,
+  Theater,
+  Camera,
+  PersonStanding,
+  Megaphone,
+  Paintbrush,
+  Palette,
+  Globe,
+  Heart,
+  Building2,
+  GraduationCap,
+  Cake,
+  Ship,
+  Tent,
+  Handshake,
+  Landmark,
+  Waves,
 } from "lucide-react";
 import { cities } from "@/lib/mockData";
 import { API_BASE_URL } from "@/lib/api";
@@ -220,16 +237,6 @@ const COUNTRY_CODES = [
   { code: "+263", iso2: "zw", name: "Zimbabwe", placeholder: "71 234 5678", maxLength: 9 },
 ];
 
-// ─── Event types ──────────────────────────────────────────────────────────────
-const EVENT_TYPES = [
-  "Wedding/Mehndi",
-  "Concert",
-  "Corporate Event",
-  "Private Party",
-  "Cruise",
-  "Resort",
-];
-
 // ─── Floating particles ───────────────────────────────────────────────────────
 const FloatingParticles = () => {
   const [mounted, setMounted] = useState(false);
@@ -253,29 +260,90 @@ const FloatingParticles = () => {
   );
 };
 
+// ─── Category config map ──────────────────────────────────────────────────────
+const CATEGORY_CONFIG: Record<string, { icon: any; iconColor: string; iconBg: string }> = {
+  singer:       { icon: Mic,           iconColor: "text-rose-400",    iconBg: "bg-rose-500/15" },
+  vocal:        { icon: Mic,           iconColor: "text-rose-400",    iconBg: "bg-rose-500/15" },
+  qawwal:       { icon: Music,         iconColor: "text-amber-400",   iconBg: "bg-amber-500/15" },
+  band:         { icon: Guitar,        iconColor: "text-sky-400",     iconBg: "bg-sky-500/15" },
+  bhangra:      { icon: Drum,          iconColor: "text-orange-400",  iconBg: "bg-orange-500/15" },
+  dj:           { icon: Headphones,    iconColor: "text-violet-400",  iconBg: "bg-violet-500/15" },
+  musician:     { icon: Piano,         iconColor: "text-teal-400",    iconBg: "bg-teal-500/15" },
+  instrumental: { icon: Piano,         iconColor: "text-indigo-400",  iconBg: "bg-indigo-500/15" },
+  classical:    { icon: Piano,         iconColor: "text-indigo-400",  iconBg: "bg-indigo-500/15" },
+  comedian:     { icon: Theater,       iconColor: "text-yellow-400",  iconBg: "bg-yellow-500/15" },
+  photograph:   { icon: Camera,        iconColor: "text-cyan-400",    iconBg: "bg-cyan-500/15" },
+  sufi:         { icon: Sparkles,      iconColor: "text-emerald-400", iconBg: "bg-emerald-500/15" },
+  ghazal:       { icon: Music2,        iconColor: "text-pink-400",    iconBg: "bg-pink-500/15" },
+  folk:         { icon: Music,         iconColor: "text-lime-400",    iconBg: "bg-lime-500/15" },
+  dance:        { icon: PersonStanding,iconColor: "text-fuchsia-400", iconBg: "bg-fuchsia-500/15" },
+  anchor:       { icon: Megaphone,     iconColor: "text-blue-400",    iconBg: "bg-blue-500/15" },
+  host:         { icon: Megaphone,     iconColor: "text-blue-400",    iconBg: "bg-blue-500/15" },
+  makeup:       { icon: Paintbrush,    iconColor: "text-pink-300",    iconBg: "bg-pink-400/15" },
+  mehndi:       { icon: Palette,       iconColor: "text-amber-300",   iconBg: "bg-amber-400/15" },
+  decor:        { icon: PartyPopper,   iconColor: "text-red-400",     iconBg: "bg-red-500/15" },
+  cultural:     { icon: Globe,         iconColor: "text-teal-400",    iconBg: "bg-teal-500/15" },
+};
+
+function getCategoryConfig(name: string) {
+  const n = name.toLowerCase();
+  for (const [key, cfg] of Object.entries(CATEGORY_CONFIG)) {
+    if (n.includes(key)) return cfg;
+  }
+  return { icon: Music, iconColor: "text-gray-400", iconBg: "bg-gray-500/15" };
+}
+
+// ─── Event types config ───────────────────────────────────────────────────────
+const EVENT_TYPES_CONFIG = [
+  { value: "Wedding/Mehndi",       label: "Wedding / Mehndi",     icon: Heart,         iconColor: "text-rose-400",    iconBg: "bg-rose-500/15" },
+  { value: "Concert",              label: "Concert",              icon: Mic,           iconColor: "text-orange-400",  iconBg: "bg-orange-500/15" },
+  { value: "Corporate Event",      label: "Corporate Event",      icon: Building2,     iconColor: "text-sky-400",     iconBg: "bg-sky-500/15" },
+  { value: "College Event",        label: "College Event",        icon: GraduationCap, iconColor: "text-violet-400",  iconBg: "bg-violet-500/15" },
+  { value: "Birthday Party",       label: "Birthday Party",       icon: Cake,          iconColor: "text-pink-400",    iconBg: "bg-pink-500/15" },
+  { value: "Private Party",        label: "Private Party",        icon: PartyPopper,   iconColor: "text-amber-400",   iconBg: "bg-amber-500/15" },
+  { value: "Cruise",               label: "Cruise",               icon: Ship,          iconColor: "text-teal-400",    iconBg: "bg-teal-500/15" },
+  { value: "Resort",               label: "Luxury Resort",        icon: Waves,         iconColor: "text-cyan-400",    iconBg: "bg-cyan-500/15" },
+  { value: "Festival",             label: "Festival",             icon: Tent,          iconColor: "text-orange-400",  iconBg: "bg-orange-500/15" },
+  { value: "Cultural Exchange",    label: "Cultural Exchange",    icon: Globe,         iconColor: "text-emerald-400", iconBg: "bg-emerald-500/15" },
+  { value: "Embassy / Diplomatic", label: "Embassy / Diplomatic", icon: Handshake,     iconColor: "text-yellow-400",  iconBg: "bg-yellow-500/15" },
+  { value: "Government Event",     label: "Government Event",     icon: Landmark,      iconColor: "text-indigo-400",  iconBg: "bg-indigo-500/15" },
+];
+
 // ─── Artist type card ─────────────────────────────────────────────────────────
 const ArtistTypeCard = ({
-  icon: Icon, label, value, selected, onClick, color,
+  icon: Icon, label, selected, onClick, iconColor, iconBg,
 }: {
-  icon: any; label: string; value: string; selected: boolean; onClick: () => void; color: string;
+  icon: any; label: string; selected: boolean; onClick: () => void; iconColor: string; iconBg: string;
 }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`relative p-4 rounded-2xl border-2 transition-all duration-300 group flex flex-col items-center gap-2 ${selected
-      ? `bg-gradient-to-br ${color} border-transparent shadow-lg scale-105`
-      : "bg-[#0a0a0b]/80 border-gray-800 hover:border-gray-700 hover:bg-[#111]"
-      }`}
+    className={`group relative flex items-center gap-3 px-3.5 py-3 rounded-xl border-2 transition-all duration-200 w-full text-left overflow-hidden ${
+      selected
+        ? "border-orange-500/50 bg-gradient-to-r from-orange-500/[0.12] to-pink-500/[0.06]"
+        : "border-gray-800 bg-[#0a0a0b] hover:border-gray-700 hover:bg-[#111]"
+    }`}
   >
-    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${selected ? "bg-white/20" : "bg-gradient-to-br from-gray-800 to-gray-900"}`}>
-      <Icon className={`w-6 h-6 ${selected ? "text-white" : "text-gray-400 group-hover:text-white"}`} />
+    <span className={`absolute left-0 inset-y-0 w-[3px] rounded-r-full bg-gradient-to-b from-orange-400 to-pink-500 transition-opacity duration-200 ${
+      selected ? "opacity-100" : "opacity-0 group-hover:opacity-30"
+    }`} />
+    <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center border transition-all duration-200 ${
+      selected
+        ? "bg-orange-500/20 border-orange-500/30"
+        : `${iconBg} border-transparent group-hover:scale-105`
+    }`}>
+      <Icon className={`w-4 h-4 transition-colors ${selected ? "text-orange-300" : iconColor}`} />
     </div>
-    <span className={`text-sm font-medium ${selected ? "text-white" : "text-gray-400 group-hover:text-white"}`}>{label}</span>
-    {selected && (
-      <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center">
-        <CheckCircle className="w-4 h-4 text-green-500" />
-      </div>
-    )}
+    <span className={`flex-1 text-sm font-semibold leading-snug transition-colors ${
+      selected ? "text-white" : "text-gray-400 group-hover:text-gray-200"
+    }`}>
+      {label}
+    </span>
+    <div className={`flex-shrink-0 w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
+      selected ? "border-orange-400 bg-orange-400/10" : "border-gray-700 group-hover:border-gray-500"
+    }`}>
+      {selected && <div className="w-2 h-2 rounded-full bg-orange-400" />}
+    </div>
   </button>
 );
 
@@ -352,7 +420,11 @@ const PhoneInput = ({
               />
             </div>
             {/* List */}
-            <div className="max-h-60 overflow-y-auto">
+            <div
+              className="max-h-60 overflow-y-auto"
+              data-lenis-prevent
+              onWheel={(e) => e.stopPropagation()}
+            >
               {filtered.map((c) => (
                 <button
                   key={`${c.iso2}-${c.code}`}
@@ -709,7 +781,7 @@ export default function PostRequirementPage() {
         {/* Form Card */}
         <form onSubmit={handleSubmit} className="relative">
           <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/40 via-pink-500/40 to-purple-500/40 rounded-[28px] blur-lg opacity-50 transition-opacity" />
-          <div className="relative bg-[#111113]/95 backdrop-blur-xl rounded-3xl border border-gray-800/50 p-8 sm:p-10 shadow-2xl">
+          <div className="relative bg-[#111113]/95 backdrop-blur-xl rounded-3xl border border-gray-800/50 p-4 sm:p-8 shadow-2xl">
 
             {/* ── Step 1: Event Details ────────────────────────────────────── */}
             <div className={`transition-all duration-300 ${step === 1 ? "opacity-100" : "hidden"} ${isAnimating ? "opacity-0 translate-x-4" : ""}`}>
@@ -724,33 +796,25 @@ export default function PostRequirementPage() {
               </div>
 
               <div className="space-y-6">
-                {/* Event type dropdown – hardcoded */}
-                <div className="group">
+                {/* Event type visual picker */}
+                <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
                     <PartyPopper className="w-4 h-4 text-orange-400" />
                     What's the occasion? <span className="text-pink-400">*</span>
                   </label>
-                  <select
-                    name="eventType"
-                    value={formData.eventType}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-5 py-4 bg-[#0a0a0b]/80 border-2 border-gray-800 rounded-2xl text-white focus:ring-0 focus:border-orange-500/50 transition-all duration-300 hover:border-gray-700 cursor-pointer appearance-none"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f97316'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundPosition: "right 1rem center",
-                      backgroundSize: "1.5rem",
-                    }}
-                  >
-                    <option value="">Select event type</option>
-                    <option value="Wedding/Mehndi">Wedding/Mehndi</option>
-                    <option value="Concert">Concert</option>
-                    <option value="Corporate Event">Corporate Event</option>
-                    <option value="Private Party">Private Party</option>
-                    <option value="Cruise">Cruise</option>
-                    <option value="Resort">Resort</option>
-                  </select>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {EVENT_TYPES_CONFIG.map((et) => (
+                      <ArtistTypeCard
+                        key={et.value}
+                        icon={et.icon}
+                        label={et.label}
+                        iconColor={et.iconColor}
+                        iconBg={et.iconBg}
+                        selected={formData.eventType === et.value}
+                        onClick={() => setFormData({ ...formData, eventType: et.value })}
+                      />
+                    ))}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -799,7 +863,11 @@ export default function PostRequirementPage() {
                         autoComplete="off"
                       />
                       {isCityDropdownOpen && (
-                        <div className="absolute z-[9999] mt-2 w-full max-h-60 overflow-y-auto bg-[#0f0f10] border-2 border-gray-800 rounded-2xl shadow-2xl shadow-black/50">
+                        <div
+                          className="absolute z-[9999] mt-2 w-full max-h-60 overflow-y-auto bg-[#0f0f10] border-2 border-gray-800 rounded-2xl shadow-2xl shadow-black/50"
+                          data-lenis-prevent
+                          onWheel={(e) => e.stopPropagation()}
+                        >
                           {filteredCities.length > 0 ? (
                             filteredCities.map((city) => (
                               <button
@@ -870,39 +938,19 @@ export default function PostRequirementPage() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {categories.length > 0 ? (
                     categories.map((cat) => {
-                      const artistTypeValue = cat.name;
-                      const getIcon = (n: string) => {
-                        if (n.toLowerCase().includes("singer")) return Music;
-                        if (n.toLowerCase().includes("musician") || n.toLowerCase().includes("band")) return Users;
-                        if (n.toLowerCase().includes("dj")) return Zap;
-                        if (n.toLowerCase().includes("dancer")) return Heart;
-                        if (n.toLowerCase().includes("comedian")) return Star;
-                        if (n.toLowerCase().includes("qawwal")) return Music2;
-                        if (n.toLowerCase().includes("bhangra")) return User2;
-                        return Briefcase;
-                      };
-                      const getColor = (n: string) => {
-                        if (n.toLowerCase().includes("singer")) return "from-purple-500 to-pink-600";
-                        if (n.toLowerCase().includes("musician") || n.toLowerCase().includes("band")) return "from-blue-500 to-cyan-600";
-                        if (n.toLowerCase().includes("dj")) return "from-yellow-500 to-orange-600";
-                        if (n.toLowerCase().includes("dancer")) return "from-pink-500 to-rose-600";
-                        if (n.toLowerCase().includes("comedian")) return "from-green-500 to-emerald-600";
-                        if (n.toLowerCase().includes("qawwal")) return "from-indigo-500 to-violet-600";
-                        if (n.toLowerCase().includes("bhangra")) return "from-red-500 to-yellow-600";
-                        return "from-gray-500 to-gray-600";
-                      };
+                      const cfg = getCategoryConfig(cat.name);
                       return (
                         <ArtistTypeCard
                           key={cat.id}
-                          icon={getIcon(cat.name)}
+                          icon={cfg.icon}
                           label={cat.name}
-                          value={artistTypeValue}
-                          color={getColor(cat.name)}
-                          selected={formData.artistType === artistTypeValue}
-                          onClick={() => setFormData({ ...formData, artistType: artistTypeValue })}
+                          iconColor={cfg.iconColor}
+                          iconBg={cfg.iconBg}
+                          selected={formData.artistType === cat.name}
+                          onClick={() => setFormData({ ...formData, artistType: cat.name })}
                         />
                       );
                     })
@@ -1043,7 +1091,7 @@ export default function PostRequirementPage() {
                 {/* Booking summary */}
                 <div className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 rounded-2xl p-5 border border-gray-800/50">
                   <h3 className="text-sm font-medium text-gray-400 mb-3">Booking Summary</h3>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     {selectedArtist && (
                       <div className="col-span-2 pb-2 border-b border-gray-700/50">
                         <span className="text-gray-500">Selected Artist:</span>

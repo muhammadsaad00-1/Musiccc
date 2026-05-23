@@ -8,8 +8,10 @@ export default function ReadyForMomentsCTA() {
     return (
         <section className="py-12 px-4 relative overflow-hidden">
             {/* Background Decorations */}
-            <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[400px] bg-red-600/10 rounded-full blur-[140px]" />
+                <div className="absolute -left-20 top-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-orange-500/20 rounded-full blur-[120px]" />
+                <div className="absolute -right-20 top-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-pink-600/15 rounded-full blur-[120px]" />
             </div>
             
             <div className="max-w-7xl mx-auto">

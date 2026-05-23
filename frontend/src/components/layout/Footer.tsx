@@ -82,6 +82,10 @@ export default function Footer() {
         { name: "Birthday Parties", slug: "birthday" },
         { name: "Luxury Cruise & Resort", slug: "resort-event" },
         { name: "Private Parties", slug: "private-party" },
+        { name: "Festivals", slug: "festival" },
+        { name: "Cultural Exchanges", slug: "cultural-exchange" },
+        { name: "Embassy & Diplomatic", slug: "embassy-diplomatic" },
+        { name: "Government Events", slug: "government-event" },
     ];
 
     const companyLinks = [
@@ -134,24 +138,24 @@ export default function Footer() {
                             Pakistan&apos;s Largest Marketplace for Professional Artists. We connect you with the best talent for weddings, corporate events, and concerts.
                         </p> */}
 
-                        <div className="flex items-center gap-4">
-                            <span className="text-base font-medium text-white">Follow us On</span>
-                            <div className="h-px w-8 bg-gray-700"></div>
-                            <div className="flex gap-3">
-                                <a href="https://www.facebook.com/share/1BkG8r9xrN/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all border border-white/5">
-                                    <Facebook className="w-4 h-4" />
+                        <div className="flex flex-wrap items-center gap-3">
+                            <span className="text-sm font-medium text-white">Follow us On</span>
+                            <div className="h-px w-6 bg-gray-700 hidden sm:block"></div>
+                            <div className="flex gap-2.5">
+                                <a href="https://www.facebook.com/share/1BkG8r9xrN/" target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all border border-white/5">
+                                    <Facebook className="w-5 h-5" />
                                 </a>
-                                <a href="https://www.instagram.com/theartistfactoryofficial" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-pink-600 hover:text-white transition-all border border-white/5">
-                                    <Instagram className="w-4 h-4" />
+                                <a href="https://www.instagram.com/theartistfactoryofficial" target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-pink-600 hover:text-white transition-all border border-white/5">
+                                    <Instagram className="w-5 h-5" />
                                 </a>
-                                <a href="https://youtube.com/@theartistfactoryofficial" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-red-600 hover:text-white transition-all border border-white/5">
-                                    <Youtube className="w-4 h-4" />
+                                <a href="https://youtube.com/@theartistfactoryofficial" target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-red-600 hover:text-white transition-all border border-white/5">
+                                    <Youtube className="w-5 h-5" />
                                 </a>
-                                <a href="https://www.tiktok.com/@theartistfactory" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-black hover:text-white hover:border-gray-700 border border-transparent transition-all border-white/5">
-                                    <TikTokIcon className="w-4 h-4" />
+                                <a href="https://www.tiktok.com/@theartistfactory" target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-[#111] hover:text-white border border-white/5 transition-all">
+                                    <TikTokIcon className="w-5 h-5" />
                                 </a>
-                                <a href="https://www.linkedin.com/company/artistfactoryofficial/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-blue-700 hover:text-white transition-all border border-white/5">
-                                    <Linkedin className="w-4 h-4" />
+                                <a href="https://www.linkedin.com/company/artistfactoryofficial/" target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-[#1a1a1a] rounded-full flex items-center justify-center text-gray-400 hover:bg-blue-700 hover:text-white transition-all border border-white/5">
+                                    <Linkedin className="w-5 h-5" />
                                 </a>
                             </div>
                         </div>
@@ -195,7 +199,7 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* Links Columns - Spans 8 columns (4 cols total) */}
+                    {/* Links Columns */}
                     <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-8 lg:mt-10 lg:pl-12">
 
                         {/* Artists Column */}
@@ -203,18 +207,17 @@ export default function Footer() {
                             <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
                                 Artists
                             </h3>
-                            <ul className="space-y-4">
+                            <ul className="space-y-1">
                                 {categories.slice(0, 6).map((category, index) => (
                                     <li key={index}>
-                                        <Link href={`/artists/${category.slug}`} className="text-base text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2">
-                                            {/* <span className="text-sm opacity-70">{category.icon}</span> */}
+                                        <Link href={`/artists/${category.slug}`} className="text-sm text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2 py-2 leading-tight">
                                             {category.name}
                                         </Link>
                                     </li>
                                 ))}
                                 <li>
-                                    <Link href="/categories" className="text-base font-semibold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-2 mt-2">
-                                        View All Categories →
+                                    <Link href="/categories" className="text-sm font-semibold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-2 py-2 mt-1">
+                                        View All →
                                     </Link>
                                 </li>
                             </ul>
@@ -224,17 +227,17 @@ export default function Footer() {
                         {/* Events Column */}
                         <div>
                             <h3 className="text-white font-bold text-lg mb-6">Events</h3>
-                            <ul className="space-y-4">
-                                {events.map((event, index) => (
+                            <ul className="space-y-1">
+                                {events.slice(0, 8).map((event, index) => (
                                     <li key={index}>
-                                        <Link href={`/events/${event.slug}`} className="text-base text-gray-400 hover:text-orange-400 transition-colors block">
+                                        <Link href={`/events/${event.slug}`} className="text-sm text-gray-400 hover:text-orange-400 transition-colors block py-2 leading-tight">
                                             {event.name}
                                         </Link>
                                     </li>
                                 ))}
                                 <li>
-                                    <Link href="/events" className="text-base font-semibold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-2 mt-2">
-                                        View All Events →
+                                    <Link href="/events" className="text-sm font-semibold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-2 py-2 mt-1">
+                                        View All →
                                     </Link>
                                 </li>
                             </ul>
@@ -243,10 +246,10 @@ export default function Footer() {
                         {/* Company Column */}
                         <div>
                             <h3 className="text-white font-bold text-lg mb-6">Company</h3>
-                            <ul className="space-y-4">
+                            <ul className="space-y-1">
                                 {companyLinks.map((link, index) => (
                                     <li key={index}>
-                                        <Link href={link.href} className="text-base text-gray-400 hover:text-orange-400 transition-colors block">
+                                        <Link href={link.href} className="text-sm text-gray-400 hover:text-orange-400 transition-colors block py-2 leading-tight">
                                             {link.name}
                                         </Link>
                                     </li>
@@ -258,13 +261,13 @@ export default function Footer() {
 
 
                 {/* Bottom Bar */}
-                <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-gray-400 text-base">
-                        © Copyright 2026 | The Artist Factory | All Rights Reserved.
+                <div className="pt-8 border-t border-gray-800/40 flex flex-col items-center gap-3 md:flex-row md:justify-between text-center md:text-left">
+                    <p className="text-gray-500 text-sm">
+                        © 2026 The Artist Factory. All Rights Reserved.
                     </p>
-                    <div className="flex items-center gap-2 text-gray-400 text-base group">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm">
                         <span>Made with</span>
-                        <Heart className="w-4 h-4 text-red-500 fill-red-500 animate-pulse group-hover:scale-110 transition-transform" />
+                        <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 animate-pulse" />
                         <span>in Pakistan</span>
                     </div>
                 </div>
