@@ -80,6 +80,42 @@ const eventTypes = [
         stats: "50+ Artists",
         popular: "Acoustic • Jazz",
     },
+    {
+        slug: "festival",
+        name: "Festival",
+        description: "Enthrall large audiences with headlining acts, live bands, and high-energy cultural performers.",
+        icon: "🎪",
+        banner: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&q=80",
+        stats: "150+ Artists",
+        popular: "Rock Bands • Folk Artists • DJs",
+    },
+    {
+        slug: "cultural-exchange",
+        name: "Cultural Exchange",
+        description: "Celebrate global heritage with authentic folk dancers, classical musicians, and traditional troupes.",
+        icon: "🌍",
+        banner: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&q=80",
+        stats: "80+ Artists",
+        popular: "Classical Musicians • Sufi • Folk Dancers",
+    },
+    {
+        slug: "embassy-diplomatic",
+        name: "Embassy & Diplomatic Event",
+        description: "Exquisite, sophisticated entertainment curated for national celebrations, galas, and VIP diplomatic receptions.",
+        icon: "🤝",
+        banner: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80",
+        stats: "60+ Artists",
+        popular: "Violinists • Instrumentalists • Ghazal Artists",
+    },
+    {
+        slug: "government-event",
+        name: "Government Event",
+        description: "Dignified and elegant entertainment featuring national anthems, classical recitals, and respectful live performances.",
+        icon: "🏛️",
+        banner: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80",
+        stats: "90+ Artists",
+        popular: "National Reciters • Ghazal Singers • Classical",
+    },
 ];
 
 export default function EventsPage() {
@@ -104,7 +140,7 @@ export default function EventsPage() {
                         </span>
                     </h1>
                     <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed italic border-l-2 border-orange-500/50 pl-6">
-                        "Your Vision, Our Stage. Bringing world-class entertainment and unforgettable moments to your doorstep."
+                        "Every event has a story. Let us curate the perfect memory to make yours unforgettable."
                     </p>
                 </div>
             </section>

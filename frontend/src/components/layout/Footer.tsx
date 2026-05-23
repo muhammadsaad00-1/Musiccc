@@ -82,6 +82,10 @@ export default function Footer() {
         { name: "Birthday Parties", slug: "birthday" },
         { name: "Luxury Cruise & Resort", slug: "resort-event" },
         { name: "Private Parties", slug: "private-party" },
+        { name: "Festivals", slug: "festival" },
+        { name: "Cultural Exchanges", slug: "cultural-exchange" },
+        { name: "Embassy & Diplomatic", slug: "embassy-diplomatic" },
+        { name: "Government Events", slug: "government-event" },
     ];
 
     const companyLinks = [
@@ -225,7 +229,7 @@ export default function Footer() {
                         <div>
                             <h3 className="text-white font-bold text-lg mb-6">Events</h3>
                             <ul className="space-y-4">
-                                {events.map((event, index) => (
+                                {events.slice(0, 8).map((event, index) => (
                                     <li key={index}>
                                         <Link href={`/events/${event.slug}`} className="text-base text-gray-400 hover:text-orange-400 transition-colors block">
                                             {event.name}

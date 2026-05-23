@@ -63,6 +63,26 @@ const eventHeroImages: Record<string, string[]> = {
         "https://images.unsplash.com/photo-1599839619722-39751411ea63?auto=format&fit=crop&q=80",
         "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80"
     ],
+    festival: [
+        "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80"
+    ],
+    "cultural-exchange": [
+        "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80"
+    ],
+    "embassy-diplomatic": [
+        "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80"
+    ],
+    "government-event": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80"
+    ],
     default: [
         "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80",
         "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80",
@@ -111,6 +131,26 @@ const eventConfigs: Record<string, { name: string; description: string; icon: st
         name: "Luxury Cruise & Resort Event",
         description: "Premium, sophisticated entertainment tailored for destination weddings, cruises, and resort galas",
         icon: "🛳️"
+    },
+    festival: {
+        name: "Festival",
+        description: "Enthrall large audiences with headlining acts, live bands, and high-energy cultural performers",
+        icon: "🎪"
+    },
+    "cultural-exchange": {
+        name: "Cultural Exchange",
+        description: "Celebrate global heritage with authentic folk dancers, classical musicians, and traditional troupes",
+        icon: "🌍"
+    },
+    "embassy-diplomatic": {
+        name: "Embassy & Diplomatic Event",
+        description: "Exquisite, sophisticated entertainment curated for national celebrations, galas, and VIP diplomatic receptions",
+        icon: "🤝"
+    },
+    "government-event": {
+        name: "Government Event",
+        description: "Dignified and elegant entertainment featuring national anthems, classical recitals, and respectful live performances",
+        icon: "🏛️"
     },
 };
 
@@ -423,6 +463,22 @@ export default function EventTypePage({ params }: EventTypePageProps) {
                         { question: "Who covers the travel and accommodation for a resort event?", answer: "For out-of-city/international destination events, the client is responsible for booking and covering the flights (Business/Economy), local travel, 4/5-star accommodation, and meals for the artist and their entire designated crew." },
                         { question: "Can the performances be split into multiple smaller sets throughout the weekend?", answer: "Yes, many resort bookings operate on a 'weekend package' basis, where a musician performs a relaxed acoustic set for a welcome brunch, and a full band/DJ set for the main gala night. This must be detailed in the initial booking contract." },
                         { question: "Are passports and visas handled by your team for international cruises?", answer: "We provide the artists' official passport details, but the client must facilitate and sponsor the visa applications (including expedited processing fees) well in advance of the travel date." }
+                    ] : type === 'festival' ? [
+                        { question: "How early do we need to book headlining artists for a festival?", answer: "Festival headliners and A-list acts require bookings at least 4 to 6 months in advance. Their schedules are highly coordinated, and they require advance travel and stage logistics planning." },
+                        { question: "Can you provide complete festival sound and stage management?", answer: "The Artist Factory specializes in connecting you with the artists and handling booking contracts. For sound, lights, and staging, we can introduce you to our trusted premium production partners." },
+                        { question: "How are festival artist hospitality and technical riders managed?", answer: "Each headlining artist has a detailed tech rider (sound system specifications, monitor mixes) and a hospitality rider (green rooms, refreshments). Our management coordinates these riders between you and the artist's team to ensure smooth setups." }
+                    ] : type === 'cultural-exchange' ? [
+                        { question: "What type of artists are suitable for cultural exchange events?", answer: "Folk singers, classical instrumentalists, Sufi ensembles, and traditional dance troupes are ideal. They represent national heritage beautifully and engage diverse global audiences." },
+                        { question: "Can artists customize their performances to fit a specific international theme?", answer: "Yes, classical and folk artists can prepare custom fusion sets or integrate traditional instruments from guest countries if coordinated well in advance of the event." },
+                        { question: "Do you represent artists who travel internationally for cultural diplomacy?", answer: "Absolutely. Many of our premium classical and Sufi performers are seasoned international travelers with experience performing at embassies, global expos, and international festivals." }
+                    ] : type === 'embassy-diplomatic' ? [
+                        { question: "What are the security clearance requirements for embassy events?", answer: "We provide full passport, CNIC, and team detail sheets for all performing artists and crew members well in advance to comply with diplomatic security protocols." },
+                        { question: "What genre of music is recommended for a VIP diplomatic reception?", answer: "Soft instrumental ensembles (harp, violin, flute), light classical instrumentals, or elegant Ghazal recitals work perfectly, providing an exquisite atmosphere without overpowering conversation." },
+                        { question: "How do we handle international visas and travel for embassy bookings?", answer: "For events hosted outside the country, the embassy/host is responsible for sponsoring and facilitating fast-track visas and covering premium travel and lodging for the artist crew." }
+                    ] : type === 'government-event' ? [
+                        { question: "Are your artists familiar with official government protocols?", answer: "Yes. We have a selection of distinguished artists, anchors, and instrumentalists who are experienced in performing under strict state protocols, VIP seating arrangements, and formal event structures." },
+                        { question: "Can you provide a classical instrumental national anthem recital?", answer: "Yes, our classical violinists, sitarists, and woodwind players can perform highly refined, respectful instrumental versions of the national anthem." },
+                        { question: "What is the payment procedure for government-contracted events?", answer: "We accommodate official invoicing, NTN registrations, and standard state financial procedures, coordinating directly with your department's accounts team." }
                     ] : [ // default fallback for private party / other
                         { question: "How does the booking process work?", answer: `Find an artist you like, click 'Contact Us', and you will be directed to WhatsApp to speak instantly with booking management to finalize dates and pricing for your ${event.name.toLowerCase()}.` },
                         { question: "Are prices negotiable?", answer: "Prices listed are base estimates. Final pricing depends on your exact location, event duration, peak season demand, and required sound equipment." },

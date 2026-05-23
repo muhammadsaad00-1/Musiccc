@@ -228,6 +228,12 @@ const EVENT_TYPES = [
   "Private Party",
   "Cruise",
   "Resort",
+  "Festival",
+  "Cultural Exchange",
+  "Embassy / Diplomatic",
+  "Government Event",
+  "College Event",
+  "Birthday Party",
 ];
 
 // ─── Floating particles ───────────────────────────────────────────────────────
@@ -750,6 +756,12 @@ export default function PostRequirementPage() {
                     <option value="Private Party">Private Party</option>
                     <option value="Cruise">Cruise</option>
                     <option value="Resort">Resort</option>
+                    <option value="Festival">Festival</option>
+                    <option value="Cultural Exchange">Cultural Exchange</option>
+                    <option value="Embassy / Diplomatic">Embassy / Diplomatic</option>
+                    <option value="Government Event">Government Event</option>
+                    <option value="College Event">College Event</option>
+                    <option value="Birthday Party">Birthday Party</option>
                   </select>
                 </div>
 
