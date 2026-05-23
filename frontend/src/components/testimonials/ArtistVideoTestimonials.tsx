@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Loader2, PlaySquare } from 'lucide-react';
+import { Loader2, PlaySquare } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 import VideoTestimonialCard from './VideoTestimonialCard';
 
@@ -112,12 +112,12 @@ export default function ArtistVideoTestimonials() {
                 {/* Main Content Carousel Area */}
                 <div className="relative max-w-5xl mx-auto">
                     <div className="overflow-hidden">
-                        <div 
+                        <div
                             className="transition-transform duration-700 ease-in-out flex"
                             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                         >
                             {testimonials.map((t) => (
-                                <div key={t.id} className="w-full flex-shrink-0 px-4">
+                                <div key={t.id} className="w-full flex-shrink-0 px-8 md:px-16">
                                     <VideoTestimonialCard
                                         id={t.id}
                                         name={t.name}
@@ -129,31 +129,15 @@ export default function ArtistVideoTestimonials() {
                                         thumbnail={t.photo_url}
                                         isPlaying={playingId === t.id}
                                         onTogglePlay={handleTogglePlay}
+                                        onPrev={testimonials.length > 1 ? prev : undefined}
+                                        onNext={testimonials.length > 1 ? next : undefined}
+                                        hasPrev={currentIndex > 0}
+                                        hasNext={currentIndex < testimonials.length - 1}
                                     />
                                 </div>
                             ))}
                         </div>
                     </div>
-
-                    {/* Navigation Arrows - Repositioned to Sides */}
-                    {testimonials.length > 1 && (
-                        <>
-                            <button
-                                onClick={prev}
-                                disabled={currentIndex === 0}
-                                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-30 w-14 h-14 rounded-full border border-white/10 bg-black/40 backdrop-blur-md flex items-center justify-center text-white hover:bg-orange-500 hover:border-orange-500 transition-all group shadow-2xl ${currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-100'}`}
-                            >
-                                <ChevronLeft className="w-8 h-8 group-hover:-translate-x-1 transition-transform" />
-                            </button>
-                            <button
-                                onClick={next}
-                                disabled={currentIndex === testimonials.length - 1}
-                                className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-30 w-14 h-14 rounded-full border border-white/10 bg-black/40 backdrop-blur-md flex items-center justify-center text-white hover:bg-orange-500 hover:border-orange-500 transition-all group shadow-2xl ${currentIndex === testimonials.length - 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-100'}`}
-                            >
-                                <ChevronRight className="w-8 h-8 group-hover:translate-x-1 transition-transform" />
-                            </button>
-                        </>
-                    )}
                 </div>
             </div>
         </section>
