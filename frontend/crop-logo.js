@@ -9,7 +9,7 @@ async function cropImage() {
   try {
     console.log('Processing:', inputPath);
     await sharp(inputPath)
-      .trim() // This trims transparent borders
+      .trim() // This trims transparent bordersss
       .toFile(outputPath);
     
     // Replace original file
