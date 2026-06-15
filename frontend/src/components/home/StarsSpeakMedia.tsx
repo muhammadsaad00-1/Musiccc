@@ -94,7 +94,7 @@ export default function StarsSpeakMedia() {
             const card = (
               <div className="relative w-72 rounded-2xl overflow-hidden border border-gray-800 bg-[#141417] group hover:border-orange-500/40 transition-all">
                 <div className="relative h-44">
-                  <Image src={thumb} alt={item.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <Image src={thumb} alt={item.title} fill sizes="288px" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
                   <div className="absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-semibold bg-black/60 text-white border border-white/10">
                     {isVideo ? <Play className="w-3 h-3" /> : <ImageIcon className="w-3 h-3" />}
@@ -130,7 +130,7 @@ export default function StarsSpeakMedia() {
       {selectedImage && (
         <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
           <div className="relative w-full h-full max-w-5xl max-h-[86vh]">
-            <Image src={selectedImage} alt="Story image" fill className="object-contain" />
+            <Image src={selectedImage} alt="Story image" fill sizes="(max-width: 1280px) 100vw, 1280px" className="object-contain" />
           </div>
         </div>
       )}

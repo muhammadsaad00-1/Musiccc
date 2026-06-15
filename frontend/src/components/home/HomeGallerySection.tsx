@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { usePortfolio } from '@/lib/hooks';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Play, X } from 'lucide-react';
 
@@ -154,12 +155,13 @@ function ShapeFrame({
           /* ── Cycling thumbnails ── */
           <>
             {items.map((item, i) => (
-              <img
+              <Image
                 key={i}
-                src={getThumb(item)}
+                src={getThumb(item) || 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f4a7?q=80&w=800&auto=format&fit=crop'}
                 alt=""
-                loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover"
+                fill
+                sizes="(max-width: 640px) 45vw, 300px"
+                className="object-cover"
                 style={{
                   opacity: i === activeIdx ? 1 : 0,
                   transition: 'opacity 1s ease-in-out',

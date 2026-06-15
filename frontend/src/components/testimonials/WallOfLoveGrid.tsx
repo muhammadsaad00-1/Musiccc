@@ -63,10 +63,11 @@ export default function WallOfLoveGrid() {
                     <div className="flex items-center gap-4 pt-6 border-t border-gray-800/50">
                         {t.photo_url ? (
                             <div className="relative w-12 h-12 rounded-full overflow-hidden ring-2 ring-gray-800">
-                                <Image 
-                                    src={t.photo_url} 
-                                    alt={t.name} 
-                                    fill 
+                                <Image
+                                    src={t.photo_url}
+                                    alt={t.name}
+                                    fill
+                                    sizes="48px"
                                     className="object-cover"
                                 />
                             </div>

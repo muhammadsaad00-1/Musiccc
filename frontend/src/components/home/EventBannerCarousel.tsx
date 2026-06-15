@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { API_BASE_URL } from '@/lib/api';
 
 interface EventBanner {
@@ -98,10 +99,13 @@ export default function EventBannerCarousel() {
             {/* Dark overlays for text readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 z-10 pointer-events-none" />
             
-            <img 
+            <Image
               src={banner.bg_image_url}
               alt={banner.title}
-              className={`w-full h-full object-cover transition-transform duration-[4000ms] ease-linear ${
+              fill
+              sizes="(max-width: 1500px) 100vw, 1500px"
+              priority={idx === 0}
+              className={`object-cover transition-transform duration-[4000ms] ease-linear ${
                 idx === activeIndex ? 'scale-110' : 'scale-100'
               }`}
             />

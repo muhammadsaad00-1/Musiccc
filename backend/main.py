@@ -8,6 +8,7 @@ from supabase_conn import supabase
 from typing import Optional
 import json
 import re
+import mimetypes
 import traceback
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -36,6 +37,30 @@ general_cache = TTLCache(maxsize=500, ttl=300)      # 5 minutes (for other endpo
 # Legacy cache variable for backward compatibility
 cache = general_cache
 
+# Long-lived cache for image objects. Filenames are unique (id/name-prefixed) so
+# objects are effectively immutable. NOTE: storage3 wraps this value as
+# `Cache-Control: max-age=<value>` and CANNOT add `public`/`immutable` via the
+# SDK — set those on the R2/Cloudflare side (boto3 CacheControl + CF cache rule).
+IMAGE_CACHE_CONTROL_SECONDS = "31536000"  # 1 year
+
+
+def storage_file_options(path_or_name: str, upsert: bool = True, content_type: str = None) -> dict:
+    """Build Supabase Storage upload options with a correct Content-Type and a
+    long-lived Cache-Control. Without an explicit content-type, storage3 stores
+    every file as text/plain;charset=UTF-8, and the default cache is only 1 hour.
+    Pass `content_type` to override the extension-based guess (e.g. the uploaded
+    file's reported content type).
+    """
+    if not content_type:
+        content_type, _ = mimetypes.guess_type(path_or_name)
+    options = {
+        "content-type": content_type or "application/octet-stream",
+        "cache-control": IMAGE_CACHE_CONTROL_SECONDS,
+    }
+    if upsert:
+        options["upsert"] = "true"
+    return options
+
 # Helper function to generate cache keys
 def get_cache_key(prefix: str, **kwargs) -> str:
     """Generate a unique cache key from prefix and parameters"""
@@ -63,6 +88,14 @@ def invalidate_packages_cache():
 def invalidate_categories_cache():
     """Invalidate all category-related cache entries"""
     categories_cache.clear()
+
+def fix_r2_url(url):
+    """Repair R2 public URLs whose host lost the 'dev' label during the
+    Supabase->R2 migration (e.g. '...r2./categories/x.png' -> '...r2.dev/...').
+    Safety net for already-stored bad data; harmless on correct URLs."""
+    if isinstance(url, str):
+        return url.replace(".r2./", ".r2.dev/")
+    return url
 
 app = FastAPI()
 app.state.limiter = limiter
@@ -489,9 +522,9 @@ async def create_performer(
         
         # Upload file with upsert enabled
         upload_response = supabase.storage.from_("performers").upload(
-            profile_path, 
+            profile_path,
             file_bytes,
-            {"upsert": "true"}
+            storage_file_options(profile_path)
         )
         profile_image_url = supabase.storage.from_("performers").get_public_url(profile_path)
         
@@ -517,9 +550,9 @@ async def create_performer(
         header_extension = header_image.filename.split('.')[-1] if '.' in header_image.filename else 'jpg'
         header_path = f"{performer_id}_{sanitized_name}_header.{header_extension}"
         supabase.storage.from_("performers").upload(
-            header_path, 
+            header_path,
             header_bytes,
-            {"upsert": "true"}
+            storage_file_options(header_path)
         )
         header_image_url = supabase.storage.from_("performers").get_public_url(header_path)
         update_data["header_image_url"] = header_image_url
@@ -532,9 +565,9 @@ async def create_performer(
             gallery_extension = gallery_image.filename.split('.')[-1] if '.' in gallery_image.filename else 'jpg'
             gallery_path = f"{performer_id}_{sanitized_name}_gallery_{idx}.{gallery_extension}"
             supabase.storage.from_("performers").upload(
-                gallery_path, 
+                gallery_path,
                 gallery_bytes,
-                {"upsert": "true"}
+                storage_file_options(gallery_path)
             )
             gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
             gallery_urls.append(gallery_url)
@@ -781,9 +814,9 @@ async def update_performer(
         
         # Upload with upsert option to overwrite if exists
         supabase.storage.from_("performers").upload(
-            path, 
-            file_bytes, 
-            {"upsert": "true"}
+            path,
+            file_bytes,
+            storage_file_options(path)
         )
         update_data["profile_image_url"] = supabase.storage.from_("performers").get_public_url(path)
     
@@ -793,9 +826,9 @@ async def update_performer(
         header_path = f"{id}_{sanitized_name}_header.{header_extension}"
         
         supabase.storage.from_("performers").upload(
-            header_path, 
-            header_bytes, 
-            {"upsert": "true"}
+            header_path,
+            header_bytes,
+            storage_file_options(header_path)
         )
         update_data["header_image_url"] = supabase.storage.from_("performers").get_public_url(header_path)
     
@@ -809,9 +842,9 @@ async def update_performer(
                 gallery_path = f"{id}_{sanitized_name}_gallery_{idx}.{gallery_extension}"
                 
                 supabase.storage.from_("performers").upload(
-                    gallery_path, 
-                    gallery_bytes, 
-                    {"upsert": "true"}
+                    gallery_path,
+                    gallery_bytes,
+                    storage_file_options(gallery_path)
                 )
                 gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
                 gallery_urls.append(gallery_url)
@@ -909,9 +942,9 @@ async def create_event(
         
         # Upload file with upsert enabled
         upload_response = supabase.storage.from_("events").upload(
-            path, 
+            path,
             file_bytes,
-            file_options={"upsert": "true"}
+            file_options=storage_file_options(path)
         )
         header_image_url = supabase.storage.from_("events").get_public_url(path)
         
@@ -1071,7 +1104,7 @@ async def update_event(
         # Ensure bucket exists before uploading
         ensure_bucket_exists("events")
         # Upload with upsert option to overwrite if exists
-        supabase.storage.from_("events").upload(path, file_bytes, {"upsert": "true"})
+        supabase.storage.from_("events").upload(path, file_bytes, storage_file_options(path))
         update_data["header_image_url"] = supabase.storage.from_("events").get_public_url(path)
     
     if update_data:
@@ -1129,7 +1162,9 @@ def get_categories(request: Request):
         # Add counts to categories
         for category in categories:
             category["artist_count"] = category_counts.get(category["name"], 0)
-            
+            # Safety net: repair any truncated R2 host ('.r2./' -> '.r2.dev/')
+            category["image_url"] = fix_r2_url(category.get("image_url"))
+
         categories_cache[cache_key] = categories
         return categories
     except Exception as e:
@@ -1172,7 +1207,7 @@ async def create_category(
                 
                 ensure_bucket_exists("categories")
                 
-                supabase.storage.from_("categories").upload(file_path, file_bytes, {"upsert": "true"})
+                supabase.storage.from_("categories").upload(file_path, file_bytes, storage_file_options(file_path))
                 image_url = supabase.storage.from_("categories").get_public_url(file_path)
                 
                 # Update category with image url
@@ -1222,7 +1257,7 @@ async def update_category(
                 
                 ensure_bucket_exists("categories")
                 
-                supabase.storage.from_("categories").upload(file_path, file_bytes, {"upsert": "true"})
+                supabase.storage.from_("categories").upload(file_path, file_bytes, storage_file_options(file_path))
                 image_url = supabase.storage.from_("categories").get_public_url(file_path)
                 
                 supabase.table("categories").update({"image_url": image_url}).eq("id", id).execute()
@@ -1384,7 +1419,7 @@ async def create_blog(
                 
                 ensure_bucket_exists("blogs")
                 
-                supabase.storage.from_("blogs").upload(file_path, file_bytes, {"upsert": "true"})
+                supabase.storage.from_("blogs").upload(file_path, file_bytes, storage_file_options(file_path))
                 image_url = supabase.storage.from_("blogs").get_public_url(file_path)
                 
                 # Update blog with image URL
@@ -1458,7 +1493,7 @@ async def update_blog(
                 
                 ensure_bucket_exists("blogs")
                 
-                supabase.storage.from_("blogs").upload(file_path, file_bytes, {"upsert": "true"})
+                supabase.storage.from_("blogs").upload(file_path, file_bytes, storage_file_options(file_path))
                 image_url = supabase.storage.from_("blogs").get_public_url(file_path)
                 
                 supabase.table("blogs").update({"image_url": image_url}).eq("id", id).execute()
@@ -1547,7 +1582,7 @@ async def create_package(
     
     # Ensure bucket exists before uploading
     ensure_bucket_exists("packages")
-    supabase.storage.from_("packages").upload(path, file_bytes)
+    supabase.storage.from_("packages").upload(path, file_bytes, storage_file_options(path, upsert=False))
     header_image_url = supabase.storage.from_("packages").get_public_url(path)
     
     # Update package with header image URL
@@ -1723,7 +1758,7 @@ async def update_package(
         # Ensure bucket exists before uploading
         ensure_bucket_exists("packages")
         # Upload with upsert option to overwrite if exists
-        supabase.storage.from_("packages").upload(path, file_bytes, {"upsert": "true"})
+        supabase.storage.from_("packages").upload(path, file_bytes, storage_file_options(path))
         update_data["header_image_url"] = supabase.storage.from_("packages").get_public_url(path)
     
     if update_data:
@@ -2214,7 +2249,7 @@ async def create_hero_image(
         upload_response = supabase.storage.from_("hero-images").upload(
             filename,
             file_bytes,
-            {"content-type": image.content_type}
+            storage_file_options(filename, upsert=False, content_type=image.content_type)
         )
         
         if hasattr(upload_response, 'error') and upload_response.error:
@@ -2296,7 +2331,7 @@ async def update_hero_image(
             upload_response = supabase.storage.from_("hero-images").upload(
                 filename,
                 file_bytes,
-                {"content-type": image.content_type}
+                storage_file_options(filename, upsert=False, content_type=image.content_type)
             )
 
             if hasattr(upload_response, 'error') and upload_response.error:
@@ -2444,7 +2479,7 @@ async def upsert_about_profile(
             supabase.storage.from_("about-profile").upload(
                 filename,
                 file_bytes,
-                {"upsert": "true", "content-type": image.content_type or "image/jpeg"}
+                storage_file_options(filename, content_type=image.content_type or "image/jpeg")
             )
             image_url = supabase.storage.from_("about-profile").get_public_url(filename)
 
@@ -2554,7 +2589,7 @@ async def upsert_about_founder(
             supabase.storage.from_("about-profile").upload(
                 filename,
                 file_bytes,
-                {"upsert": "true", "content-type": image.content_type or "image/jpeg"},
+                storage_file_options(filename, content_type=image.content_type or "image/jpeg"),
             )
             image_url = supabase.storage.from_("about-profile").get_public_url(filename)
 
@@ -2647,7 +2682,7 @@ async def create_about_team_member(
             supabase.storage.from_("about-team").upload(
                 filename,
                 file_bytes,
-                {"upsert": "true", "content-type": image.content_type or "image/jpeg"},
+                storage_file_options(filename, content_type=image.content_type or "image/jpeg"),
             )
             image_url = supabase.storage.from_("about-team").get_public_url(filename)
 
@@ -2713,7 +2748,7 @@ async def update_about_team_member(
             supabase.storage.from_("about-team").upload(
                 filename,
                 file_bytes,
-                {"upsert": "true", "content-type": image.content_type or "image/jpeg"},
+                storage_file_options(filename, content_type=image.content_type or "image/jpeg"),
             )
             image_url = supabase.storage.from_("about-team").get_public_url(filename)
 
@@ -2846,7 +2881,7 @@ async def create_client_logo(
             
             # Upload to storage
             supabase.storage.from_("client-logos").upload(
-                path, file_bytes, {"upsert": "true"}
+                path, file_bytes, storage_file_options(path)
             )
             
             # Get public URL and update database
@@ -2894,7 +2929,7 @@ async def update_client_logo(
             
             # Upload to storage
             supabase.storage.from_("client-logos").upload(
-                path, file_bytes, {"upsert": "true"}
+                path, file_bytes, storage_file_options(path)
             )
             
             # Get public URL
@@ -3014,7 +3049,7 @@ async def create_artist_testimonial(
             
             # Upload to storage
             supabase.storage.from_("artist-testimonials").upload(
-                path, file_bytes, {"upsert": "true"}
+                path, file_bytes, storage_file_options(path)
             )
             
             # Get public URL and update database
@@ -3082,7 +3117,7 @@ async def update_artist_testimonial(
             
             # Upload to storage
             supabase.storage.from_("artist-testimonials").upload(
-                path, file_bytes, {"upsert": "true"}
+                path, file_bytes, storage_file_options(path)
             )
             
             # Get public URL
@@ -3146,9 +3181,9 @@ async def upload_portfolio_image(
         
         # Upload to storage
         supabase.storage.from_("portfolio-items").upload(
-            filename, 
-            file_bytes, 
-            {"upsert": "true"}
+            filename,
+            file_bytes,
+            storage_file_options(filename)
         )
         
         # Get public URL
@@ -3302,7 +3337,7 @@ async def create_event_banner(
         supabase.storage.from_("event-banners").upload(
             filename,
             file_bytes,
-            {"upsert": "true"}
+            storage_file_options(filename)
         )
 
         bg_image_url = supabase.storage.from_("event-banners").get_public_url(filename)
@@ -3393,7 +3428,7 @@ async def replace_event_banner_image(
         supabase.storage.from_("event-banners").upload(
             filename,
             file_bytes,
-            {"upsert": "true"}
+            storage_file_options(filename)
         )
 
         bg_image_url = supabase.storage.from_("event-banners").get_public_url(filename)

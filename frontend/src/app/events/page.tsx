@@ -176,10 +176,11 @@ export default function EventsPage() {
                             className="group relative h-[450px] rounded-[2rem] overflow-hidden border border-gray-800 hover:border-orange-500/50 transition-all duration-700 hover:-translate-y-2 hover:shadow-2xl hover:shadow-orange-500/10"
                         >
                             {/* Static Banner Background */}
-                            <Image 
+                            <Image
                                 src={event.banner}
                                 alt={event.name}
                                 fill
+                                sizes="(max-width: 768px) 100vw, 50vw"
                                 className="object-cover transition-transform duration-1000 group-hover:scale-110 grayscale-[30%] group-hover:grayscale-0 opacity-60 group-hover:opacity-100"
                             />
                             

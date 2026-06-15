@@ -240,6 +240,7 @@ export default function Hero() {
                                 src={heroImages[currentImageIndex]}
                                 alt="Featured Artist"
                                 fill
+                                sizes="(max-width: 1024px) 280px, 40vw"
                                 className="object-cover rounded-3xl lg:rounded-t-[3rem] shadow-2xl shadow-orange-900/20 animate-in fade-in duration-700"
                                 priority
                             />

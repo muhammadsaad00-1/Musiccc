@@ -96,6 +96,7 @@ export default function HomeBlogSection() {
                                         src={featured.image_url}
                                         alt={featured.title}
                                         fill
+                                        sizes="(max-width: 1024px) 100vw, 50vw"
                                         className="object-cover group-hover:scale-105 transition-transform duration-700"
                                     />
                                 ) : (
@@ -143,6 +144,7 @@ export default function HomeBlogSection() {
                                                 src={post.image_url}
                                                 alt={post.title}
                                                 fill
+                                                sizes="144px"
                                                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                         ) : (

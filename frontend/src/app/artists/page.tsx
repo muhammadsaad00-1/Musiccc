@@ -160,6 +160,7 @@ function AllArtistsContent() {
                         src={heroImages[heroImageIndex]}
                         alt="Artists background"
                         fill
+                        sizes="100vw"
                         className="object-cover transition-opacity duration-1000"
                         priority
                     />

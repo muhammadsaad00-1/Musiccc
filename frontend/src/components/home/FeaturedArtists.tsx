@@ -204,6 +204,7 @@ export default function FeaturedArtists() {
                                                     src={artist.image_url!}
                                                     alt={artist.name}
                                                     fill
+                                                    sizes="(max-width: 768px) 144px, (max-width: 1024px) 176px, 192px"
                                                     className="object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-2"
                                                 />
 

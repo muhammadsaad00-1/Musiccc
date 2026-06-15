@@ -222,6 +222,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
             src={artist.cover_image || artist.image_url}
             alt={artist.name}
             fill
+            sizes="100vw"
             className="object-cover"
             style={{ objectPosition: 'center 30%' }}
             priority
@@ -258,6 +259,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                   src={artist.image_url}
                   alt={artist.name}
                   fill
+                  sizes="(max-width: 1024px) 160px, 192px"
                   className="object-cover rounded-full border-4 border-[#0a0a0b] relative z-10 shadow-2xl"
                 />
                 {artist.is_verified && (
@@ -365,6 +367,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                       src={url}
                       alt={`${artist.name} ${index + 1}`}
                       fill
+                      sizes="(max-width: 1024px) 100vw, 50vw"
                       className="object-cover"
                     />
                   </div>
@@ -374,6 +377,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                   src={artist.image_url}
                   alt={artist.name}
                   fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
                 />
               )}
@@ -718,6 +722,7 @@ export default function ArtistPage({ params }: ArtistPageProps) {
                           src={relatedArtist.image_url}
                           alt={relatedArtist.name}
                           fill
+                          sizes="(max-width: 768px) 128px, 160px"
                           className="object-cover transition-transform duration-700 group-hover:scale-110"
                         />
                       </div>

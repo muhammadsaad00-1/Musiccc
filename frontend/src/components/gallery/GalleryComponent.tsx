@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { usePortfolio } from '@/lib/hooks';
 import { Play, Maximize2, X, ChevronLeft, ChevronRight, Video } from 'lucide-react';
 
@@ -149,11 +150,13 @@ export default function GalleryComponent() {
           <div className="hidden lg:flex lg:col-span-1 h-full items-end pb-12 justify-end pr-2 xl:pr-6">
             <div className="w-[95%] h-[95%] rounded-t-[500px] rounded-b-3xl overflow-hidden shadow-2xl shadow-orange-500/10 border border-white/5 group bg-[#1a1a1a] relative">
               <div className="absolute inset-0 bg-gradient-to-t from-[#0C0C0C]/80 via-transparent to-transparent z-10 transition-opacity duration-700"></div>
-              <img
+              <Image
                 key={displayImages[0]}
-                src={displayImages[0]}
+                src={displayImages[0] || baseFallbacks[0]}
                 alt="Tall Arch Portfolio Collage"
-                className="w-full h-full object-cover object-center animate-fade-in opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                fill
+                sizes="(max-width: 1024px) 0px, 25vw"
+                className="object-cover object-center animate-fade-in opacity-80 group-hover:opacity-100 transition-opacity duration-500"
               />
             </div>
           </div>
@@ -183,11 +186,11 @@ export default function GalleryComponent() {
             <div className="w-full flex justify-center items-end gap-6 sm:gap-10 z-10 h-full pb-10 pt-[240px]">
               {/* Left Leaf (Reflected) */}
               <div className="w-[50%] max-w-[260px] aspect-[4/5] rounded-tr-[120px] rounded-bl-[40px] rounded-tl-xl rounded-br-xl overflow-hidden border border-white/5 shadow-xl group bg-[#1a1a1a] relative">
-                <img key={displayImages[1]} src={displayImages[1]} alt="Reflected Leaf Collage" className="w-full h-full object-cover animate-fade-in opacity-85 group-hover:opacity-100 transition-opacity duration-500" />
+                <Image key={displayImages[1]} src={displayImages[1] || baseFallbacks[1]} alt="Reflected Leaf Collage" fill sizes="(max-width: 1024px) 45vw, 22vw" priority className="object-cover animate-fade-in opacity-85 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
               {/* Right Leaf */}
               <div className="w-[50%] max-w-[260px] aspect-[4/5] rounded-tl-[120px] rounded-br-[40px] rounded-tr-xl rounded-bl-xl overflow-hidden border border-white/5 shadow-xl group bg-[#1a1a1a] relative">
-                <img key={displayImages[2]} src={displayImages[2]} alt="Leaf Mask Collage" className="w-full h-full object-cover animate-fade-in opacity-85 group-hover:opacity-100 transition-opacity duration-500" />
+                <Image key={displayImages[2]} src={displayImages[2] || baseFallbacks[2]} alt="Leaf Mask Collage" fill sizes="(max-width: 1024px) 45vw, 22vw" className="object-cover animate-fade-in opacity-85 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
             </div>
           </div>
@@ -196,11 +199,13 @@ export default function GalleryComponent() {
           <div className="hidden lg:flex lg:col-span-1 h-full items-end pb-12 justify-start pl-2 xl:pl-6">
             <div className="w-[95%] h-[95%] rounded-t-[500px] rounded-b-3xl overflow-hidden shadow-2xl shadow-orange-500/10 border border-white/5 group bg-[#1a1a1a] relative">
               <div className="absolute inset-0 bg-gradient-to-t from-[#0C0C0C]/80 via-transparent to-transparent z-10 transition-opacity duration-700"></div>
-              <img
+              <Image
                 key={displayImages[3]}
-                src={displayImages[3]}
+                src={displayImages[3] || baseFallbacks[3]}
                 alt="Tall Arch Right Collage"
-                className="w-full h-full object-cover object-center animate-fade-in opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                fill
+                sizes="(max-width: 1024px) 0px, 25vw"
+                className="object-cover object-center animate-fade-in opacity-80 group-hover:opacity-100 transition-opacity duration-500"
               />
             </div>
           </div>
@@ -315,11 +320,13 @@ export default function GalleryComponent() {
                       </div>
                     )
                   ) : (
-                    <img
+                    <Image
                       src={item.media_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop'}
                       alt={item.title}
-                      className="w-full object-cover transition-transform duration-700 group-hover:scale-105 min-h-[200px]"
-                      loading="lazy"
+                      width={0}
+                      height={0}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105 min-h-[200px]"
                     />
                   )}
                 </div>

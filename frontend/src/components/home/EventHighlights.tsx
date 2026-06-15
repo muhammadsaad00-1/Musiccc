@@ -172,7 +172,7 @@ export default function EventHighlights() {
                   onClick={() => setSelectedImage(item.media_url)}
                   className={`relative overflow-hidden rounded-2xl border border-gray-800 cursor-pointer group ${index === 0 ? 'sm:col-span-2 aspect-[16/9]' : 'aspect-[4/3]'}`}
                 >
-                  <Image src={item.media_url} alt={item.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <Image src={item.media_url} alt={item.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <p className="text-white font-semibold line-clamp-1">{item.title}</p>
@@ -206,7 +206,7 @@ export default function EventHighlights() {
                     className="group flex items-center gap-3 bg-[#18181b] border border-gray-800 hover:border-red-500/40 rounded-xl p-2.5 transition-all"
                   >
                     <div className="relative w-28 h-16 rounded-lg overflow-hidden bg-black flex-shrink-0">
-                      {thumb && <Image src={thumb} alt={video.title} fill className="object-cover" />}
+                      {thumb && <Image src={thumb} alt={video.title} fill sizes="112px" className="object-cover" />}
                       <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
                         <PlayCircle className="w-7 h-7 text-white/90" />
                       </div>
@@ -235,7 +235,7 @@ export default function EventHighlights() {
                 onClick={() => setSelectedImage(item.media_url)}
                 className="relative mb-4 w-full overflow-hidden rounded-xl border border-gray-800 break-inside-avoid group text-left"
               >
-                <img src={item.media_url} alt={item.title} className="w-full h-auto object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+                <Image src={item.media_url} alt={item.title} width={0} height={0} sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw" className="w-full h-auto object-cover group-hover:scale-[1.03] transition-transform duration-500" />
                 <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
                   <p className="text-white text-sm font-medium line-clamp-2">{item.title}</p>
                 </div>
@@ -253,7 +253,7 @@ export default function EventHighlights() {
       {selectedImage && (
         <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
           <div className="relative w-full h-full max-w-6xl max-h-[88vh]">
-            <Image src={selectedImage} alt="Selected highlight" fill className="object-contain" />
+            <Image src={selectedImage} alt="Selected highlight" fill sizes="(max-width: 1280px) 100vw, 1280px" className="object-contain" />
           </div>
         </div>
       )}
