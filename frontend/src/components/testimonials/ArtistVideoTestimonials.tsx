@@ -11,8 +11,19 @@ export default function ArtistVideoTestimonials() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [playingId, setPlayingId] = useState<string | null>(null);
     const [inView, setInView] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const sectionRef = useRef<HTMLElement>(null);
     const mobileScrollRef = useRef<HTMLDivElement>(null);
+
+    /* Track which layout is on screen so only IT mounts a video iframe
+       (prevents the CSS-hidden layout from playing audio in the background). */
+    useEffect(() => {
+        const mq = window.matchMedia('(max-width: 767px)');
+        const update = () => setIsMobile(mq.matches);
+        update();
+        mq.addEventListener('change', update);
+        return () => mq.removeEventListener('change', update);
+    }, []);
 
     useEffect(() => {
         async function fetchVideoTestimonials() {
@@ -130,7 +141,7 @@ export default function ArtistVideoTestimonials() {
                         ref={mobileScrollRef}
                         onScroll={handleMobileScroll}
                         className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 overscroll-x-contain"
-                        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
+                        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y' }}
                         data-lenis-prevent
                     >
                         {testimonials.map((t, i) => (
@@ -148,6 +159,7 @@ export default function ArtistVideoTestimonials() {
                                     customMessage={t.custom_message}
                                     thumbnail={t.photo_url}
                                     isPlaying={playingId === t.id}
+                                    canPlay={isMobile}
                                     onTogglePlay={handleTogglePlay}
                                 />
                             </div>
@@ -192,6 +204,7 @@ export default function ArtistVideoTestimonials() {
                                             customMessage={t.custom_message}
                                             thumbnail={t.photo_url}
                                             isPlaying={playingId === t.id}
+                                            canPlay={!isMobile}
                                             onTogglePlay={handleTogglePlay}
                                             onPrev={testimonials.length > 1 ? prev : undefined}
                                             onNext={testimonials.length > 1 ? next : undefined}

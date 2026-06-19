@@ -180,6 +180,7 @@ export default function PortfolioGrid({ bgClass = 'bg-[#0a0a0b]' }: PortfolioGri
                                     src={item.media_url}
                                     alt={item.title}
                                     fill
+                                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                     className="object-cover group-hover:scale-110 transition-transform duration-500"
                                 />
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex items-center justify-center">
@@ -341,6 +342,7 @@ export default function PortfolioGrid({ bgClass = 'bg-[#0a0a0b]' }: PortfolioGri
                                 src={selectedImage}
                                 alt="Portfolio image"
                                 fill
+                                sizes="(max-width: 1280px) 100vw, 1280px"
                                 className="object-contain"
                             />
                         </div>

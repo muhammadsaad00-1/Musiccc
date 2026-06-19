@@ -264,10 +264,12 @@ export default function AboutPage() {
                         <div className="relative min-h-[420px] lg:min-h-[560px]">
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-pink-600/20 flex items-center justify-center">
                                 {founder.image_url ? (
-                                    <img
+                                    <Image
                                         src={founder.image_url}
                                         alt={founder.name}
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        sizes="(max-width: 1024px) 100vw, 50vw"
+                                        className="object-cover"
                                     />
                                 ) : (
                                     <div className="flex flex-col items-center gap-4 text-center p-12">
@@ -354,9 +356,12 @@ export default function AboutPage() {
                             >
                                 {/* Avatar */}
                                 {member.image_url ? (
-                                    <img
+                                    <Image
                                         src={member.image_url}
                                         alt={member.name}
+                                        width={80}
+                                        height={80}
+                                        sizes="80px"
                                         className="w-20 h-20 rounded-full object-cover mb-4 shadow-lg border border-gray-700"
                                     />
                                 ) : (

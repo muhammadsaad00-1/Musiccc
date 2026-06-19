@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Plus,
   Search,
@@ -424,9 +425,12 @@ function ManageArtistsContent() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <img
+                            <Image
                               src={artist.profile_image_url || "/placeholder.png"}
                               alt={artist.name}
+                              width={40}
+                              height={40}
+                              sizes="40px"
                               className="w-10 h-10 rounded-full object-cover"
                             />
                             <div className="ml-4">

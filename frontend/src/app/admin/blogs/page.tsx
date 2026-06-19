@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Plus, ArrowLeft, Edit2, Trash2, Loader2, X, Upload, Eye, EyeOff } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 
@@ -229,10 +230,12 @@ export default function ManageBlogsPage() {
                             <div key={blog.id} className="bg-[#1a1a1a] rounded-xl border border-gray-800 overflow-hidden group hover:border-orange-500/50 transition-all">
                                 {blog.image_url && (
                                     <div className="relative h-48 overflow-hidden">
-                                        <img
+                                        <Image
                                             src={blog.image_url}
                                             alt={blog.title}
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                            fill
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                            className="object-cover group-hover:scale-110 transition-transform duration-500"
                                         />
                                     </div>
                                 )}

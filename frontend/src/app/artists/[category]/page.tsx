@@ -248,6 +248,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
             src={categoryHeroImages[categorySlug]?.[heroImageIndex] || categoryHeroImages.default[heroImageIndex]}
             alt="Performance background"
             fill
+            sizes="100vw"
             className="object-cover transition-opacity duration-1000"
             priority
           />

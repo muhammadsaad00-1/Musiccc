@@ -13,6 +13,9 @@ interface VideoTestimonialCardProps {
     customMessage?: string;
     thumbnail?: string;
     isPlaying: boolean;
+    /* Only the layout currently on screen should mount the <iframe>; the other
+       (CSS-hidden) layout passes canPlay={false} so it never plays audio. */
+    canPlay?: boolean;
     onTogglePlay: (id: string, play: boolean) => void;
     onPrev?: () => void;
     onNext?: () => void;
@@ -30,12 +33,14 @@ export default function VideoTestimonialCard({
     customMessage,
     thumbnail,
     isPlaying,
+    canPlay = true,
     onTogglePlay,
     onPrev,
     onNext,
     hasPrev,
     hasNext,
 }: VideoTestimonialCardProps) {
+    const showVideo = isPlaying && canPlay;
     const getYouTubeId = (url: string) => {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
         const match = url.match(regExp);
@@ -80,8 +85,8 @@ export default function VideoTestimonialCard({
                 <div className="absolute inset-0 rounded-[2.4rem] bg-gradient-to-b from-orange-500/30 to-pink-600/30 blur-2xl -z-10 scale-110 opacity-70" />
 
                 {/* Gradient border ring — full width on mobile, fixed on desktop */}
-                <div className="p-[3px] rounded-[2.2rem] bg-gradient-to-b from-orange-400 via-pink-500 to-pink-700 shadow-2xl shadow-pink-600/30 w-full md:w-auto">
-                    <div className="relative w-full md:w-[290px] lg:w-[320px] aspect-[9/18] rounded-[2rem] overflow-hidden bg-gray-950">
+                <div className="p-[3px] rounded-[2.2rem] bg-gradient-to-b from-orange-400 via-pink-500 to-pink-700 shadow-2xl shadow-pink-600/30 w-auto">
+                    <div className="relative w-[230px] sm:w-[260px] md:w-[290px] lg:w-[320px] aspect-[9/16] md:aspect-[9/18] rounded-[2rem] overflow-hidden bg-gray-950">
 
                         {/* Top notification bar */}
                         {!isPlaying && (
@@ -107,7 +112,7 @@ export default function VideoTestimonialCard({
                         )}
 
                         {/* Thumbnail + play */}
-                        {!isPlaying ? (
+                        {!showVideo ? (
                             <>
                                 <Image
                                     src={thumbnail || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
@@ -128,7 +133,7 @@ export default function VideoTestimonialCard({
                         ) : (
                             <div className="relative w-full h-full">
                                 <iframe
-                                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&modestbranding=1&rel=0`}
+                                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3`}
                                     className="w-full h-full"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen

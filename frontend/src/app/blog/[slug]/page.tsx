@@ -153,6 +153,7 @@ export default function BlogDetailPage({ params }: BlogPageProps) {
                             src={blog.image_url}
                             alt={blog.title}
                             fill
+                            sizes="100vw"
                             className="object-cover scale-105"
                             priority
                         />
@@ -281,6 +282,7 @@ export default function BlogDetailPage({ params }: BlogPageProps) {
                                                     src={item.image_url}
                                                     alt={item.title}
                                                     fill
+                                                    sizes="(max-width: 768px) 100vw, 800px"
                                                     className="object-cover group-hover:scale-110 transition-transform duration-500"
                                                 />
                                             </div>
@@ -344,6 +346,7 @@ export default function BlogDetailPage({ params }: BlogPageProps) {
                                             src={related.image_url}
                                             alt={related.title}
                                             fill
+                                            sizes="(max-width: 768px) 100vw, 33vw"
                                             className="object-cover group-hover:scale-110 transition-transform duration-1000 grayscale group-hover:grayscale-0"
                                         />
                                     ) : (

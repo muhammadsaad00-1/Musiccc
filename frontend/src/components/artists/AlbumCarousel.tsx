@@ -161,6 +161,7 @@ export default function AlbumCarousel({ albums, artistName }: AlbumCarouselProps
                                         src={album.cover}
                                         alt={album.name}
                                         fill
+                                        sizes="(max-width: 1024px) 192px, 224px"
                                         className="object-cover"
                                     />
 

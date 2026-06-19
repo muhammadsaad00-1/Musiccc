@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { 
   ArrowLeft, 
   Trash2, 
@@ -347,7 +348,7 @@ export default function AdminAboutPage() {
                   {founderImage ? (
                     <img src={URL.createObjectURL(founderImage)} className="w-full h-full object-cover" />
                   ) : founderData.image_url ? (
-                    <img src={founderData.image_url} className="w-full h-full object-cover" />
+                    <Image src={founderData.image_url} alt="Founder" fill sizes="(max-width: 1024px) 100vw, 400px" className="object-cover" />
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
                       <Upload className="w-10 h-10 mb-2 group-hover:text-orange-500 transition-colors" />
@@ -405,7 +406,7 @@ export default function AdminAboutPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${member.gradient} flex items-center justify-center text-3xl shadow-lg`}>
                       {member.image_url ? (
-                        <img src={member.image_url} className="w-full h-full object-cover rounded-full" />
+                        <Image src={member.image_url} alt="Team member" width={64} height={64} sizes="64px" className="w-full h-full object-cover rounded-full" />
                       ) : member.emoji}
                     </div>
                     <div className="flex gap-2">

@@ -206,10 +206,12 @@ export default function CategoryGrid() {
 
                                             {/* Image / Icon */}
                                             {category.image_url ? (
-                                                <img
+                                                <Image
                                                     src={category.image_url}
                                                     alt={category.name}
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                    fill
+                                                    sizes="(max-width: 768px) 128px, 160px"
+                                                    className="object-cover transition-transform duration-700 group-hover:scale-110"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full bg-gradient-to-br from-[#2a2a2a] to-[#111] flex flex-col items-center justify-center p-4 text-center">
@@ -254,10 +256,12 @@ export default function CategoryGrid() {
                             >
                                 <div className="relative w-[72px] h-[72px] rounded-full overflow-hidden border-2 border-gray-700 shadow-lg bg-[#1a1a1a]">
                                     {category.image_url ? (
-                                        <img
+                                        <Image
                                             src={category.image_url}
                                             alt={category.name}
-                                            className="w-full h-full object-cover"
+                                            fill
+                                            sizes="72px"
+                                            className="object-cover"
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-gradient-to-br from-orange-500/10 to-pink-500/10 flex items-center justify-center text-orange-400">

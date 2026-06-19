@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Plus, ArrowLeft, Edit2, Trash2, Loader2, X, Upload } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 
@@ -180,7 +181,7 @@ export default function ManageCategoriesPage() {
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="flex items-center gap-3">
                                         {category.image_url ? (
-                                            <img src={category.image_url} alt={category.name} className="w-12 h-12 rounded-lg object-cover bg-gray-800" />
+                                            <Image src={category.image_url} alt={category.name} width={48} height={48} sizes="48px" className="w-12 h-12 rounded-lg object-cover bg-gray-800" />
                                         ) : (
                                             <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center text-gray-500 text-xs">No img</div>
                                         )}
@@ -269,9 +270,12 @@ export default function ManageCategoriesPage() {
                                 {editingCategory?.image_url && !formData.image && (
                                     <div className="mb-3 p-3 bg-[#0a0a0b] border border-gray-800 rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <img
+                                            <Image
                                                 src={editingCategory.image_url}
                                                 alt="Current"
+                                                width={64}
+                                                height={64}
+                                                sizes="64px"
                                                 className="w-16 h-16 rounded-lg object-cover"
                                             />
                                             <div className="flex-1">
