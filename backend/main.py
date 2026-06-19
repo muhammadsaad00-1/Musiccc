@@ -19,8 +19,70 @@ from email_service import send_requirement_notification, send_contact_message
 from dotenv import load_dotenv
 from datetime import datetime
 import secrets
+import boto3
+from botocore.config import Config as BotocoreConfig
 
-load_dotenv()  
+load_dotenv()
+
+# ── Cloudflare R2 upload helper ──────────────────────────────────────────────
+
+_r2_client_instance = None
+
+
+def _get_r2_client():
+    """Lazy-initialize the R2 boto3 client. Returns None when env vars are absent."""
+    global _r2_client_instance
+    if _r2_client_instance is None:
+        account_id = os.getenv("R2_ACCOUNT_ID", "")
+        access_key = os.getenv("R2_ACCESS_KEY_ID", "")
+        secret_key = os.getenv("R2_SECRET_ACCESS_KEY", "")
+        if account_id and access_key and secret_key:
+            _r2_client_instance = boto3.client(
+                "s3",
+                endpoint_url=f"https://{account_id}.r2.cloudflarestorage.com",
+                aws_access_key_id=access_key,
+                aws_secret_access_key=secret_key,
+                config=BotocoreConfig(signature_version="s3v4"),
+                region_name="auto",
+            )
+    return _r2_client_instance
+
+
+def upload_image(bucket: str, path: str, file_bytes: bytes, content_type: str = None) -> str:
+    """Upload an image to Cloudflare R2 when configured, otherwise Supabase Storage.
+
+    When R2 env vars (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY,
+    R2_BUCKET_NAME, R2_PUBLIC_URL) are all set, files go directly to R2 with
+    long-lived cache headers.  If any var is missing the function falls back to
+    Supabase Storage so the app stays functional without R2 configured.
+    """
+    if not content_type:
+        content_type, _ = mimetypes.guess_type(path)
+    content_type = content_type or "application/octet-stream"
+
+    r2 = _get_r2_client()
+    r2_bucket = os.getenv("R2_BUCKET", "")
+    r2_public_url = os.getenv("R2_PUBLIC_BASE", "").rstrip("/")
+
+    if r2 and r2_bucket and r2_public_url:
+        key = f"{bucket}/{path}"
+        r2.put_object(
+            Bucket=r2_bucket,
+            Key=key,
+            Body=file_bytes,
+            ContentType=content_type,
+            CacheControl="public, max-age=31536000, immutable",
+        )
+        return f"{r2_public_url}/{key}"
+
+    # Fallback: Supabase Storage
+    ensure_bucket_exists(bucket)
+    supabase.storage.from_(bucket).upload(
+        path, file_bytes, storage_file_options(path, content_type=content_type)
+    )
+    return supabase.storage.from_(bucket).get_public_url(path)
+
+# ────────────────────────────────────────────────────────────────────────────
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -511,23 +573,12 @@ async def create_performer(
     performer_id = insert_response.data[0]["id"]
     sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name.lower().replace(' ', '_'))
     
-    # Ensure bucket exists before uploading
-    ensure_bucket_exists("performers")
-    
     # Upload profile image
     try:
         file_bytes = await image.read()
         file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
         profile_path = f"{performer_id}_{sanitized_name}.{file_extension}"
-        
-        # Upload file with upsert enabled
-        upload_response = supabase.storage.from_("performers").upload(
-            profile_path,
-            file_bytes,
-            storage_file_options(profile_path)
-        )
-        profile_image_url = supabase.storage.from_("performers").get_public_url(profile_path)
-        
+        profile_image_url = upload_image("performers", profile_path, file_bytes, image.content_type)
         update_data = {"profile_image_url": profile_image_url}
     except Exception as upload_error:
         print(f"❌ Upload error: {upload_error}")
@@ -549,13 +600,7 @@ async def create_performer(
         header_bytes = await header_image.read()
         header_extension = header_image.filename.split('.')[-1] if '.' in header_image.filename else 'jpg'
         header_path = f"{performer_id}_{sanitized_name}_header.{header_extension}"
-        supabase.storage.from_("performers").upload(
-            header_path,
-            header_bytes,
-            storage_file_options(header_path)
-        )
-        header_image_url = supabase.storage.from_("performers").get_public_url(header_path)
-        update_data["header_image_url"] = header_image_url
+        update_data["header_image_url"] = upload_image("performers", header_path, header_bytes, header_image.content_type)
     
     # Upload gallery images if provided
     if gallery_images:
@@ -564,13 +609,7 @@ async def create_performer(
             gallery_bytes = await gallery_image.read()
             gallery_extension = gallery_image.filename.split('.')[-1] if '.' in gallery_image.filename else 'jpg'
             gallery_path = f"{performer_id}_{sanitized_name}_gallery_{idx}.{gallery_extension}"
-            supabase.storage.from_("performers").upload(
-                gallery_path,
-                gallery_bytes,
-                storage_file_options(gallery_path)
-            )
-            gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
-            gallery_urls.append(gallery_url)
+            gallery_urls.append(upload_image("performers", gallery_path, gallery_bytes, gallery_image.content_type))
         update_data["gallery_image_urls"] = gallery_urls
     
     # Update performer with image URLs
@@ -804,33 +843,17 @@ async def update_performer(
     performer_name = performer_response.data[0]["name"] if performer_response.data else "performer"
     sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', performer_name.lower().replace(' ', '_'))
     
-    # Ensure bucket exists before uploading
-    ensure_bucket_exists("performers")
-    
     if image and image.filename:
         file_bytes = await image.read()
         file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
         path = f"{id}_{sanitized_name}.{file_extension}"
-        
-        # Upload with upsert option to overwrite if exists
-        supabase.storage.from_("performers").upload(
-            path,
-            file_bytes,
-            storage_file_options(path)
-        )
-        update_data["profile_image_url"] = supabase.storage.from_("performers").get_public_url(path)
+        update_data["profile_image_url"] = upload_image("performers", path, file_bytes, image.content_type)
     
     if header_image and header_image.filename:
         header_bytes = await header_image.read()
         header_extension = header_image.filename.split('.')[-1] if '.' in header_image.filename else 'jpg'
         header_path = f"{id}_{sanitized_name}_header.{header_extension}"
-        
-        supabase.storage.from_("performers").upload(
-            header_path,
-            header_bytes,
-            storage_file_options(header_path)
-        )
-        update_data["header_image_url"] = supabase.storage.from_("performers").get_public_url(header_path)
+        update_data["header_image_url"] = upload_image("performers", header_path, header_bytes, header_image.content_type)
     
     if gallery_images and len(gallery_images) > 0:
         # Check if actual files were uploaded (not empty file list)
@@ -840,14 +863,7 @@ async def update_performer(
                 gallery_bytes = await gallery_image.read()
                 gallery_extension = gallery_image.filename.split('.')[-1] if '.' in gallery_image.filename else 'jpg'
                 gallery_path = f"{id}_{sanitized_name}_gallery_{idx}.{gallery_extension}"
-                
-                supabase.storage.from_("performers").upload(
-                    gallery_path,
-                    gallery_bytes,
-                    storage_file_options(gallery_path)
-                )
-                gallery_url = supabase.storage.from_("performers").get_public_url(gallery_path)
-                gallery_urls.append(gallery_url)
+                gallery_urls.append(upload_image("performers", gallery_path, gallery_bytes, gallery_image.content_type))
             update_data["gallery_image_urls"] = gallery_urls
 
     supabase.table("performers").update(update_data).eq("id", id).execute()
@@ -930,24 +946,13 @@ async def create_event(
         ]
         supabase.table("event_performers").insert(event_performer_rows).execute()
     
-    # Now upload header image with proper naming: {id}_{sanitized_name}.{extension}
     try:
         file_bytes = await image.read()
         file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
         sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name.lower().replace(' ', '_'))
         path = f"{event_id}_{sanitized_name}_header.{file_extension}"
-        
-        # Ensure bucket exists before uploading
-        ensure_bucket_exists("events")
-        
-        # Upload file with upsert enabled
-        upload_response = supabase.storage.from_("events").upload(
-            path,
-            file_bytes,
-            file_options=storage_file_options(path)
-        )
-        header_image_url = supabase.storage.from_("events").get_public_url(path)
-        
+        header_image_url = upload_image("events", path, file_bytes, image.content_type)
+
     except Exception as upload_error:
         print(f"❌ Event image upload error: {upload_error}")
         error_str = str(upload_error).lower()
@@ -1092,20 +1097,14 @@ async def update_event(
             supabase.table("event_performers").insert(event_performer_rows).execute()
     
     if image:
-        # Get event name for proper file naming
         event_response = supabase.table("events").select("name").eq("id", event_id).execute()
         event_name = event_response.data[0]["name"] if event_response.data else "event"
-        
+
         file_bytes = await image.read()
         file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
         sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', event_name.lower().replace(' ', '_'))
         path = f"{event_id}_{sanitized_name}_header.{file_extension}"
-        
-        # Ensure bucket exists before uploading
-        ensure_bucket_exists("events")
-        # Upload with upsert option to overwrite if exists
-        supabase.storage.from_("events").upload(path, file_bytes, storage_file_options(path))
-        update_data["header_image_url"] = supabase.storage.from_("events").get_public_url(path)
+        update_data["header_image_url"] = upload_image("events", path, file_bytes, image.content_type)
     
     if update_data:
         supabase.table("events").update(update_data).eq("id", event_id).execute()
@@ -1204,15 +1203,9 @@ async def create_category(
                 file_bytes = await image.read()
                 file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
                 file_path = f"category_{category_id}.{file_extension}"
-                
-                ensure_bucket_exists("categories")
-                
-                supabase.storage.from_("categories").upload(file_path, file_bytes, storage_file_options(file_path))
-                image_url = supabase.storage.from_("categories").get_public_url(file_path)
-                
-                # Update category with image url
+                image_url = upload_image("categories", file_path, file_bytes, image.content_type)
                 supabase.table("categories").update({"image_url": image_url}).eq("id", category_id).execute()
-                
+
             except Exception as upload_error:
                 print(f"Category image upload error: {upload_error}")
                 # Continue even if image upload fails
@@ -1254,12 +1247,7 @@ async def update_category(
                 file_bytes = await image.read()
                 file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
                 file_path = f"category_{id}.{file_extension}"
-                
-                ensure_bucket_exists("categories")
-                
-                supabase.storage.from_("categories").upload(file_path, file_bytes, storage_file_options(file_path))
-                image_url = supabase.storage.from_("categories").get_public_url(file_path)
-                
+                image_url = upload_image("categories", file_path, file_bytes, image.content_type)
                 supabase.table("categories").update({"image_url": image_url}).eq("id", id).execute()
             except Exception as upload_error:
                 print(f"Category image upload error: {upload_error}")
@@ -1416,15 +1404,9 @@ async def create_blog(
                 file_bytes = await image.read()
                 file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
                 file_path = f"blog_{blog_id}.{file_extension}"
-                
-                ensure_bucket_exists("blogs")
-                
-                supabase.storage.from_("blogs").upload(file_path, file_bytes, storage_file_options(file_path))
-                image_url = supabase.storage.from_("blogs").get_public_url(file_path)
-                
-                # Update blog with image URL
+                image_url = upload_image("blogs", file_path, file_bytes, image.content_type)
                 supabase.table("blogs").update({"image_url": image_url}).eq("id", blog_id).execute()
-                
+
             except Exception as upload_error:
                 print(f"Blog image upload error: {upload_error}")
                 # Continue even if image upload fails
@@ -1490,12 +1472,7 @@ async def update_blog(
                 file_bytes = await image.read()
                 file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
                 file_path = f"blog_{id}.{file_extension}"
-                
-                ensure_bucket_exists("blogs")
-                
-                supabase.storage.from_("blogs").upload(file_path, file_bytes, storage_file_options(file_path))
-                image_url = supabase.storage.from_("blogs").get_public_url(file_path)
-                
+                image_url = upload_image("blogs", file_path, file_bytes, image.content_type)
                 supabase.table("blogs").update({"image_url": image_url}).eq("id", id).execute()
             except Exception as upload_error:
                 print(f"Blog image upload error: {upload_error}")
@@ -1574,16 +1551,11 @@ async def create_package(
         ]
         supabase.table("package_performers").insert(package_performer_rows).execute()
     
-    # Upload header image
     file_bytes = await image.read()
     file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
     sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name.lower().replace(' ', '_'))
     path = f"{package_id}_{sanitized_name}_header.{file_extension}"
-    
-    # Ensure bucket exists before uploading
-    ensure_bucket_exists("packages")
-    supabase.storage.from_("packages").upload(path, file_bytes, storage_file_options(path, upsert=False))
-    header_image_url = supabase.storage.from_("packages").get_public_url(path)
+    header_image_url = upload_image("packages", path, file_bytes, image.content_type)
     
     # Update package with header image URL
     supabase.table("packages").update({
@@ -1746,20 +1718,14 @@ async def update_package(
             supabase.table("package_performers").insert(package_performer_rows).execute()
     
     if image and image.filename:
-        # Get package name for proper file naming
         package_response = supabase.table("packages").select("name").eq("id", package_id).execute()
         package_name = package_response.data[0]["name"] if package_response.data else "package"
-        
+
         file_bytes = await image.read()
         file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
         sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', package_name.lower().replace(' ', '_'))
         path = f"{package_id}_{sanitized_name}_header.{file_extension}"
-        
-        # Ensure bucket exists before uploading
-        ensure_bucket_exists("packages")
-        # Upload with upsert option to overwrite if exists
-        supabase.storage.from_("packages").upload(path, file_bytes, storage_file_options(path))
-        update_data["header_image_url"] = supabase.storage.from_("packages").get_public_url(path)
+        update_data["header_image_url"] = upload_image("packages", path, file_bytes, image.content_type)
     
     if update_data:
         supabase.table("packages").update(update_data).eq("id", package_id).execute()
@@ -2244,23 +2210,9 @@ async def create_hero_image(
         ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
         filename = f"hero_{datetime.now().timestamp()}_{secrets.token_hex(8)}.{ext}"
         
-        # Upload to Supabase Storage
         file_bytes = await image.read()
-        upload_response = supabase.storage.from_("hero-images").upload(
-            filename,
-            file_bytes,
-            storage_file_options(filename, upsert=False, content_type=image.content_type)
-        )
-        
-        if hasattr(upload_response, 'error') and upload_response.error:
-            return {
-                "success": False,
-                "message": f"Failed to upload image: {upload_response.error}"
-            }
-        
-        # Get public URL
-        public_url = supabase.storage.from_("hero-images").get_public_url(filename)
-        
+        public_url = upload_image("hero-images", filename, file_bytes, image.content_type)
+
         # Save to database
         hero_data = {
             "image_url": public_url,
@@ -2326,23 +2278,8 @@ async def update_hero_image(
             ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
             filename = f"hero_{datetime.now().timestamp()}_{secrets.token_hex(8)}.{ext}"
 
-            # Upload to Supabase Storage
             file_bytes = await image.read()
-            upload_response = supabase.storage.from_("hero-images").upload(
-                filename,
-                file_bytes,
-                storage_file_options(filename, upsert=False, content_type=image.content_type)
-            )
-
-            if hasattr(upload_response, 'error') and upload_response.error:
-                return {
-                    "success": False,
-                    "message": f"Failed to upload image: {upload_response.error}"
-                }
-
-            # Get public URL
-            public_url = supabase.storage.from_("hero-images").get_public_url(filename)
-            update_data["image_url"] = public_url
+            update_data["image_url"] = upload_image("hero-images", filename, file_bytes, image.content_type)
 
         response = (
             supabase.table("hero_images")
@@ -2470,18 +2407,12 @@ async def upsert_about_profile(
         image_url = existing.data[0].get("image_url") if existing.data else None
 
         if image and image.filename:
-            ensure_bucket_exists("about-profile")
             ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
             safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", founder_name.lower().replace(" ", "_"))
             filename = f"about_{record_id or int(datetime.now().timestamp())}_{safe_name}.{ext}"
 
             file_bytes = await image.read()
-            supabase.storage.from_("about-profile").upload(
-                filename,
-                file_bytes,
-                storage_file_options(filename, content_type=image.content_type or "image/jpeg")
-            )
-            image_url = supabase.storage.from_("about-profile").get_public_url(filename)
+            image_url = upload_image("about-profile", filename, file_bytes, image.content_type or "image/jpeg")
 
         payload = {
             "founder_name": founder_name,
@@ -2580,18 +2511,12 @@ async def upsert_about_founder(
         image_url = existing.data[0].get("image_url") if existing.data else None
 
         if image and image.filename:
-            ensure_bucket_exists("about-profile")
             ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
             safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
             filename = f"about_{record_id or int(datetime.now().timestamp())}_{safe_name}.{ext}"
 
             file_bytes = await image.read()
-            supabase.storage.from_("about-profile").upload(
-                filename,
-                file_bytes,
-                storage_file_options(filename, content_type=image.content_type or "image/jpeg"),
-            )
-            image_url = supabase.storage.from_("about-profile").get_public_url(filename)
+            image_url = upload_image("about-profile", filename, file_bytes, image.content_type or "image/jpeg")
 
         payload = {
             "name": name,
@@ -2673,18 +2598,12 @@ async def create_about_team_member(
     try:
         image_url = None
         if image and image.filename:
-            ensure_bucket_exists("about-team")
             ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
             safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
             filename = f"about_team_{int(datetime.now().timestamp())}_{safe_name}.{ext}"
 
             file_bytes = await image.read()
-            supabase.storage.from_("about-team").upload(
-                filename,
-                file_bytes,
-                storage_file_options(filename, content_type=image.content_type or "image/jpeg"),
-            )
-            image_url = supabase.storage.from_("about-team").get_public_url(filename)
+            image_url = upload_image("about-team", filename, file_bytes, image.content_type or "image/jpeg")
 
         payload = {
             "name": name,
@@ -2739,18 +2658,12 @@ async def update_about_team_member(
         image_url = current_image_url
 
         if image and image.filename:
-            ensure_bucket_exists("about-team")
             ext = image.filename.split(".")[-1] if "." in image.filename else "jpg"
             safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
             filename = f"about_team_{member_id}_{safe_name}.{ext}"
 
             file_bytes = await image.read()
-            supabase.storage.from_("about-team").upload(
-                filename,
-                file_bytes,
-                storage_file_options(filename, content_type=image.content_type or "image/jpeg"),
-            )
-            image_url = supabase.storage.from_("about-team").get_public_url(filename)
+            image_url = upload_image("about-team", filename, file_bytes, image.content_type or "image/jpeg")
 
         payload = {
             "name": name,
@@ -2873,19 +2786,11 @@ async def create_client_logo(
         client_id = response.data[0]["id"]
 
         if logo and logo.filename:
-            ensure_bucket_exists("client-logos")
             file_bytes = await logo.read()
             ext = logo.filename.split(".")[-1] if "." in logo.filename else "png"
             sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
             path = f"{client_id}_{sanitized}.{ext}"
-            
-            # Upload to storage
-            supabase.storage.from_("client-logos").upload(
-                path, file_bytes, storage_file_options(path)
-            )
-            
-            # Get public URL and update database
-            logo_url = supabase.storage.from_("client-logos").get_public_url(path)
+            logo_url = upload_image("client-logos", path, file_bytes, logo.content_type)
             update_response = supabase.table("client_logos").update({"logo_url": logo_url}).eq("id", client_id).execute()
             
             if not update_response.data:
@@ -2920,20 +2825,12 @@ async def update_client_logo(
             update_data["is_active"] = is_active
 
         if logo and logo.filename:
-            ensure_bucket_exists("client-logos")
             file_bytes = await logo.read()
             ext = logo.filename.split(".")[-1] if "." in logo.filename else "png"
             label = name or client_id
             sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", str(label).lower().replace(" ", "_"))
             path = f"{client_id}_{sanitized}.{ext}"
-            
-            # Upload to storage
-            supabase.storage.from_("client-logos").upload(
-                path, file_bytes, storage_file_options(path)
-            )
-            
-            # Get public URL
-            update_data["logo_url"] = supabase.storage.from_("client-logos").get_public_url(path)
+            update_data["logo_url"] = upload_image("client-logos", path, file_bytes, logo.content_type)
 
         if update_data:
             supabase.table("client_logos").update(update_data).eq("id", client_id).execute()
@@ -3041,19 +2938,11 @@ async def create_artist_testimonial(
         testimonial_id = response.data[0]["id"]
 
         if photo and photo.filename:
-            ensure_bucket_exists("artist-testimonials")
             file_bytes = await photo.read()
             ext = photo.filename.split(".")[-1] if "." in photo.filename else "jpg"
             sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower().replace(" ", "_"))
             path = f"{testimonial_id}_{sanitized}.{ext}"
-            
-            # Upload to storage
-            supabase.storage.from_("artist-testimonials").upload(
-                path, file_bytes, storage_file_options(path)
-            )
-            
-            # Get public URL and update database
-            photo_url = supabase.storage.from_("artist-testimonials").get_public_url(path)
+            photo_url = upload_image("artist-testimonials", path, file_bytes, photo.content_type)
             update_response = supabase.table("artist_testimonials").update({"photo_url": photo_url}).eq("id", testimonial_id).execute()
             
             if not update_response.data:
@@ -3108,20 +2997,12 @@ async def update_artist_testimonial(
             update_data["custom_message"] = custom_message
 
         if photo and photo.filename:
-            ensure_bucket_exists("artist-testimonials")
             file_bytes = await photo.read()
             ext = photo.filename.split(".")[-1] if "." in photo.filename else "jpg"
             label = name or testimonial_id
             sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", str(label).lower().replace(" ", "_"))
             path = f"{testimonial_id}_{sanitized}.{ext}"
-            
-            # Upload to storage
-            supabase.storage.from_("artist-testimonials").upload(
-                path, file_bytes, storage_file_options(path)
-            )
-            
-            # Get public URL
-            update_data["photo_url"] = supabase.storage.from_("artist-testimonials").get_public_url(path)
+            update_data["photo_url"] = upload_image("artist-testimonials", path, file_bytes, photo.content_type)
 
         if update_data:
             supabase.table("artist_testimonials").update(update_data).eq("id", testimonial_id).execute()
@@ -3163,31 +3044,18 @@ async def upload_portfolio_image(
     """Admin: Upload an image for portfolio_items."""
     import time as _time
     try:
-        # Ensure bucket exists
-        ensure_bucket_exists("portfolio-items")
-        
         # Validate file type
         if not image.content_type or not image.content_type.startswith("image/"):
             return {
                 "success": False,
                 "message": "Only image files are allowed"
             }
-        
-        # Upload image to storage
+
         file_bytes = await image.read()
         ext = image.filename.split(".")[-1] if image.filename and "." in image.filename else "jpg"
         sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", title.lower().replace(" ", "_"))
         filename = f"{sanitized}_{int(_time.time())}.{ext}"
-        
-        # Upload to storage
-        supabase.storage.from_("portfolio-items").upload(
-            filename,
-            file_bytes,
-            storage_file_options(filename)
-        )
-        
-        # Get public URL
-        media_url = supabase.storage.from_("portfolio-items").get_public_url(filename)
+        media_url = upload_image("portfolio-items", filename, file_bytes, image.content_type)
         
         item_data = {
             "title": title,
@@ -3324,8 +3192,6 @@ async def create_event_banner(
     """Admin: Create a new event banner with background image upload."""
     import time as _time
     try:
-        ensure_bucket_exists("event-banners")
-
         if not image.content_type or not image.content_type.startswith("image/"):
             return {"success": False, "message": "Only image files are allowed"}
 
@@ -3333,14 +3199,7 @@ async def create_event_banner(
         ext = image.filename.split(".")[-1] if image.filename and "." in image.filename else "jpg"
         sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", title.lower().replace(" ", "_"))
         filename = f"banner_{sanitized}_{int(_time.time())}.{ext}"
-
-        supabase.storage.from_("event-banners").upload(
-            filename,
-            file_bytes,
-            storage_file_options(filename)
-        )
-
-        bg_image_url = supabase.storage.from_("event-banners").get_public_url(filename)
+        bg_image_url = upload_image("event-banners", filename, file_bytes, image.content_type)
 
         banner_data = {
             "title": title,
@@ -3416,22 +3275,13 @@ async def replace_event_banner_image(
     """Admin: Replace background image of an existing event banner."""
     import time as _time
     try:
-        ensure_bucket_exists("event-banners")
-
         if not image.content_type or not image.content_type.startswith("image/"):
             return {"success": False, "message": "Only image files are allowed"}
 
         file_bytes = await image.read()
         ext = image.filename.split(".")[-1] if image.filename and "." in image.filename else "jpg"
         filename = f"banner_replace_{int(_time.time())}.{ext}"
-
-        supabase.storage.from_("event-banners").upload(
-            filename,
-            file_bytes,
-            storage_file_options(filename)
-        )
-
-        bg_image_url = supabase.storage.from_("event-banners").get_public_url(filename)
+        bg_image_url = upload_image("event-banners", filename, file_bytes, image.content_type)
 
         response = supabase.table("event_banners") \
             .update({"bg_image_url": bg_image_url}) \
